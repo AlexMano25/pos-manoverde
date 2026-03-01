@@ -92,8 +92,9 @@ router.post('/', (req, res) => {
     runTransaction(() => {
       // Validate each item
       for (const item of items) {
-        if (!item.product_id || !item.quantity || item.quantity <= 0) {
-          throw new Error(`Article invalide: product_id et quantity requis (quantity > 0).`);
+        const itemQty = item.qty || item.quantity;
+        if (!item.product_id || !itemQty || itemQty <= 0) {
+          throw new Error(`Article invalide: product_id et qty requis (qty > 0).`);
         }
 
         const product = getProductById(item.product_id);
@@ -105,12 +106,12 @@ router.post('/', (req, res) => {
           throw new Error(`Produit n'appartient pas a ce magasin: ${item.product_id}`);
         }
 
-        if (product.stock < item.quantity) {
-          throw new Error(`Stock insuffisant pour "${product.name}": ${product.stock} disponible(s), ${item.quantity} demande(s).`);
+        if (product.stock < itemQty) {
+          throw new Error(`Stock insuffisant pour "${product.name}": ${product.stock} disponible(s), ${itemQty} demande(s).`);
         }
 
         // Decrement stock
-        updateProductStock(item.product_id, -item.quantity);
+        updateProductStock(item.product_id, -itemQty);
 
         // Create stock move for the sale
         createStockMove({
@@ -118,7 +119,7 @@ router.post('/', (req, res) => {
           store_id: req.user.store_id,
           product_id: item.product_id,
           type: 'sale',
-          qty: -item.quantity,
+          qty: -itemQty,
           reason: `Vente - Commande ${orderId}`,
           user_id: req.user.id,
         });
@@ -217,8 +218,9 @@ router.patch('/:id', (req, res) => {
 
       runTransaction(() => {
         for (const item of items) {
+          const itemQty = item.qty || item.quantity;
           // Restore stock
-          updateProductStock(item.product_id, item.quantity);
+          updateProductStock(item.product_id, itemQty);
 
           // Create stock move for the refund/cancel
           createStockMove({
@@ -226,7 +228,7 @@ router.patch('/:id', (req, res) => {
             store_id: req.user.store_id,
             product_id: item.product_id,
             type: status === 'refunded' ? 'refund' : 'cancel',
-            qty: item.quantity,
+            qty: itemQty,
             reason: `${status === 'refunded' ? 'Remboursement' : 'Annulation'} - Commande ${order.id}`,
             user_id: req.user.id,
           });
