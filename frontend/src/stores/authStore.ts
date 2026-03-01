@@ -388,7 +388,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           throw new Error('Supabase is not configured')
         }
 
-        // 1. Create Supabase Auth user
+        // 1. Create Supabase Auth user (unconfirmed at this point)
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: data.ownerEmail,
           password: data.password,
@@ -396,17 +396,8 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
         if (authError) throw new Error(authError.message)
         if (!authData.user) throw new Error('Registration failed')
 
-        // 2. Sign in immediately (needed for the RPC call context)
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: data.ownerEmail,
-          password: data.password,
-        })
-        if (signInError) {
-          // If sign-in fails (e.g. email confirmation required), try proceeding with signup session
-          console.warn('[authStore] Sign-in after signup failed, using signup session')
-        }
-
-        // 3. Call the registration RPC function
+        // 2. Call the registration RPC function (SECURITY DEFINER)
+        //    This auto-confirms the auth user AND creates org/store/user/subscription
         const { data: result, error: rpcError } = await supabase.rpc('register_organization', {
           p_org_name: data.orgName,
           p_owner_name: data.ownerName,
@@ -421,6 +412,15 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           p_auth_id: authData.user.id,
         })
         if (rpcError) throw new Error(rpcError.message)
+
+        // 3. Now sign in (user is auto-confirmed by the RPC function)
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.ownerEmail,
+          password: data.password,
+        })
+        if (signInError) {
+          console.warn('[authStore] Sign-in after registration failed:', signInError.message)
+        }
 
         // 4. Fetch the newly created user profile
         const { data: profile } = await supabase
