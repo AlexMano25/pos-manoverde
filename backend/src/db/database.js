@@ -8,7 +8,7 @@ const fs = require('fs');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
-const DB_PATH = path.join(__dirname, '../../pos.db');
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, '../../pos.db');
 const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 let db;

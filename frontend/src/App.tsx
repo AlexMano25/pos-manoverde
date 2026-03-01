@@ -4,9 +4,12 @@ import { useAuthStore } from './stores/authStore'
 import { useProductStore } from './stores/productStore'
 import { useOrderStore } from './stores/orderStore'
 import { useSyncStore } from './stores/syncStore'
+import { useLanguageStore } from './stores/languageStore'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useSync } from './hooks/useSync'
 import Layout from './components/layout/Layout'
+import HelpButton from './components/common/HelpButton'
+import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import SetupPage from './pages/SetupPage'
 import DashboardPage from './pages/DashboardPage'
@@ -23,6 +26,7 @@ function AppContent() {
   const { loadProducts } = useProductStore()
   const { loadOrders } = useOrderStore()
   const { countPending } = useSyncStore()
+  const { t } = useLanguageStore()
 
   useOnlineStatus()
   useSync()
@@ -35,14 +39,14 @@ function AppContent() {
     countPending()
   }, [storeId, loadProducts, loadOrders, countPending])
 
-  const pageTitles: Record<string, { title: string; subtitle?: string }> = {
-    dashboard: { title: 'Tableau de bord', subtitle: activity ? `${activity.charAt(0).toUpperCase() + activity.slice(1)}` : undefined },
-    pos: { title: 'Caisse', subtitle: 'Point de vente' },
-    products: { title: 'Produits', subtitle: 'Gestion du catalogue' },
-    orders: { title: 'Commandes', subtitle: 'Historique des ventes' },
-    stock: { title: 'Stock', subtitle: 'Gestion des inventaires' },
-    employees: { title: 'Employes', subtitle: 'Equipe et acces' },
-    settings: { title: 'Parametres', subtitle: 'Configuration du systeme' },
+  const pageTitles: Record<string, { title: string; subtitle?: string; helpKey: string }> = {
+    dashboard: { title: t.nav.dashboard, subtitle: activity ? `${activity.charAt(0).toUpperCase() + activity.slice(1)}` : undefined, helpKey: 'dashboard' },
+    pos: { title: t.nav.pos, subtitle: t.pos.title, helpKey: 'pos' },
+    products: { title: t.nav.products, subtitle: t.products.subtitle, helpKey: 'products' },
+    orders: { title: t.nav.orders, subtitle: t.orders.subtitle, helpKey: 'orders' },
+    stock: { title: t.nav.stock, subtitle: t.stock.subtitle, helpKey: 'stock' },
+    employees: { title: t.nav.employees, subtitle: t.employees.subtitle, helpKey: 'employees' },
+    settings: { title: t.nav.settings, subtitle: t.settings.subtitle, helpKey: 'settings' },
   }
 
   const current = pageTitles[section] || pageTitles.dashboard
@@ -69,6 +73,7 @@ function AppContent() {
   return (
     <Layout title={current.title} subtitle={current.subtitle}>
       {renderPage()}
+      <HelpButton pageKey={current.helpKey} userRole={user?.role} />
     </Layout>
   )
 }
@@ -76,6 +81,14 @@ function AppContent() {
 export default function App() {
   const { activity } = useAppStore()
   const { user, token } = useAuthStore()
+
+  // Show landing page when accessed from public site with no setup
+  const isPublicAccess = !activity && !user && !token
+  const hasSetupStarted = localStorage.getItem('pos-app-store')
+
+  if (isPublicAccess && !hasSetupStarted) {
+    return <LandingPage />
+  }
 
   if (!activity) {
     return <SetupPage />

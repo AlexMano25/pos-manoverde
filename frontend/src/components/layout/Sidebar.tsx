@@ -15,6 +15,7 @@ import {
 import { useAppStore } from '../../stores/appStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useSyncStore } from '../../stores/syncStore'
+import LanguageSelector from '../common/LanguageSelector'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -378,6 +379,11 @@ const Sidebar: React.FC = () => {
         ) : (
           <WifiOff size={14} style={{ marginLeft: 'auto' }} />
         )}
+      </div>
+
+      {/* ── Language selector ─────────────────────────────────────────── */}
+      <div style={{ padding: '8px 20px' }}>
+        <LanguageSelector />
       </div>
 
       {/* ── User info + Logout ──────────────────────────────────────────── */}

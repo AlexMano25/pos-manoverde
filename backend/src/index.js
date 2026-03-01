@@ -48,8 +48,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ============================================================
 // Serve static frontend files (if they exist)
+// Try local dev path first, then Docker mount path as fallback
 // ============================================================
-const frontendPath = path.join(__dirname, '../../frontend/dist');
+const frontendCandidates = [
+  path.join(__dirname, '../../frontend/dist'),  // Local development
+  '/app/public',                                 // Docker mount
+];
+const frontendPath = frontendCandidates.find(p => fs.existsSync(p)) || frontendCandidates[0];
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   console.log('[SERVER] Serving frontend from', frontendPath);
