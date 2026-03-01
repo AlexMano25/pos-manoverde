@@ -85,6 +85,12 @@ export type TranslationKeys = {
     invalidCredentials: string
     sessionExpired: string
     defaultCredentials: string
+    register: string
+    createAccount: string
+    confirmPassword: string
+    passwordMismatch: string
+    registrationSuccess: string
+    alreadyHaveAccount: string
   }
 
   // Setup
@@ -231,6 +237,9 @@ export type TranslationKeys = {
     orderSummary: string
     processing: string
     paymentConfirmed: string
+    orangeMoney: string
+    mtnMoney: string
+    carteBancaire: string
   }
 
   // Products
@@ -587,5 +596,50 @@ export type TranslationKeys = {
     copied: string
     showQrCode: string
     serverUrl: string
+  }
+
+  // Registration
+  registration: {
+    step1Title: string
+    step1Desc: string
+    step2Title: string
+    step2Desc: string
+    step3Title: string
+    step3Desc: string
+    step4Title: string
+    step4Desc: string
+    step5Title: string
+    step5Desc: string
+    orgName: string
+    ownerName: string
+    ownerEmail: string
+    ownerPhone: string
+    ownerAddress: string
+    storeName: string
+    planSelected: string
+    monthlyBilling: string
+    yearlyBilling: string
+    totalPerMonth: string
+    totalPerYear: string
+    orangeMoney: string
+    orangeMoneyDesc: string
+    mtnMoney: string
+    mtnMoneyDesc: string
+    carteBancaire: string
+    carteBancaireDesc: string
+    createMyAccount: string
+    processing: string
+    backToPlans: string
+    freePlanNote: string
+  }
+
+  // Subscription
+  subscription: {
+    title: string
+    currentPlan: string
+    nextBilling: string
+    changePlan: string
+    invoiceHistory: string
+    noInvoices: string
   }
 }

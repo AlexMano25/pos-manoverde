@@ -343,6 +343,18 @@ export default function POSPage() {
                   <ArrowRightLeft size={18} />
                   {t.pos.transfer}
                 </button>
+                <button style={payBtnOutline} onClick={() => handlePayment('orange_money')}>
+                  <Smartphone size={18} />
+                  {t.pos.orangeMoney}
+                </button>
+                <button style={payBtnOutline} onClick={() => handlePayment('mtn_money')}>
+                  <Smartphone size={18} />
+                  {t.pos.mtnMoney}
+                </button>
+                <button style={payBtnOutline} onClick={() => handlePayment('carte_bancaire')}>
+                  <CreditCard size={18} />
+                  {t.pos.carteBancaire}
+                </button>
               </div>
             </div>
           </>

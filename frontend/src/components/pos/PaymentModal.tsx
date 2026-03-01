@@ -34,6 +34,9 @@ const paymentIcons: Record<PaymentMethod, React.ReactNode> = {
   card: <CreditCard size={20} />,
   momo: <Smartphone size={20} />,
   transfer: <ArrowRightLeft size={20} />,
+  orange_money: <Smartphone size={20} />,
+  mtn_money: <Smartphone size={20} />,
+  carte_bancaire: <CreditCard size={20} />,
 }
 
 // ── Props ────────────────────────────────────────────────────────────────
@@ -71,6 +74,9 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     card: t.pos.card,
     momo: t.pos.momo,
     transfer: t.pos.transfer,
+    orange_money: t.pos.orangeMoney,
+    mtn_money: t.pos.mtnMoney,
+    carte_bancaire: t.pos.carteBancaire,
   }
 
   const subtotal = getTotal()

@@ -43,6 +43,7 @@ export type Activity =
 
 export type Store = {
   id: string
+  organization_id?: string
   name: string
   address: string
   phone: string
@@ -105,7 +106,7 @@ export type CartItem = {
 
 // -- Payment -----------------------------------------------------------------
 
-export type PaymentMethod = 'cash' | 'card' | 'momo' | 'transfer'
+export type PaymentMethod = 'cash' | 'card' | 'momo' | 'transfer' | 'orange_money' | 'mtn_money' | 'carte_bancaire'
 
 // -- Orders ------------------------------------------------------------------
 
@@ -263,4 +264,76 @@ export type AppSettings = {
   auto_print: boolean
   sound_enabled: boolean
   tax_inclusive: boolean // whether displayed prices include tax
+}
+
+// -- Subscription Plans -------------------------------------------------------
+
+export type SubscriptionPlan = 'free' | 'starter' | 'pro' | 'enterprise'
+export type BillingCycle = 'monthly' | 'yearly'
+export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trial'
+
+// -- Organization -------------------------------------------------------------
+
+export type Organization = {
+  id: string
+  name: string
+  owner_name: string
+  owner_email: string
+  owner_phone?: string
+  address?: string
+  tax_id?: string
+  created_at: string
+  updated_at: string
+}
+
+// -- Subscription -------------------------------------------------------------
+
+export type Subscription = {
+  id: string
+  organization_id: string
+  plan: SubscriptionPlan
+  billing_cycle: BillingCycle
+  payment_method?: string
+  price_fcfa: number
+  status: SubscriptionStatus
+  current_period_start: string
+  current_period_end?: string
+  created_at: string
+  updated_at: string
+}
+
+// -- Invoice ------------------------------------------------------------------
+
+export type Invoice = {
+  id: string
+  organization_id: string
+  subscription_id?: string
+  invoice_number: string
+  amount_fcfa: number
+  payment_method?: string
+  payment_reference?: string
+  status: 'pending' | 'paid' | 'failed' | 'refunded'
+  issued_at: string
+  paid_at?: string
+  billing_name?: string
+  billing_email?: string
+  billing_phone?: string
+  billing_address?: string
+  created_at: string
+}
+
+// -- Registration Data --------------------------------------------------------
+
+export type RegistrationData = {
+  orgName: string
+  ownerName: string
+  ownerEmail: string
+  ownerPhone: string
+  ownerAddress: string
+  plan: SubscriptionPlan
+  billingCycle: BillingCycle
+  paymentMethod: string
+  storeName: string
+  activity: Activity
+  password: string
 }

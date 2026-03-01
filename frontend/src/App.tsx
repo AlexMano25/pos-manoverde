@@ -19,6 +19,7 @@ import OrdersPage from './pages/OrdersPage'
 import StockPage from './pages/StockPage'
 import EmployeesPage from './pages/EmployeesPage'
 import SettingsPage from './pages/SettingsPage'
+import RegistrationPage from './pages/RegistrationPage'
 
 function AppContent() {
   const { section, activity, currentStore } = useAppStore()
@@ -84,7 +85,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity } = useAppStore()
+  const { activity, registrationMode } = useAppStore()
   const { user, token } = useAuthStore()
 
   const isPublicAccess = !activity && !user && !token
@@ -101,6 +102,10 @@ export default function App() {
 
   if (isLanding) {
     return <LandingPage />
+  }
+
+  if (registrationMode && !user) {
+    return <RegistrationPage />
   }
 
   if (!activity) {

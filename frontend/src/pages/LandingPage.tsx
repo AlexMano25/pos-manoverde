@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useLanguageStore } from '../stores/languageStore'
+import { useAppStore } from '../stores/appStore'
 import { languages } from '../i18n/types'
 import type { Language } from '../i18n/types'
 
@@ -433,9 +434,27 @@ export default function LandingPage() {
     window.location.href = `mailto:${email}`
   }
 
+  const handlePlanSelect = (plan: 'starter' | 'pro') => {
+    const appStore = useAppStore.getState()
+    appStore.setSelectedPlan(plan)
+    appStore.setRegistrationMode(true)
+    // Remove body app-mode if present
+    document.body.classList.remove('app-mode')
+    // Trigger the app flow
+    localStorage.setItem('pos-app-store', JSON.stringify({
+      state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: plan, registrationMode: true },
+      version: 0,
+    }))
+    window.location.reload()
+  }
+
   const handlePlanCTA = (planId: string) => {
     if (planId === 'enterprise') {
       handleContact('direction@manovende.com')
+    } else if (planId === 'starter') {
+      handlePlanSelect('starter')
+    } else if (planId === 'pro') {
+      handlePlanSelect('pro')
     } else {
       handleStartApp()
     }

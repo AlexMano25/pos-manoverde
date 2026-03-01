@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Activity, ConnectionStatus, Mode, Store } from '../types'
+import type { Activity, ConnectionStatus, Mode, Store, SubscriptionPlan } from '../types'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +11,8 @@ interface AppState {
   section: string
   connectionStatus: ConnectionStatus
   serverUrl: string
+  selectedPlan: SubscriptionPlan | null
+  registrationMode: boolean
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -22,6 +24,8 @@ interface AppActions {
   setSection: (section: string) => void
   setConnectionStatus: (status: ConnectionStatus) => void
   setServerUrl: (url: string) => void
+  setSelectedPlan: (plan: SubscriptionPlan | null) => void
+  setRegistrationMode: (mode: boolean) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -36,6 +40,8 @@ export const useAppStore = create<AppState & AppActions>()(
       section: 'dashboard',
       connectionStatus: 'offline',
       serverUrl: '',
+      selectedPlan: null,
+      registrationMode: false,
 
       // Actions
       setMode: (mode) => set({ mode }),
@@ -44,6 +50,8 @@ export const useAppStore = create<AppState & AppActions>()(
       setSection: (section) => set({ section }),
       setConnectionStatus: (status) => set({ connectionStatus: status }),
       setServerUrl: (url) => set({ serverUrl: url }),
+      setSelectedPlan: (plan) => set({ selectedPlan: plan }),
+      setRegistrationMode: (mode) => set({ registrationMode: mode }),
     }),
     {
       name: 'pos-app-store',
@@ -51,6 +59,8 @@ export const useAppStore = create<AppState & AppActions>()(
         mode: state.mode,
         activity: state.activity,
         serverUrl: state.serverUrl,
+        selectedPlan: state.selectedPlan,
+        registrationMode: state.registrationMode,
       }),
     }
   )

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User } from '../types'
+import type { User, RegistrationData } from '../types'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import { useAppStore } from './appStore'
 import { db } from '../db/dexie'
@@ -21,6 +21,7 @@ interface AuthActions {
   logout: () => void
   setUser: (user: User) => void
   loadSession: () => void
+  register: (data: RegistrationData) => Promise<void>
 }
 
 // ── Computed ─────────────────────────────────────────────────────────────────
@@ -211,7 +212,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
 
             // Set app store state (activity and current store)
             const appStore = useAppStore.getState()
-            appStore.setActivity((store.activity || 'restaurant') as Activity)
+            if (!appStore.activity) {
+              appStore.setActivity((store.activity || 'restaurant') as Activity)
+            }
             appStore.setCurrentStore(store)
 
             // Set auth state
@@ -307,7 +310,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
 
             if (store) {
               const appStore = useAppStore.getState()
-              appStore.setActivity((store.activity || 'restaurant') as Activity)
+              if (!appStore.activity) {
+                appStore.setActivity((store.activity || 'restaurant') as Activity)
+              }
               appStore.setCurrentStore(store)
             }
 
@@ -376,6 +381,83 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           localStorage.removeItem('pos-auth-store')
           set({ user: null, token: null })
         }
+      },
+
+      register: async (data: RegistrationData) => {
+        if (!isSupabaseConfigured || !supabase) {
+          throw new Error('Supabase is not configured')
+        }
+
+        // 1. Create Supabase Auth user
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: data.ownerEmail,
+          password: data.password,
+        })
+        if (authError) throw new Error(authError.message)
+        if (!authData.user) throw new Error('Registration failed')
+
+        // 2. Sign in immediately (needed for the RPC call context)
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.ownerEmail,
+          password: data.password,
+        })
+        if (signInError) {
+          // If sign-in fails (e.g. email confirmation required), try proceeding with signup session
+          console.warn('[authStore] Sign-in after signup failed, using signup session')
+        }
+
+        // 3. Call the registration RPC function
+        const { data: result, error: rpcError } = await supabase.rpc('register_organization', {
+          p_org_name: data.orgName,
+          p_owner_name: data.ownerName,
+          p_owner_email: data.ownerEmail,
+          p_owner_phone: data.ownerPhone,
+          p_owner_address: data.ownerAddress,
+          p_plan: data.plan,
+          p_billing_cycle: data.billingCycle,
+          p_payment_method: data.paymentMethod,
+          p_store_name: data.storeName,
+          p_activity: data.activity,
+          p_auth_id: authData.user.id,
+        })
+        if (rpcError) throw new Error(rpcError.message)
+
+        // 4. Fetch the newly created user profile
+        const { data: profile } = await supabase
+          .from('users')
+          .select('id, store_id, name, email, role, pin, phone, is_active, created_at, updated_at')
+          .eq('email', data.ownerEmail)
+          .eq('is_active', true)
+          .single()
+
+        if (!profile) throw new Error('Failed to fetch user profile after registration')
+
+        // 5. Fetch the store
+        const { data: store } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', result.store_id)
+          .single()
+
+        // 6. Set app state
+        const appStore = useAppStore.getState()
+        appStore.setActivity(data.activity)
+        if (store) {
+          appStore.setCurrentStore(store)
+        }
+        appStore.setRegistrationMode(false)
+        appStore.setSelectedPlan(null)
+
+        // 7. Set auth state
+        set({
+          user: profile as User,
+          token: signInData?.session?.access_token ?? authData.session?.access_token ?? 'registered-session',
+        })
+
+        // 8. Load cloud data into IndexedDB (non-blocking)
+        loadCloudDataToIndexedDB(profile.store_id).catch((err) =>
+          console.error('[authStore] Background data load failed:', err),
+        )
       },
     }),
     {

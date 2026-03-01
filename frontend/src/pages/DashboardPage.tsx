@@ -36,6 +36,9 @@ const paymentColors: Record<PaymentMethod, string> = {
   card: '#2563eb',
   momo: '#f59e0b',
   transfer: '#8b5cf6',
+  orange_money: '#f97316',
+  mtn_money: '#eab308',
+  carte_bancaire: '#6366f1',
 }
 
 const statusColors: Record<string, string> = {
@@ -71,6 +74,9 @@ export default function DashboardPage() {
     card: t.pos.card,
     momo: t.pos.momo,
     transfer: t.pos.transfer,
+    orange_money: t.pos.orangeMoney,
+    mtn_money: t.pos.mtnMoney,
+    carte_bancaire: t.pos.carteBancaire,
   }
 
   const statusLabels: Record<string, string> = {
