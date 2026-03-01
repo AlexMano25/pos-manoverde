@@ -69,6 +69,8 @@ function authHeaders(): Record<string, string> {
 
 /**
  * Check if the local server is reachable (quick health check).
+ * Verifies the response is JSON from the actual Express backend,
+ * not an SPA fallback HTML page from Vite/Vercel.
  */
 async function checkLocalServer(): Promise<boolean> {
   const baseUrl = getServerUrl()
@@ -77,11 +79,20 @@ async function checkLocalServer(): Promise<boolean> {
     const timeoutId = setTimeout(() => controller.abort(), 3000)
     const response = await fetch(`${baseUrl}/health`, {
       method: 'GET',
+      headers: { Accept: 'application/json' },
       signal: controller.signal,
       cache: 'no-store',
     })
     clearTimeout(timeoutId)
-    return response.ok
+
+    if (!response.ok) return false
+
+    // Verify response is JSON from backend, not HTML from SPA fallback
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return false
+
+    const data = await response.json()
+    return data && typeof data === 'object' && 'status' in data
   } catch {
     return false
   }

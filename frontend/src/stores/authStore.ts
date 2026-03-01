@@ -122,23 +122,32 @@ async function loadCloudDataToIndexedDB(storeId: string): Promise<void> {
 
 /**
  * Check if the local Express server is reachable (quick 3s timeout).
+ * We call GET /health and verify the JSON response contains { status: 'ok' }
+ * to distinguish a real backend from Vite/Vercel SPA fallback (which returns HTML).
  */
 async function isLocalServerReachable(): Promise<boolean> {
   const baseUrl = getServerUrl()
-  // If baseUrl is just '/api' or empty, it means no explicit server configured
-  // which on the deployed site would point to the Vercel origin (no backend)
   try {
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 3000)
 
-    await fetch(`${baseUrl}/auth/me`, {
-      method: 'HEAD',
+    const response = await fetch(`${baseUrl}/health`, {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
       signal: controller.signal,
     })
 
     clearTimeout(timeoutId)
-    // Even a 401 means the server exists; only network errors mean unreachable
-    return true
+
+    if (!response.ok) return false
+
+    // Verify the response is JSON from the actual backend, not HTML from SPA fallback
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) return false
+
+    const data = await response.json()
+    // The Express backend returns { status: 'ok', ... }
+    return data && typeof data === 'object' && 'status' in data
   } catch {
     return false
   }
