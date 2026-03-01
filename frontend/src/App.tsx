@@ -34,6 +34,11 @@ function AppContent() {
   const storeId = currentStore?.id || user?.store_id || 'default-store'
 
   useEffect(() => {
+    document.body.classList.add('app-mode')
+    return () => { document.body.classList.remove('app-mode') }
+  }, [])
+
+  useEffect(() => {
     loadProducts(storeId)
     loadOrders(storeId)
     countPending()
@@ -82,11 +87,19 @@ export default function App() {
   const { activity } = useAppStore()
   const { user, token } = useAuthStore()
 
-  // Show landing page when accessed from public site with no setup
   const isPublicAccess = !activity && !user && !token
   const hasSetupStarted = localStorage.getItem('pos-app-store')
 
-  if (isPublicAccess && !hasSetupStarted) {
+  const isLanding = isPublicAccess && !hasSetupStarted
+
+  // Remove app-mode class when showing landing/setup/login pages
+  useEffect(() => {
+    if (isLanding) {
+      document.body.classList.remove('app-mode')
+    }
+  }, [isLanding])
+
+  if (isLanding) {
     return <LandingPage />
   }
 

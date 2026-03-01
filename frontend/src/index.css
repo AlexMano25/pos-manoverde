@@ -5,8 +5,19 @@
 }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
+}
+
+/* POS app mode: fixed viewport, no scroll */
+body.app-mode,
+body.app-mode html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.app-mode #root {
+  height: 100%;
   overflow: hidden;
 }
 

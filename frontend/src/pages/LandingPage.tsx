@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useLanguageStore } from '../stores/languageStore'
+import { languages } from '../i18n/types'
+import type { Language } from '../i18n/types'
 
 // ============================================================================
 // POS Mano Verde - Landing / Marketing Page
@@ -121,6 +124,20 @@ const LogoIcon = ({ size = 32 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
     <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+)
+
+const IconArrowUp = ({ size = 20 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5" />
+    <polyline points="5 12 12 5 19 12" />
+  </svg>
+)
+
+const IconMail = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="M22 7l-10 7L2 7" />
   </svg>
 )
 
@@ -385,6 +402,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     >
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         style={{
           width: '100%',
           display: 'flex',
@@ -439,12 +457,156 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 
 
 // ---------------------------------------------------------------------------
+// Landing Page Language Selector (light-aware variant)
+// ---------------------------------------------------------------------------
+function LandingLanguageSelector({ scrolled }: { scrolled: boolean }) {
+  const { language, setLanguage } = useLanguageStore()
+  const [isOpen, setIsOpen] = useState(false)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  const currentLang = languages.find((l) => l.code === language) ?? languages[0]
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => { document.removeEventListener('mousedown', handleClickOutside) }
+  }, [isOpen])
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
+  const selectLanguage = useCallback((lang: Language) => {
+    setLanguage(lang)
+    setIsOpen(false)
+  }, [setLanguage])
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={`Language: ${currentLang.nativeName}`}
+        className="landing-lang-btn"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '6px 10px',
+          background: scrolled ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)',
+          border: scrolled ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.2)',
+          borderRadius: 8,
+          cursor: 'pointer',
+          color: scrolled ? '#334155' : 'rgba(255,255,255,0.9)',
+          fontSize: 13,
+          fontWeight: 500,
+          transition: 'all 0.2s ease',
+          outline: 'none',
+          whiteSpace: 'nowrap',
+          fontFamily: 'inherit',
+        }}
+      >
+        <span style={{ fontSize: 16, lineHeight: 1 }}>{currentLang.flag}</span>
+        <span style={{ textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: 11, fontWeight: 600 }}>
+          {currentLang.code}
+        </span>
+        <span style={{
+          fontSize: 10,
+          opacity: 0.6,
+          transition: 'transform 0.2s ease',
+          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+        }}>
+          &#9660;
+        </span>
+      </button>
+
+      {isOpen && (
+        <div
+          role="listbox"
+          aria-label="Select language"
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            right: 0,
+            minWidth: 200,
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 10,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+            overflow: 'hidden',
+            zIndex: 9999,
+            padding: 4,
+            animation: 'fadeIn 0.15s ease',
+          }}
+        >
+          {languages.map((lang, index) => {
+            const isActive = lang.code === language
+            const isHovered = hoveredIndex === index
+
+            return (
+              <button
+                key={lang.code}
+                role="option"
+                aria-selected={isActive}
+                onClick={() => selectLanguage(lang.code)}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  borderRadius: 6,
+                  transition: 'background 0.15s ease',
+                  border: 'none',
+                  background: isActive ? 'rgba(37,99,235,0.08)' : isHovered ? 'rgba(0,0,0,0.04)' : 'transparent',
+                  width: '100%',
+                  textAlign: 'left',
+                  color: isActive ? '#2563eb' : '#334155',
+                  fontSize: 13,
+                  outline: 'none',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{lang.flag}</span>
+                <span style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                  <span style={{ fontWeight: 500, fontSize: 13, lineHeight: 1.3 }}>{lang.nativeName}</span>
+                  <span style={{ fontSize: 11, opacity: 0.5, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang.code}</span>
+                </span>
+                {isActive && <span style={{ fontSize: 14, color: '#2563eb', flexShrink: 0 }}>&#10003;</span>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+// ---------------------------------------------------------------------------
 // Main Landing Page Component
 // ---------------------------------------------------------------------------
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [billingYearly, setBillingYearly] = useState(false)
   const [headerScrolled, setHeaderScrolled] = useState(false)
+  const [showScrollTop, setShowScrollTop] = useState(false)
 
   // Animated counters for hero stats
   const stat1 = useCountUp(500, 2000)
@@ -453,16 +615,38 @@ export default function LandingPage() {
   useEffect(() => {
     const handleScroll = () => {
       setHeaderScrolled(window.scrollY > 20)
+      setShowScrollTop(window.scrollY > 600)
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false)
     const el = document.getElementById(id)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const handleStartApp = () => {
+    localStorage.setItem('pos-app-store', JSON.stringify({ state: { mode: 'server', activity: null, serverUrl: '' }, version: 0 }))
+    window.location.reload()
+  }
+
+  const handleContact = (email: string) => {
+    window.location.href = `mailto:${email}`
+  }
+
+  const handlePlanCTA = (planId: string) => {
+    if (planId === 'enterprise') {
+      handleContact('direction@manovande.com')
+    } else {
+      handleStartApp()
     }
   }
 
@@ -499,14 +683,6 @@ export default function LandingPage() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-  }
-
-  const logoStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    textDecoration: 'none',
-    cursor: 'pointer',
   }
 
   const logoIconContainerStyle: React.CSSProperties = {
@@ -554,6 +730,7 @@ export default function LandingPage() {
     transition: 'all 0.2s',
     textDecoration: 'none',
     whiteSpace: 'nowrap',
+    fontFamily: pageFont,
   }
 
   // -- Section container
@@ -594,7 +771,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: pageFont, color: '#0f172a', overflowX: 'hidden' }}>
 
       {/* ================================================================
-          KEYFRAME ANIMATIONS
+          KEYFRAME ANIMATIONS + RESPONSIVE CSS
           ================================================================ */}
       <style>{`
         @keyframes fadeInUp {
@@ -634,38 +811,242 @@ export default function LandingPage() {
         * { box-sizing: border-box; }
         body { margin: 0; padding: 0; }
 
-        @media (max-width: 768px) {
-          .landing-nav-links { display: none !important; }
-          .landing-nav-cta-desktop { display: none !important; }
-          .landing-mobile-toggle { display: flex !important; }
-          .landing-hero-stats { flex-direction: column !important; gap: 12px !important; }
-          .landing-features-grid { grid-template-columns: 1fr !important; }
-          .landing-steps-grid { grid-template-columns: 1fr !important; }
-          .landing-pricing-grid { grid-template-columns: 1fr !important; }
-          .landing-testimonials-grid { grid-template-columns: 1fr !important; }
-          .landing-footer-grid { grid-template-columns: 1fr !important; text-align: center; }
-          .landing-footer-bottom { flex-direction: column !important; gap: 12px !important; text-align: center !important; }
-          .landing-hero-content { text-align: center !important; }
-          .landing-hero-buttons { justify-content: center !important; }
-          .landing-hero-inner { flex-direction: column !important; }
-          .landing-hero-left { max-width: 100% !important; }
-          .landing-hero-right { display: none !important; }
-          .landing-billing-toggle-container { flex-direction: column !important; align-items: center !important; }
+        /* ---- Focus-visible for all interactive elements ---- */
+        .landing-page-root button:focus-visible,
+        .landing-page-root a:focus-visible {
+          outline: 2px solid #2563eb;
+          outline-offset: 2px;
+          border-radius: 4px;
         }
-        @media (min-width: 769px) and (max-width: 1024px) {
-          .landing-features-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-testimonials-grid { grid-template-columns: 1fr !important; }
+
+        .landing-lang-btn:hover {
+          opacity: 0.85;
+        }
+
+        /* ---- Mobile-first responsive ---- */
+        /* Base (mobile): single column everywhere */
+        .landing-nav-links { display: none !important; }
+        .landing-nav-cta-desktop { display: none !important; }
+        .landing-mobile-toggle { display: flex !important; }
+
+        .landing-hero-inner {
+          flex-direction: column !important;
+        }
+        .landing-hero-left {
+          max-width: 100% !important;
+        }
+        .landing-hero-right {
+          display: none !important;
+        }
+        .landing-hero-content {
+          text-align: center !important;
+        }
+        .landing-hero-buttons {
+          justify-content: center !important;
+        }
+        .landing-hero-stats {
+          flex-direction: column !important;
+          gap: 16px !important;
+          align-items: center !important;
+        }
+        .landing-hero-stats-divider {
+          display: none !important;
+        }
+
+        .landing-features-grid {
+          grid-template-columns: 1fr !important;
+        }
+        .landing-steps-grid {
+          grid-template-columns: 1fr !important;
+        }
+        .landing-step-connector {
+          display: none !important;
+        }
+        .landing-pricing-grid {
+          grid-template-columns: 1fr !important;
+        }
+        .landing-testimonials-grid {
+          grid-template-columns: 1fr !important;
+        }
+        .landing-footer-grid {
+          grid-template-columns: 1fr !important;
+          text-align: center;
+        }
+        .landing-footer-bottom {
+          flex-direction: column !important;
+          gap: 12px !important;
+          text-align: center !important;
+        }
+        .landing-social-links {
+          justify-content: center !important;
+        }
+        .landing-billing-toggle-container {
+          flex-direction: column !important;
+          align-items: center !important;
+        }
+        .landing-hero-trust-badge-text {
+          font-size: 12px !important;
+        }
+        .landing-section-padding {
+          padding: 64px 16px !important;
+        }
+
+        /* ---- Tablet: min-width 600px ---- */
+        @media (min-width: 600px) {
+          .landing-features-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .landing-pricing-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .landing-testimonials-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .landing-footer-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .landing-section-padding {
+            padding: 80px 24px !important;
+          }
+          .landing-billing-toggle-container {
+            flex-direction: row !important;
+          }
+          .landing-hero-stats {
+            flex-direction: row !important;
+            gap: 32px !important;
+            align-items: center !important;
+          }
+          .landing-hero-stats-divider {
+            display: block !important;
+          }
+        }
+
+        /* ---- Desktop: min-width 1024px ---- */
+        @media (min-width: 1024px) {
+          .landing-nav-links { display: flex !important; }
+          .landing-nav-cta-desktop { display: flex !important; }
+          .landing-mobile-toggle { display: none !important; }
+
+          .landing-hero-inner {
+            flex-direction: row !important;
+          }
+          .landing-hero-left {
+            max-width: 640px !important;
+          }
+          .landing-hero-right {
+            display: flex !important;
+          }
+          .landing-hero-content {
+            text-align: left !important;
+          }
+          .landing-hero-buttons {
+            justify-content: flex-start !important;
+          }
+          .landing-hero-stats {
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+          }
+
+          .landing-features-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .landing-steps-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .landing-step-connector {
+            display: block !important;
+          }
+          .landing-pricing-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
+          .landing-testimonials-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+          .landing-footer-grid {
+            grid-template-columns: 2fr 1fr 1fr 1fr !important;
+            text-align: left;
+          }
+          .landing-footer-bottom {
+            flex-direction: row !important;
+            text-align: left !important;
+          }
+          .landing-social-links {
+            justify-content: flex-start !important;
+          }
+          .landing-section-padding {
+            padding: 96px 24px !important;
+          }
+        }
+
+        /* ---- Scroll-to-top button ---- */
+        .landing-scroll-top {
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          z-index: 999;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          border: none;
+          background: #2563eb;
+          color: #ffffff;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+          transition: all 0.3s ease;
+          opacity: 0;
+          transform: translateY(20px);
+          pointer-events: none;
+        }
+        .landing-scroll-top.visible {
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: auto;
+        }
+        .landing-scroll-top:hover {
+          background: #1d4ed8;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 24px rgba(37,99,235,0.45);
+        }
+        .landing-scroll-top.visible:hover {
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 599px) {
+          .landing-scroll-top {
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+          }
         }
       `}</style>
+
+      <div className="landing-page-root">
 
       {/* ================================================================
           HEADER / NAVBAR
           ================================================================ */}
       <header style={headerStyle}>
-        <nav style={navContainerStyle}>
-          {/* Logo */}
-          <div style={logoStyle} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <nav style={navContainerStyle} aria-label="Main navigation">
+          {/* Logo - accessible link */}
+          <a
+            href="#top"
+            onClick={(e) => {
+              e.preventDefault()
+              scrollToTop()
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              textDecoration: 'none',
+              cursor: 'pointer',
+            }}
+            aria-label="POS Mano Verde - Retour en haut"
+          >
             <div style={logoIconContainerStyle}>
               <LogoIcon size={20} />
             </div>
@@ -677,30 +1058,36 @@ export default function LandingPage() {
             }}>
               POS Mano Verde
             </span>
-          </div>
+          </a>
 
           {/* Desktop nav links */}
           <ul className="landing-nav-links" style={navLinksStyle}>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('features')}>Fonctionnalites</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('how-it-works')}>Comment ca marche</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('pricing')}>Tarifs</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('testimonials')}>Temoignages</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('faq')}>FAQ</button></li>
+            <li><button style={navLinkStyle} onClick={() => scrollToSection('features')} aria-label="Voir les fonctionnalites">Fonctionnalites</button></li>
+            <li><button style={navLinkStyle} onClick={() => scrollToSection('how-it-works')} aria-label="Voir comment ca marche">Comment ca marche</button></li>
+            <li><button style={navLinkStyle} onClick={() => scrollToSection('pricing')} aria-label="Voir les tarifs">Tarifs</button></li>
+            <li><button style={navLinkStyle} onClick={() => scrollToSection('testimonials')} aria-label="Voir les temoignages">Temoignages</button></li>
+            <li><button style={navLinkStyle} onClick={() => scrollToSection('faq')} aria-label="Voir la FAQ">FAQ</button></li>
           </ul>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA + Language Selector */}
           <div className="landing-nav-cta-desktop" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LandingLanguageSelector scrolled={headerScrolled} />
             <button
               style={{
                 ...navLinkStyle,
                 color: headerScrolled ? '#2563eb' : '#ffffff',
                 fontWeight: 600,
               }}
-              onClick={() => scrollToSection('pricing')}
+              onClick={handleStartApp}
+              aria-label="Se connecter"
             >
               Connexion
             </button>
-            <button style={navCTAStyle} onClick={() => scrollToSection('pricing')}>
+            <button
+              style={navCTAStyle}
+              onClick={handleStartApp}
+              aria-label="Commencer a utiliser POS Mano Verde"
+            >
               Commencer
             </button>
           </div>
@@ -719,6 +1106,8 @@ export default function LandingPage() {
               padding: 4,
             }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <IconXClose /> : <IconMenu />}
           </button>
@@ -736,6 +1125,11 @@ export default function LandingPage() {
             padding: '16px 24px 24px',
             animation: 'fadeIn 0.2s ease',
           }}>
+            {/* Mobile language selector at top */}
+            <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <LandingLanguageSelector scrolled={true} />
+            </div>
+
             {['features', 'how-it-works', 'pricing', 'testimonials', 'faq'].map((id) => (
               <button
                 key={id}
@@ -762,16 +1156,49 @@ export default function LandingPage() {
                 {id === 'faq' && 'FAQ'}
               </button>
             ))}
+
+            {/* Mobile Connexion button */}
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '14px 20px',
+                marginTop: 12,
+                borderRadius: 8,
+                border: '2px solid #2563eb',
+                backgroundColor: 'transparent',
+                color: '#2563eb',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: 'pointer',
+                textAlign: 'center',
+                fontFamily: pageFont,
+              }}
+              onClick={() => {
+                setMobileMenuOpen(false)
+                handleStartApp()
+              }}
+              aria-label="Se connecter"
+            >
+              Connexion
+            </button>
+
+            {/* Mobile Commencer button */}
             <button
               style={{
                 ...navCTAStyle,
                 width: '100%',
-                marginTop: 16,
+                marginTop: 8,
                 padding: '14px 20px',
                 fontSize: 15,
                 textAlign: 'center',
+                display: 'block',
               }}
-              onClick={() => scrollToSection('pricing')}
+              onClick={() => {
+                setMobileMenuOpen(false)
+                handleStartApp()
+              }}
+              aria-label="Commencer a utiliser POS Mano Verde"
             >
               Commencer gratuitement
             </button>
@@ -782,7 +1209,7 @@ export default function LandingPage() {
       {/* ================================================================
           HERO SECTION
           ================================================================ */}
-      <section style={{
+      <section id="top" style={{
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #1e40af 60%, #2563eb 100%)',
         backgroundSize: '200% 200%',
@@ -850,13 +1277,13 @@ export default function LandingPage() {
                   border: '1px solid rgba(255,255,255,0.15)',
                 }}>
                   <IconShield />
-                  <span style={{ color: '#ffffff', fontSize: 13, fontWeight: 500 }}>
+                  <span className="landing-hero-trust-badge-text" style={{ color: '#ffffff', fontSize: 13, fontWeight: 500 }}>
                     Solution certifiee - Fonctionne 100% hors-ligne
                   </span>
                 </div>
 
                 <h1 style={{
-                  fontSize: 'clamp(36px, 5.5vw, 60px)',
+                  fontSize: 'clamp(32px, 5.5vw, 60px)',
                   fontWeight: 800,
                   color: '#ffffff',
                   lineHeight: 1.1,
@@ -873,7 +1300,7 @@ export default function LandingPage() {
                   }}>
                     intelligent
                   </span>
-                  {' '}pour l'Afrique
+                  {' '}pour l&apos;Afrique
                 </h1>
 
                 <p style={{
@@ -908,8 +1335,9 @@ export default function LandingPage() {
                       gap: 10,
                       transition: 'all 0.3s ease',
                       boxShadow: '0 4px 24px rgba(22,163,74,0.4)',
+                      fontFamily: pageFont,
                     }}
-                    onClick={() => scrollToSection('pricing')}
+                    onClick={handleStartApp}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-2px)'
                       e.currentTarget.style.boxShadow = '0 8px 32px rgba(22,163,74,0.5)'
@@ -918,6 +1346,7 @@ export default function LandingPage() {
                       e.currentTarget.style.transform = 'translateY(0)'
                       e.currentTarget.style.boxShadow = '0 4px 24px rgba(22,163,74,0.4)'
                     }}
+                    aria-label="Commencer gratuitement"
                   >
                     Commencer gratuitement
                     <IconArrowRight size={18} />
@@ -937,7 +1366,9 @@ export default function LandingPage() {
                       gap: 10,
                       transition: 'all 0.3s ease',
                       backdropFilter: 'blur(4px)',
+                      fontFamily: pageFont,
                     }}
+                    onClick={() => scrollToSection('features')}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
@@ -946,6 +1377,7 @@ export default function LandingPage() {
                       e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
                     }}
+                    aria-label="Voir la demo"
                   >
                     <IconPlay size={16} />
                     Voir la demo
@@ -964,14 +1396,14 @@ export default function LandingPage() {
                       Commercants<br />actifs
                     </span>
                   </div>
-                  <div style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
+                  <div className="landing-hero-stats-divider" style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
                   <div ref={stat2.ref} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 800, color: '#22d3ee' }}>{stat2.count}</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
                       Pays<br />en Afrique
                     </span>
                   </div>
-                  <div style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
+                  <div className="landing-hero-stats-divider" style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 800, color: '#ffffff' }}>99.9%</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
@@ -993,6 +1425,7 @@ export default function LandingPage() {
                 width: 380,
                 maxWidth: '100%',
                 animation: 'float 6s ease-in-out infinite',
+                position: 'relative',
               }}>
                 {/* Mock phone / tablet with POS UI */}
                 <div style={{
@@ -1199,7 +1632,7 @@ export default function LandingPage() {
           letterSpacing: '0.1em',
           marginBottom: 24,
         }}>
-          Utilise par des commercants dans toute l'Afrique
+          Utilise par des commercants dans toute l&apos;Afrique
         </p>
         <div style={{
           display: 'flex',
@@ -1225,7 +1658,7 @@ export default function LandingPage() {
       {/* ================================================================
           FEATURES SECTION
           ================================================================ */}
-      <section id="features" style={sectionStyle('#ffffff')}>
+      <section id="features" className="landing-section-padding" style={sectionStyle('#ffffff')}>
         <div style={containerStyle}>
           <p style={{
             textAlign: 'center',
@@ -1240,7 +1673,7 @@ export default function LandingPage() {
           </p>
           <h2 style={sectionTitleStyle}>Pourquoi POS Mano Verde ?</h2>
           <p style={sectionSubtitleStyle}>
-            Une solution de caisse pensee pour les realites africaines. Pas d'internet ? Pas de probleme.
+            Une solution de caisse pensee pour les realites africaines. Pas d&apos;internet ? Pas de probleme.
           </p>
 
           <div className="landing-features-grid" style={{
@@ -1310,7 +1743,7 @@ export default function LandingPage() {
       {/* ================================================================
           HOW IT WORKS
           ================================================================ */}
-      <section id="how-it-works" style={{
+      <section id="how-it-works" className="landing-section-padding" style={{
         ...sectionStyle('#f8fafc'),
         background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
       }}>
@@ -1420,7 +1853,7 @@ export default function LandingPage() {
       {/* ================================================================
           PRICING SECTION
           ================================================================ */}
-      <section id="pricing" style={sectionStyle('#ffffff')}>
+      <section id="pricing" className="landing-section-padding" style={sectionStyle('#ffffff')}>
         <div style={containerStyle}>
           <p style={{
             textAlign: 'center',
@@ -1456,6 +1889,7 @@ export default function LandingPage() {
             </span>
             <button
               onClick={() => setBillingYearly(!billingYearly)}
+              aria-label={billingYearly ? 'Passer au paiement mensuel' : 'Passer au paiement annuel'}
               style={{
                 width: 52,
                 height: 28,
@@ -1668,6 +2102,8 @@ export default function LandingPage() {
 
                   {/* CTA button */}
                   <button
+                    onClick={() => handlePlanCTA(plan.id)}
+                    aria-label={plan.cta}
                     style={{
                       width: '100%',
                       padding: '14px 20px',
@@ -1686,6 +2122,7 @@ export default function LandingPage() {
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       marginBottom: 24,
+                      fontFamily: pageFont,
                     }}
                     onMouseEnter={(e) => {
                       if (plan.ctaVariant === 'solid') {
@@ -1745,6 +2182,7 @@ export default function LandingPage() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 10,
+            flexWrap: 'wrap',
           }}>
             <div style={{
               width: 40,
@@ -1755,6 +2193,7 @@ export default function LandingPage() {
               alignItems: 'center',
               justifyContent: 'center',
               color: '#16a34a',
+              flexShrink: 0,
             }}>
               <IconShield />
             </div>
@@ -1763,7 +2202,7 @@ export default function LandingPage() {
                 Satisfait ou rembourse 30 jours
               </p>
               <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-                Testez sans risque. Si vous n'etes pas satisfait, nous vous remboursons integralement.
+                Testez sans risque. Si vous n&apos;etes pas satisfait, nous vous remboursons integralement.
               </p>
             </div>
           </div>
@@ -1803,7 +2242,7 @@ export default function LandingPage() {
       {/* ================================================================
           TESTIMONIALS
           ================================================================ */}
-      <section id="testimonials" style={{
+      <section id="testimonials" className="landing-section-padding" style={{
         ...sectionStyle('#f8fafc'),
         background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
       }}>
@@ -1867,7 +2306,7 @@ export default function LandingPage() {
                   flex: 1,
                   fontStyle: 'italic',
                 }}>
-                  "{testimonial.text}"
+                  &ldquo;{testimonial.text}&rdquo;
                 </p>
 
                 {/* Author */}
@@ -1905,7 +2344,7 @@ export default function LandingPage() {
       {/* ================================================================
           FAQ SECTION
           ================================================================ */}
-      <section id="faq" style={sectionStyle('#ffffff')}>
+      <section id="faq" className="landing-section-padding" style={sectionStyle('#ffffff')}>
         <div style={{ ...containerStyle, maxWidth: 768 }}>
           <p style={{
             textAlign: 'center',
@@ -1940,13 +2379,15 @@ export default function LandingPage() {
             borderRadius: 16,
           }}>
             <p style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', margin: '0 0 8px' }}>
-              Vous avez d'autres questions ?
+              Vous avez d&apos;autres questions ?
             </p>
             <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 16px' }}>
               Notre equipe est disponible pour vous repondre.
             </p>
-            <button
+            <a
+              href="mailto:infos@manovande.com"
               style={{
+                display: 'inline-block',
                 padding: '12px 28px',
                 borderRadius: 10,
                 border: '2px solid #2563eb',
@@ -1956,6 +2397,7 @@ export default function LandingPage() {
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s',
+                textDecoration: 'none',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#2563eb'
@@ -1965,9 +2407,10 @@ export default function LandingPage() {
                 e.currentTarget.style.backgroundColor = 'transparent'
                 e.currentTarget.style.color = '#2563eb'
               }}
+              aria-label="Nous contacter par email"
             >
               Nous contacter
-            </button>
+            </a>
           </div>
         </div>
       </section>
@@ -2025,6 +2468,8 @@ export default function LandingPage() {
           </p>
 
           <button
+            onClick={handleStartApp}
+            aria-label="Commencer gratuitement"
             style={{
               padding: '18px 40px',
               borderRadius: 14,
@@ -2040,6 +2485,7 @@ export default function LandingPage() {
               transition: 'all 0.3s ease',
               boxShadow: '0 4px 24px rgba(22,163,74,0.4)',
               marginBottom: 16,
+              fontFamily: pageFont,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)'
@@ -2099,8 +2545,48 @@ export default function LandingPage() {
               <p style={{ fontSize: 14, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 320 }}>
                 La solution de caisse intelligente concue pour les commercants africains. Fonctionnement hors-ligne, synchronisation automatique et impression Bluetooth.
               </p>
+
+              {/* Contact emails */}
+              <div style={{ marginBottom: 20 }}>
+                <a
+                  href="mailto:direction@manovande.com"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#94a3b8',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    marginBottom: 8,
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                >
+                  <IconMail size={14} />
+                  direction@manovande.com
+                </a>
+                <a
+                  href="mailto:infos@manovande.com"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    color: '#94a3b8',
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                >
+                  <IconMail size={14} />
+                  infos@manovande.com
+                </a>
+              </div>
+
               {/* Social links */}
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="landing-social-links" style={{ display: 'flex', gap: 12 }}>
                 {['Facebook', 'Twitter', 'LinkedIn', 'WhatsApp'].map((social) => (
                   <span
                     key={social}
@@ -2119,6 +2605,8 @@ export default function LandingPage() {
                       transition: 'all 0.2s',
                     }}
                     title={social}
+                    role="link"
+                    tabIndex={0}
                   >
                     {social.charAt(0)}
                   </span>
@@ -2176,17 +2664,33 @@ export default function LandingPage() {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {['Centre d\'aide', 'Contact', 'Communaute', 'Statut du service', 'Tutoriels'].map((link) => (
                   <li key={link} style={{ marginBottom: 12 }}>
-                    <button
-                      style={{
-                        background: 'none', border: 'none', color: '#94a3b8',
-                        fontSize: 14, cursor: 'pointer', padding: 0,
-                        fontFamily: pageFont, transition: 'color 0.2s',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
-                    >
-                      {link}
-                    </button>
+                    {link === 'Contact' ? (
+                      <a
+                        href="mailto:infos@manovande.com"
+                        style={{
+                          background: 'none', border: 'none', color: '#94a3b8',
+                          fontSize: 14, cursor: 'pointer', padding: 0,
+                          fontFamily: pageFont, transition: 'color 0.2s',
+                          textDecoration: 'none',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                      >
+                        {link}
+                      </a>
+                    ) : (
+                      <button
+                        style={{
+                          background: 'none', border: 'none', color: '#94a3b8',
+                          fontSize: 14, cursor: 'pointer', padding: 0,
+                          fontFamily: pageFont, transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                      >
+                        {link}
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -2256,6 +2760,20 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* ================================================================
+          SCROLL TO TOP BUTTON
+          ================================================================ */}
+      <button
+        className={`landing-scroll-top ${showScrollTop ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        aria-label="Retour en haut de la page"
+        tabIndex={showScrollTop ? 0 : -1}
+      >
+        <IconArrowUp size={20} />
+      </button>
+
+      </div>{/* end .landing-page-root */}
     </div>
   )
 }
