@@ -13,6 +13,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import { db } from '../db/dexie'
 import type { User, UserRole } from '../types'
+import { generateUUID } from '../utils/uuid'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -155,7 +156,7 @@ export default function EmployeesPage() {
         })
       } else {
         const newUser: User = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           store_id: currentStore.id,
           name: form.name.trim(),
           email: form.email.trim(),

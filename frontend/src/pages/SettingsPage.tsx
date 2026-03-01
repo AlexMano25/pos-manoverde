@@ -14,8 +14,10 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
+import { useLanguageStore } from '../stores/languageStore'
 import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
+import QRCodeDisplay from '../components/common/QRCodeDisplay'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -51,6 +53,8 @@ export default function SettingsPage() {
     countPending,
     syncToServer,
   } = useSyncStore()
+
+  const { t, language } = useLanguageStore()
 
   // Store info form
   const [storeName, setStoreName] = useState(currentStore?.name || '')
@@ -117,8 +121,10 @@ export default function SettingsPage() {
   }
 
   const handlePrinterTest = () => {
-    alert('Test d\'impression - Fonctionnalite bientot disponible. Assurez-vous que votre imprimante Bluetooth est connectee.')
+    alert(t.printer.notSupported)
   }
+
+  const locale = language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : language === 'de' ? 'de-DE' : language === 'it' ? 'it-IT' : language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'fr-FR'
 
   // ── Styles ───────────────────────────────────────────────────────────────
 
@@ -274,16 +280,19 @@ export default function SettingsPage() {
   }
 
   const connectionStatusMap: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-    online: { label: 'Connecte', color: C.success, icon: <Wifi size={14} /> },
-    offline: { label: 'Hors ligne', color: C.danger, icon: <WifiOff size={14} /> },
-    'local-only': { label: 'Mode local', color: C.warning, icon: <WifiOff size={14} /> },
+    online: { label: t.sync.online, color: C.success, icon: <Wifi size={14} /> },
+    offline: { label: t.sync.offline, color: C.danger, icon: <WifiOff size={14} /> },
+    'local-only': { label: t.sync.localOnly, color: C.warning, icon: <WifiOff size={14} /> },
   }
 
   const currentConnectionStatus = connectionStatusMap[connectionStatus] || connectionStatusMap['offline']
 
+  // Build server URL for QR code
+  const qrUrl = serverUrl || (typeof window !== 'undefined' ? window.location.origin : '')
+
   return (
     <div style={pageStyle}>
-      <h1 style={titleStyle}>Parametres</h1>
+      <h1 style={titleStyle}>{t.settings.title}</h1>
 
       {/* ── Store Info ──────────────────────────────────────────────── */}
       <div style={sectionCardStyle}>
@@ -292,13 +301,13 @@ export default function SettingsPage() {
             <Store size={18} color={C.primary} />
           </div>
           <div>
-            <h3 style={sectionTitleStyle}>Informations du magasin</h3>
-            <p style={sectionDescStyle}>Nom, adresse et telephone du magasin</p>
+            <h3 style={sectionTitleStyle}>{t.settings.storeInfo}</h3>
+            <p style={sectionDescStyle}>{t.settings.storeInfoDesc}</p>
           </div>
         </div>
 
         <div style={fieldStyle}>
-          <label style={labelStyle}>Nom du magasin</label>
+          <label style={labelStyle}>{t.setup.storeName}</label>
           <input
             style={inputStyle}
             type="text"
@@ -312,7 +321,7 @@ export default function SettingsPage() {
         </div>
 
         <div style={fieldStyle}>
-          <label style={labelStyle}>Adresse</label>
+          <label style={labelStyle}>{t.common.address}</label>
           <input
             style={inputStyle}
             type="text"
@@ -326,7 +335,7 @@ export default function SettingsPage() {
         </div>
 
         <div style={fieldStyle}>
-          <label style={labelStyle}>Telephone</label>
+          <label style={labelStyle}>{t.common.phone}</label>
           <input
             style={inputStyle}
             type="tel"
@@ -345,16 +354,16 @@ export default function SettingsPage() {
             onClick={handleSaveStore}
           >
             {storeSaved ? (
-              <><CheckCircle2 size={16} /> Sauvegarde !</>
+              <><CheckCircle2 size={16} /> {t.common.success}</>
             ) : (
-              <><Save size={16} /> Sauvegarder</>
+              <><Save size={16} /> {t.common.save}</>
             )}
           </button>
         )}
 
         {mode === 'client' && (
           <p style={{ fontSize: 12, color: C.textSecondary, margin: '8px 0 0', fontStyle: 'italic' }}>
-            Les informations du magasin sont gerees par le serveur.
+            {t.employees.serverModeMessage}
           </p>
         )}
       </div>
@@ -366,8 +375,8 @@ export default function SettingsPage() {
             {connectionStatus === 'online' ? <Wifi size={18} color={C.success} /> : <WifiOff size={18} color={C.danger} />}
           </div>
           <div>
-            <h3 style={sectionTitleStyle}>Connexion</h3>
-            <p style={sectionDescStyle}>Configuration du serveur backend</p>
+            <h3 style={sectionTitleStyle}>{t.settings.connection}</h3>
+            <p style={sectionDescStyle}>{t.settings.connectionDesc}</p>
           </div>
         </div>
 
@@ -379,7 +388,7 @@ export default function SettingsPage() {
         </div>
 
         <div style={fieldStyle}>
-          <label style={labelStyle}>URL du serveur</label>
+          <label style={labelStyle}>{t.auth.serverUrl}</label>
           <div style={inputRowStyle}>
             <input
               style={{ ...inputStyle, flex: 1 }}
@@ -391,7 +400,7 @@ export default function SettingsPage() {
               placeholder="http://192.168.1.100:3000/api"
             />
             <button style={outlineBtnStyle} onClick={handleSaveServerUrl}>
-              <Save size={14} /> Sauver
+              <Save size={14} /> {t.common.save}
             </button>
           </div>
         </div>
@@ -403,24 +412,31 @@ export default function SettingsPage() {
             disabled={testingConnection}
           >
             {testingConnection ? (
-              <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Test en cours...</>
+              <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {t.common.loading}</>
             ) : (
-              <><Wifi size={16} /> Tester la connexion</>
+              <><Wifi size={16} /> {t.auth.testConnection}</>
             )}
           </button>
 
           {connectionResult === 'success' && (
             <span style={statusBadgeStyle(C.success)}>
-              <CheckCircle2 size={14} /> Connexion reussie
+              <CheckCircle2 size={14} /> {t.auth.connectionSuccess}
             </span>
           )}
           {connectionResult === 'error' && (
             <span style={statusBadgeStyle(C.danger)}>
-              <XCircle size={14} /> Connexion echouee
+              <XCircle size={14} /> {t.auth.connectionFailed}
             </span>
           )}
         </div>
       </div>
+
+      {/* ── QR Code (Server mode only) ──────────────────────────────── */}
+      {mode === 'server' && qrUrl && (
+        <div style={sectionCardStyle}>
+          <QRCodeDisplay url={qrUrl} />
+        </div>
+      )}
 
       {/* ── Printer ────────────────────────────────────────────────── */}
       <div style={sectionCardStyle}>
@@ -429,23 +445,23 @@ export default function SettingsPage() {
             <Printer size={18} color="#8b5cf6" />
           </div>
           <div>
-            <h3 style={sectionTitleStyle}>Imprimante</h3>
-            <p style={sectionDescStyle}>Configuration de l'imprimante thermique Bluetooth</p>
+            <h3 style={sectionTitleStyle}>{t.settings.printer}</h3>
+            <p style={sectionDescStyle}>{t.settings.printerDesc}</p>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <span style={statusBadgeStyle(C.textSecondary)}>
-            <Bluetooth size={14} /> Non connectee
+            <Bluetooth size={14} /> {t.settings.printerDisconnected}
           </span>
         </div>
 
         <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
-          <button style={outlineBtnStyle} onClick={() => alert('Recherche d\'imprimante Bluetooth - Bientot disponible')}>
-            <Bluetooth size={16} /> Rechercher
+          <button style={outlineBtnStyle} onClick={() => alert(t.printer.notSupported)}>
+            <Bluetooth size={16} /> {t.settings.searchPrinter}
           </button>
           <button style={outlineBtnStyle} onClick={handlePrinterTest}>
-            <Printer size={16} /> Test d'impression
+            <Printer size={16} /> {t.settings.testPrint}
           </button>
         </div>
       </div>
@@ -457,13 +473,13 @@ export default function SettingsPage() {
             <RefreshCw size={18} color={C.warning} />
           </div>
           <div>
-            <h3 style={sectionTitleStyle}>Synchronisation</h3>
-            <p style={sectionDescStyle}>Gestion de la synchronisation des donnees</p>
+            <h3 style={sectionTitleStyle}>{t.settings.sync}</h3>
+            <p style={sectionDescStyle}>{t.settings.syncDesc}</p>
           </div>
         </div>
 
         <div style={infoRowStyle}>
-          <span style={infoLabelStyle}>Operations en attente</span>
+          <span style={infoLabelStyle}>{t.settings.pendingItems}</span>
           <span style={{
             ...infoValueStyle,
             color: pendingCount > 0 ? C.warning : C.success,
@@ -475,11 +491,11 @@ export default function SettingsPage() {
         </div>
 
         <div style={{ ...infoRowStyle, borderBottom: 'none' }}>
-          <span style={infoLabelStyle}>Derniere synchronisation</span>
+          <span style={infoLabelStyle}>{t.settings.lastSync}</span>
           <span style={{ ...infoValueStyle, fontFamily: 'inherit' }}>
             {lastSyncAt
-              ? new Date(lastSyncAt).toLocaleString('fr-FR')
-              : 'Jamais'}
+              ? new Date(lastSyncAt).toLocaleString(locale)
+              : t.settings.never}
           </span>
         </div>
 
@@ -490,9 +506,9 @@ export default function SettingsPage() {
             disabled={isSyncing}
           >
             {isSyncing ? (
-              <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Synchronisation...</>
+              <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {t.sync.syncing}</>
             ) : (
-              <><RefreshCw size={16} /> Synchroniser maintenant</>
+              <><RefreshCw size={16} /> {t.settings.syncNow}</>
             )}
           </button>
         </div>
@@ -505,8 +521,8 @@ export default function SettingsPage() {
             <Info size={18} color={C.textSecondary} />
           </div>
           <div>
-            <h3 style={sectionTitleStyle}>A propos</h3>
-            <p style={sectionDescStyle}>Informations sur l'application</p>
+            <h3 style={sectionTitleStyle}>{t.settings.about}</h3>
+            <p style={sectionDescStyle}>{t.settings.aboutDesc}</p>
           </div>
         </div>
 
@@ -516,19 +532,19 @@ export default function SettingsPage() {
         </div>
 
         <div style={infoRowStyle}>
-          <span style={infoLabelStyle}>Version</span>
+          <span style={infoLabelStyle}>{t.common.version}</span>
           <span style={infoValueStyle}>1.0.0</span>
         </div>
 
         <div style={infoRowStyle}>
-          <span style={infoLabelStyle}>Mode</span>
+          <span style={infoLabelStyle}>{t.settings.mode}</span>
           <span style={{ ...infoValueStyle, fontFamily: 'inherit' }}>
-            {mode === 'server' ? 'Serveur' : 'Client'}
+            {mode === 'server' ? t.setup.serverMode : t.setup.clientMode}
           </span>
         </div>
 
         <div style={{ ...infoRowStyle, borderBottom: 'none' }}>
-          <span style={infoLabelStyle}>ID de l'appareil</span>
+          <span style={infoLabelStyle}>{t.settings.deviceId}</span>
           <span style={{ ...infoValueStyle, fontSize: 12 }}>
             {deviceId}
           </span>

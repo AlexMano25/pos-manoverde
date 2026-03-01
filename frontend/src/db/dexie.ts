@@ -7,6 +7,7 @@ import type {
   Store,
   User,
 } from '../types'
+import { generateUUID } from '../utils/uuid'
 
 // ---------------------------------------------------------------------------
 // POS Database -- IndexedDB via Dexie for offline-first storage
@@ -255,7 +256,7 @@ const DEVICE_ID_KEY = 'pos_device_id'
 export function getDeviceId(): string {
   let deviceId = localStorage.getItem(DEVICE_ID_KEY)
   if (!deviceId) {
-    deviceId = crypto.randomUUID()
+    deviceId = generateUUID()
     localStorage.setItem(DEVICE_ID_KEY, deviceId)
   }
   return deviceId

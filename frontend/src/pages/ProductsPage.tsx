@@ -12,6 +12,7 @@ import Modal from '../components/common/Modal'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import type { Product } from '../types'
+import { generateUUID } from '../utils/uuid'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ export default function ProductsPage() {
       } else {
         const now = new Date().toISOString()
         const newProduct: Product = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           store_id: currentStore.id,
           name: form.name.trim(),
           price: parseFloat(form.price),

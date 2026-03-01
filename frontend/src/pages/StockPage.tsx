@@ -15,6 +15,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import { db, getDeviceId } from '../db/dexie'
 import type { Product, StockMove, StockMoveType } from '../types'
+import { generateUUID } from '../utils/uuid'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ export default function StockPage() {
 
       // Create stock move record
       const move: StockMove = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         store_id: currentStore.id,
         product_id: selectedProductId,
         type: moveType as StockMoveType,
@@ -157,7 +158,7 @@ export default function StockPage() {
 
       // Add to sync queue
       await db.sync_queue.add({
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         entity_type: 'stock_move',
         entity_id: move.id,
         operation: 'create',

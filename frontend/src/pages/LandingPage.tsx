@@ -143,216 +143,6 @@ const IconMail = ({ size = 16 }: { size?: number }) => (
 
 
 // ---------------------------------------------------------------------------
-// Data
-// ---------------------------------------------------------------------------
-
-const FEATURES = [
-  {
-    icon: <IconWifiOff />,
-    title: 'Fonctionne hors-ligne',
-    description: 'Vendez meme sans connexion internet. Vos donnees se synchronisent automatiquement des que le reseau revient.',
-  },
-  {
-    icon: <IconStore />,
-    title: 'Multi-boutiques',
-    description: 'Gerez plusieurs points de vente depuis un seul tableau de bord. Vue consolidee de toutes vos boutiques.',
-  },
-  {
-    icon: <IconPrinter />,
-    title: 'Impression Bluetooth',
-    description: 'Imprimez vos tickets de caisse, factures et recus directement via imprimante Bluetooth portable.',
-  },
-  {
-    icon: <IconRefresh />,
-    title: 'Synchronisation automatique',
-    description: 'Les donnees se synchronisent automatiquement entre vos appareils. Tous vos caisses restent a jour en temps reel.',
-  },
-  {
-    icon: <IconGlobe />,
-    title: 'Multi-langues',
-    description: 'Interface disponible en francais et en anglais. Adaptee aux besoins des commercants africains.',
-  },
-  {
-    icon: <IconZap />,
-    title: 'Installation en 2 minutes',
-    description: 'Pas de materiel couteux a acheter. Installez sur votre telephone ou tablette et commencez a vendre.',
-  },
-]
-
-const PLANS = [
-  {
-    id: 'free',
-    name: 'Decouverte',
-    tagline: 'GRATUIT',
-    price: 0,
-    priceYearly: 0,
-    currency: 'FCFA',
-    period: '/mois',
-    description: 'Ideal pour demarrer et tester la solution sans engagement.',
-    badge: 'Populaire',
-    badgeColor: '#2563eb',
-    features: [
-      { text: '1 boutique, 1 caisse', included: true },
-      { text: '50 produits maximum', included: true },
-      { text: '100 commandes / mois', included: true },
-      { text: 'Stockage local uniquement', included: true },
-      { text: 'Support communautaire', included: true },
-      { text: 'Sync cloud', included: false },
-      { text: 'Impression Bluetooth', included: false },
-      { text: 'Multi-utilisateurs', included: false },
-      { text: 'Rapports avances', included: false },
-    ],
-    cta: 'Commencer gratuitement',
-    ctaVariant: 'outline' as const,
-    highlight: false,
-  },
-  {
-    id: 'starter',
-    name: 'Essentiel',
-    tagline: 'STARTER',
-    price: 9900,
-    priceYearly: 8250,
-    currency: 'FCFA',
-    period: '/mois',
-    description: 'Pour les commercants qui veulent passer au niveau superieur.',
-    badge: null,
-    badgeColor: null,
-    features: [
-      { text: '1 boutique, 3 caisses', included: true },
-      { text: '500 produits', included: true },
-      { text: 'Commandes illimitees', included: true },
-      { text: 'Synchronisation cloud', included: true },
-      { text: 'Impression Bluetooth', included: true },
-      { text: 'Support email', included: true },
-      { text: 'Multi-utilisateurs', included: false },
-      { text: 'Rapports avances', included: false },
-      { text: 'API personnalisee', included: false },
-    ],
-    cta: 'Essayer 14 jours gratuit',
-    ctaVariant: 'outline' as const,
-    highlight: false,
-  },
-  {
-    id: 'pro',
-    name: 'Professionnel',
-    tagline: 'PRO',
-    price: 29900,
-    priceYearly: 24917,
-    currency: 'FCFA',
-    period: '/mois',
-    description: 'La solution complete pour les entreprises en croissance.',
-    badge: 'Recommande',
-    badgeColor: '#16a34a',
-    features: [
-      { text: '3 boutiques, 10 caisses', included: true },
-      { text: 'Produits illimites', included: true },
-      { text: 'Commandes illimitees', included: true },
-      { text: 'Sync cloud temps reel', included: true },
-      { text: 'Multi-utilisateurs avec roles', included: true },
-      { text: 'Rapports avances', included: true },
-      { text: 'Support prioritaire', included: true },
-      { text: 'Impression Bluetooth', included: true },
-      { text: 'API personnalisee', included: false },
-    ],
-    cta: 'Essayer 14 jours gratuit',
-    ctaVariant: 'solid' as const,
-    highlight: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Entreprise',
-    tagline: 'ENTERPRISE',
-    price: -1,
-    priceYearly: -1,
-    currency: '',
-    period: '',
-    description: 'Solution sur mesure pour les grandes enseignes et franchises.',
-    badge: null,
-    badgeColor: null,
-    features: [
-      { text: 'Boutiques illimitees', included: true },
-      { text: 'Caisses illimitees', included: true },
-      { text: 'Tout du plan PRO', included: true },
-      { text: 'API personnalisee', included: true },
-      { text: 'Formation sur site', included: true },
-      { text: 'Serveur dedie', included: true },
-      { text: 'Support 24/7', included: true },
-      { text: 'SLA garanti', included: true },
-      { text: 'Migration assistee', included: true },
-    ],
-    cta: 'Nous contacter',
-    ctaVariant: 'outline' as const,
-    highlight: false,
-  },
-]
-
-const TESTIMONIALS = [
-  {
-    name: 'Amadou Ndiaye',
-    role: 'Proprietaire de restaurant',
-    location: 'Douala, Cameroun',
-    avatar: 'AN',
-    avatarBg: '#2563eb',
-    text: "Avant POS Mano Verde, je notais tout sur papier. Maintenant, mes 3 serveurs prennent les commandes sur tablette et le ticket sort automatiquement en cuisine. Meme quand le reseau coupe, tout continue de fonctionner. J'ai reduit mes erreurs de commande de 80%.",
-    rating: 5,
-  },
-  {
-    name: 'Fatou Diallo',
-    role: 'Gerante de supermarche',
-    location: 'Abidjan, Cote d\'Ivoire',
-    avatar: 'FD',
-    avatarBg: '#16a34a',
-    text: "Je gere 2 superettes avec POS Mano Verde. Le tableau de bord me montre en temps reel les ventes de chaque boutique. La gestion de stock est incroyable - je recois des alertes quand un produit atteint le seuil minimum. C'est vraiment concu pour l'Afrique.",
-    rating: 5,
-  },
-  {
-    name: 'Dr. Moussa Sow',
-    role: 'Proprietaire de pharmacie',
-    location: 'Dakar, Senegal',
-    avatar: 'MS',
-    avatarBg: '#9333ea',
-    text: "La conformite est essentielle dans la pharmacie. POS Mano Verde me permet de tracer chaque vente, de gerer les dates de peremption et d'imprimer des factures conformes. Le support est reactif et l'application est tres stable. Je la recommande a tous mes collegues.",
-    rating: 5,
-  },
-]
-
-const FAQ_ITEMS = [
-  {
-    question: 'Est-ce que POS Mano Verde fonctionne vraiment sans internet ?',
-    answer: 'Oui, absolument. POS Mano Verde stocke toutes vos donnees localement sur votre appareil. Vous pouvez creer des ventes, gerer vos produits et imprimer des tickets meme sans aucune connexion. Lorsque vous retrouvez internet, toutes les donnees se synchronisent automatiquement avec le cloud.',
-  },
-  {
-    question: 'Quel materiel ai-je besoin pour utiliser POS Mano Verde ?',
-    answer: 'Un simple smartphone ou une tablette Android suffit. Pour l\'impression, vous pouvez utiliser n\'importe quelle imprimante thermique Bluetooth compatible (nous recommandons les modeles 58mm ou 80mm). Aucun materiel special ou couteux n\'est necessaire.',
-  },
-  {
-    question: 'Puis-je migrer mes donnees depuis un autre logiciel ?',
-    answer: 'Oui. Vous pouvez importer vos produits via un fichier CSV ou Excel. Pour les plans Pro et Enterprise, notre equipe peut vous assister dans la migration complete de vos donnees, incluant l\'historique des ventes et la base clients.',
-  },
-  {
-    question: 'Comment fonctionne la facturation ?',
-    answer: 'Le plan Gratuit est 100% gratuit, pour toujours, sans carte bancaire. Pour les plans payants, vous etes facture mensuellement ou annuellement (2 mois offerts). Nous acceptons le paiement par Mobile Money (MTN, Orange, Wave), carte bancaire et virement bancaire.',
-  },
-  {
-    question: 'Mes donnees sont-elles en securite ?',
-    answer: 'Vos donnees sont chiffrees en transit et au repos. Nous utilisons des serveurs securises avec des sauvegardes quotidiennes. Vous gardez toujours la propriete de vos donnees et pouvez les exporter a tout moment. Nous sommes conformes aux reglementations locales de protection des donnees.',
-  },
-  {
-    question: 'Puis-je annuler mon abonnement a tout moment ?',
-    answer: 'Oui, sans engagement. Vous pouvez annuler votre abonnement a tout moment depuis les parametres de votre compte. Nous offrons egalement une garantie satisfait ou rembourse de 30 jours sur tous les plans payants.',
-  },
-  {
-    question: 'Combien d\'employes peuvent utiliser le systeme ?',
-    answer: 'Le plan Gratuit est limite a 1 utilisateur. Le plan Starter permet jusqu\'a 3 utilisateurs. Le plan Pro offre un nombre illimite d\'utilisateurs avec gestion des roles (admin, manager, caissier). Le plan Enterprise inclut des roles personnalises et un annuaire d\'entreprise.',
-  },
-  {
-    question: 'Proposez-vous une formation ?',
-    answer: 'Oui. Tous les plans incluent un acces a nos guides en ligne et videos tutoriels. Le plan Pro inclut une session de formation a distance. Le plan Enterprise comprend une formation sur site pour votre equipe, avec un support dedie pour le deploiement.',
-  },
-]
-
-
-// ---------------------------------------------------------------------------
 // Animated counter hook
 // ---------------------------------------------------------------------------
 function useCountUp(target: number, duration = 2000, startOnView = true) {
@@ -607,6 +397,7 @@ export default function LandingPage() {
   const [billingYearly, setBillingYearly] = useState(false)
   const [headerScrolled, setHeaderScrolled] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const { t } = useLanguageStore()
 
   // Animated counters for hero stats
   const stat1 = useCountUp(500, 2000)
@@ -651,10 +442,176 @@ export default function LandingPage() {
   }
 
   const formatPrice = (price: number) => {
-    if (price === -1) return 'Sur devis'
+    if (price === -1) return t.landing.pricingCustom
     if (price === 0) return '0'
     return price.toLocaleString('fr-FR')
   }
+
+  // ── Translated data arrays ─────────────────────────────────────────────────
+
+  const FEATURES = [
+    { icon: <IconWifiOff />, title: t.landing.feature1Title, description: t.landing.feature1Desc },
+    { icon: <IconStore />, title: t.landing.feature2Title, description: t.landing.feature2Desc },
+    { icon: <IconPrinter />, title: t.landing.feature3Title, description: t.landing.feature3Desc },
+    { icon: <IconRefresh />, title: t.landing.feature4Title, description: t.landing.feature4Desc },
+    { icon: <IconGlobe />, title: t.landing.feature5Title, description: t.landing.feature5Desc },
+    { icon: <IconZap />, title: t.landing.feature6Title, description: t.landing.feature6Desc },
+  ]
+
+  const PLANS = [
+    {
+      id: 'free',
+      name: t.landing.planFreeName,
+      tagline: 'GRATUIT',
+      price: 0,
+      priceYearly: 0,
+      currency: 'FCFA',
+      description: t.landing.planFreeDesc,
+      badge: null,
+      badgeColor: null,
+      features: [
+        { text: t.landing.planFeature1, included: true },
+        { text: t.landing.planFeature2, included: true },
+        { text: t.landing.planFeature3, included: true },
+        { text: t.landing.planFeature4, included: true },
+        { text: t.landing.planFeature5, included: true },
+        { text: t.landing.planFeature9, included: false },
+        { text: t.landing.planFeature10, included: false },
+        { text: t.landing.planFeature15, included: false },
+        { text: t.landing.planFeature16, included: false },
+      ],
+      cta: t.landing.planFreeCTA,
+      ctaVariant: 'outline' as const,
+      highlight: false,
+    },
+    {
+      id: 'starter',
+      name: t.landing.planStarterName,
+      tagline: 'STARTER',
+      price: 9900,
+      priceYearly: 8250,
+      currency: 'FCFA',
+      description: t.landing.planStarterDesc,
+      badge: null,
+      badgeColor: null,
+      features: [
+        { text: t.landing.planFeature6, included: true },
+        { text: t.landing.planFeature7, included: true },
+        { text: t.landing.planFeature8, included: true },
+        { text: t.landing.planFeature9, included: true },
+        { text: t.landing.planFeature10, included: true },
+        { text: t.landing.planFeature11, included: true },
+        { text: t.landing.planFeature15, included: false },
+        { text: t.landing.planFeature16, included: false },
+        { text: t.landing.planFeature20, included: false },
+      ],
+      cta: t.landing.planStarterCTA,
+      ctaVariant: 'outline' as const,
+      highlight: false,
+    },
+    {
+      id: 'pro',
+      name: t.landing.planProName,
+      tagline: 'PRO',
+      price: 29900,
+      priceYearly: 24917,
+      currency: 'FCFA',
+      description: t.landing.planProDesc,
+      badge: t.landing.planBadgePopular,
+      badgeColor: '#16a34a',
+      features: [
+        { text: t.landing.planFeature12, included: true },
+        { text: t.landing.planFeature13, included: true },
+        { text: t.landing.planFeature8, included: true },
+        { text: t.landing.planFeature14, included: true },
+        { text: t.landing.planFeature15, included: true },
+        { text: t.landing.planFeature16, included: true },
+        { text: t.landing.planFeature17, included: true },
+        { text: t.landing.planFeature10, included: true },
+        { text: t.landing.planFeature20, included: false },
+      ],
+      cta: t.landing.planProCTA,
+      ctaVariant: 'solid' as const,
+      highlight: true,
+    },
+    {
+      id: 'enterprise',
+      name: t.landing.planEnterpriseName,
+      tagline: 'ENTERPRISE',
+      price: -1,
+      priceYearly: -1,
+      currency: '',
+      description: t.landing.planEnterpriseDesc,
+      badge: null,
+      badgeColor: null,
+      features: [
+        { text: t.landing.planFeature18, included: true },
+        { text: t.landing.planFeature19, included: true },
+        { text: t.landing.planFeature13, included: true },
+        { text: t.landing.planFeature20, included: true },
+        { text: t.landing.planFeature17, included: true },
+        { text: t.landing.planFeature16, included: true },
+        { text: t.landing.planFeature15, included: true },
+        { text: t.landing.planFeature14, included: true },
+        { text: t.landing.planFeature10, included: true },
+      ],
+      cta: t.landing.planEnterpriseCTA,
+      ctaVariant: 'outline' as const,
+      highlight: false,
+    },
+  ]
+
+  const TESTIMONIALS = [
+    {
+      name: t.landing.testimonial1Name,
+      role: t.landing.testimonial1Role,
+      avatar: 'AN',
+      avatarBg: '#2563eb',
+      text: t.landing.testimonial1Text,
+      rating: 5,
+    },
+    {
+      name: t.landing.testimonial2Name,
+      role: t.landing.testimonial2Role,
+      avatar: 'FD',
+      avatarBg: '#16a34a',
+      text: t.landing.testimonial2Text,
+      rating: 5,
+    },
+    {
+      name: t.landing.testimonial3Name,
+      role: t.landing.testimonial3Role,
+      avatar: 'MS',
+      avatarBg: '#9333ea',
+      text: t.landing.testimonial3Text,
+      rating: 5,
+    },
+  ]
+
+  const FAQ_ITEMS = [
+    { question: t.landing.faqQ1, answer: t.landing.faqA1 },
+    { question: t.landing.faqQ2, answer: t.landing.faqA2 },
+    { question: t.landing.faqQ3, answer: t.landing.faqA3 },
+    { question: t.landing.faqQ4, answer: t.landing.faqA4 },
+    { question: t.landing.faqQ5, answer: t.landing.faqA5 },
+    { question: t.landing.faqQ6, answer: t.landing.faqA6 },
+    { question: t.landing.faqQ7, answer: t.landing.faqA7 },
+    { question: t.landing.faqQ8, answer: t.landing.faqA8 },
+  ]
+
+  const NAV_SECTIONS = [
+    { id: 'features', label: t.landing.navFeatures },
+    { id: 'how-it-works', label: t.landing.navHow },
+    { id: 'pricing', label: t.landing.navPricing },
+    { id: 'testimonials', label: t.landing.navTestimonials },
+    { id: 'faq', label: t.landing.navFaq },
+  ]
+
+  const HOW_STEPS = [
+    { step: '01', title: t.landing.howStep1Title, description: t.landing.howStep1Desc, color: '#2563eb' },
+    { step: '02', title: t.landing.howStep2Title, description: t.landing.howStep2Desc, color: '#16a34a' },
+    { step: '03', title: t.landing.howStep3Title, description: t.landing.howStep3Desc, color: '#9333ea' },
+  ]
 
   // ========================================================================
   // STYLES
@@ -824,101 +781,40 @@ export default function LandingPage() {
         }
 
         /* ---- Mobile-first responsive ---- */
-        /* Base (mobile): single column everywhere */
         .landing-nav-links { display: none !important; }
         .landing-nav-cta-desktop { display: none !important; }
         .landing-mobile-toggle { display: flex !important; }
 
-        .landing-hero-inner {
-          flex-direction: column !important;
-        }
-        .landing-hero-left {
-          max-width: 100% !important;
-        }
-        .landing-hero-right {
-          display: none !important;
-        }
-        .landing-hero-content {
-          text-align: center !important;
-        }
-        .landing-hero-buttons {
-          justify-content: center !important;
-        }
-        .landing-hero-stats {
-          flex-direction: column !important;
-          gap: 16px !important;
-          align-items: center !important;
-        }
-        .landing-hero-stats-divider {
-          display: none !important;
-        }
+        .landing-hero-inner { flex-direction: column !important; }
+        .landing-hero-left { max-width: 100% !important; }
+        .landing-hero-right { display: none !important; }
+        .landing-hero-content { text-align: center !important; }
+        .landing-hero-buttons { justify-content: center !important; }
+        .landing-hero-stats { flex-direction: column !important; gap: 16px !important; align-items: center !important; }
+        .landing-hero-stats-divider { display: none !important; }
 
-        .landing-features-grid {
-          grid-template-columns: 1fr !important;
-        }
-        .landing-steps-grid {
-          grid-template-columns: 1fr !important;
-        }
-        .landing-step-connector {
-          display: none !important;
-        }
-        .landing-pricing-grid {
-          grid-template-columns: 1fr !important;
-        }
-        .landing-testimonials-grid {
-          grid-template-columns: 1fr !important;
-        }
-        .landing-footer-grid {
-          grid-template-columns: 1fr !important;
-          text-align: center;
-        }
-        .landing-footer-bottom {
-          flex-direction: column !important;
-          gap: 12px !important;
-          text-align: center !important;
-        }
-        .landing-social-links {
-          justify-content: center !important;
-        }
-        .landing-billing-toggle-container {
-          flex-direction: column !important;
-          align-items: center !important;
-        }
-        .landing-hero-trust-badge-text {
-          font-size: 12px !important;
-        }
-        .landing-section-padding {
-          padding: 64px 16px !important;
-        }
+        .landing-features-grid { grid-template-columns: 1fr !important; }
+        .landing-steps-grid { grid-template-columns: 1fr !important; }
+        .landing-step-connector { display: none !important; }
+        .landing-pricing-grid { grid-template-columns: 1fr !important; }
+        .landing-testimonials-grid { grid-template-columns: 1fr !important; }
+        .landing-footer-grid { grid-template-columns: 1fr !important; text-align: center; }
+        .landing-footer-bottom { flex-direction: column !important; gap: 12px !important; text-align: center !important; }
+        .landing-social-links { justify-content: center !important; }
+        .landing-billing-toggle-container { flex-direction: column !important; align-items: center !important; }
+        .landing-hero-trust-badge-text { font-size: 12px !important; }
+        .landing-section-padding { padding: 64px 16px !important; }
 
         /* ---- Tablet: min-width 600px ---- */
         @media (min-width: 600px) {
-          .landing-features-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .landing-pricing-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .landing-testimonials-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .landing-footer-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .landing-section-padding {
-            padding: 80px 24px !important;
-          }
-          .landing-billing-toggle-container {
-            flex-direction: row !important;
-          }
-          .landing-hero-stats {
-            flex-direction: row !important;
-            gap: 32px !important;
-            align-items: center !important;
-          }
-          .landing-hero-stats-divider {
-            display: block !important;
-          }
+          .landing-features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-testimonials-grid { grid-template-columns: 1fr !important; }
+          .landing-footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-section-padding { padding: 80px 24px !important; }
+          .landing-billing-toggle-container { flex-direction: row !important; }
+          .landing-hero-stats { flex-direction: row !important; gap: 32px !important; align-items: center !important; }
+          .landing-hero-stats-divider { display: block !important; }
         }
 
         /* ---- Desktop: min-width 1024px ---- */
@@ -927,55 +823,22 @@ export default function LandingPage() {
           .landing-nav-cta-desktop { display: flex !important; }
           .landing-mobile-toggle { display: none !important; }
 
-          .landing-hero-inner {
-            flex-direction: row !important;
-          }
-          .landing-hero-left {
-            max-width: 640px !important;
-          }
-          .landing-hero-right {
-            display: flex !important;
-          }
-          .landing-hero-content {
-            text-align: left !important;
-          }
-          .landing-hero-buttons {
-            justify-content: flex-start !important;
-          }
-          .landing-hero-stats {
-            flex-direction: row !important;
-            justify-content: flex-start !important;
-          }
+          .landing-hero-inner { flex-direction: row !important; }
+          .landing-hero-left { max-width: 640px !important; }
+          .landing-hero-right { display: flex !important; }
+          .landing-hero-content { text-align: left !important; }
+          .landing-hero-buttons { justify-content: flex-start !important; }
+          .landing-hero-stats { flex-direction: row !important; justify-content: flex-start !important; }
 
-          .landing-features-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .landing-steps-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .landing-step-connector {
-            display: block !important;
-          }
-          .landing-pricing-grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-          }
-          .landing-testimonials-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-          }
-          .landing-footer-grid {
-            grid-template-columns: 2fr 1fr 1fr 1fr !important;
-            text-align: left;
-          }
-          .landing-footer-bottom {
-            flex-direction: row !important;
-            text-align: left !important;
-          }
-          .landing-social-links {
-            justify-content: flex-start !important;
-          }
-          .landing-section-padding {
-            padding: 96px 24px !important;
-          }
+          .landing-features-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-steps-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-step-connector { display: block !important; }
+          .landing-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; }
+          .landing-testimonials-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr !important; text-align: left; }
+          .landing-footer-bottom { flex-direction: row !important; text-align: left !important; }
+          .landing-social-links { justify-content: flex-start !important; }
+          .landing-section-padding { padding: 96px 24px !important; }
         }
 
         /* ---- Scroll-to-top button ---- */
@@ -1031,7 +894,7 @@ export default function LandingPage() {
           ================================================================ */}
       <header style={headerStyle}>
         <nav style={navContainerStyle} aria-label="Main navigation">
-          {/* Logo - accessible link */}
+          {/* Logo */}
           <a
             href="#top"
             onClick={(e) => {
@@ -1045,7 +908,7 @@ export default function LandingPage() {
               textDecoration: 'none',
               cursor: 'pointer',
             }}
-            aria-label="POS Mano Verde - Retour en haut"
+            aria-label="POS Mano Verde"
           >
             <div style={logoIconContainerStyle}>
               <LogoIcon size={20} />
@@ -1062,11 +925,13 @@ export default function LandingPage() {
 
           {/* Desktop nav links */}
           <ul className="landing-nav-links" style={navLinksStyle}>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('features')} aria-label="Voir les fonctionnalites">Fonctionnalites</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('how-it-works')} aria-label="Voir comment ca marche">Comment ca marche</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('pricing')} aria-label="Voir les tarifs">Tarifs</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('testimonials')} aria-label="Voir les temoignages">Temoignages</button></li>
-            <li><button style={navLinkStyle} onClick={() => scrollToSection('faq')} aria-label="Voir la FAQ">FAQ</button></li>
+            {NAV_SECTIONS.map((nav) => (
+              <li key={nav.id}>
+                <button style={navLinkStyle} onClick={() => scrollToSection(nav.id)}>
+                  {nav.label}
+                </button>
+              </li>
+            ))}
           </ul>
 
           {/* Desktop CTA + Language Selector */}
@@ -1079,16 +944,14 @@ export default function LandingPage() {
                 fontWeight: 600,
               }}
               onClick={handleStartApp}
-              aria-label="Se connecter"
             >
-              Connexion
+              {t.landing.navLogin}
             </button>
             <button
               style={navCTAStyle}
               onClick={handleStartApp}
-              aria-label="Commencer a utiliser POS Mano Verde"
             >
-              Commencer
+              {t.landing.navStart}
             </button>
           </div>
 
@@ -1106,7 +969,6 @@ export default function LandingPage() {
               padding: 4,
             }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <IconXClose /> : <IconMenu />}
@@ -1130,10 +992,10 @@ export default function LandingPage() {
               <LandingLanguageSelector scrolled={true} />
             </div>
 
-            {['features', 'how-it-works', 'pricing', 'testimonials', 'faq'].map((id) => (
+            {NAV_SECTIONS.map((nav) => (
               <button
-                key={id}
-                onClick={() => scrollToSection(id)}
+                key={nav.id}
+                onClick={() => scrollToSection(nav.id)}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -1149,11 +1011,7 @@ export default function LandingPage() {
                   fontFamily: pageFont,
                 }}
               >
-                {id === 'features' && 'Fonctionnalites'}
-                {id === 'how-it-works' && 'Comment ca marche'}
-                {id === 'pricing' && 'Tarifs'}
-                {id === 'testimonials' && 'Temoignages'}
-                {id === 'faq' && 'FAQ'}
+                {nav.label}
               </button>
             ))}
 
@@ -1178,9 +1036,8 @@ export default function LandingPage() {
                 setMobileMenuOpen(false)
                 handleStartApp()
               }}
-              aria-label="Se connecter"
             >
-              Connexion
+              {t.landing.navLogin}
             </button>
 
             {/* Mobile Commencer button */}
@@ -1198,9 +1055,8 @@ export default function LandingPage() {
                 setMobileMenuOpen(false)
                 handleStartApp()
               }}
-              aria-label="Commencer a utiliser POS Mano Verde"
             >
-              Commencer gratuitement
+              {t.landing.heroCTA1}
             </button>
           </div>
         )}
@@ -1278,7 +1134,7 @@ export default function LandingPage() {
                 }}>
                   <IconShield />
                   <span className="landing-hero-trust-badge-text" style={{ color: '#ffffff', fontSize: 13, fontWeight: 500 }}>
-                    Solution certifiee - Fonctionne 100% hors-ligne
+                    {t.landing.heroTrustBadge}
                   </span>
                 </div>
 
@@ -1290,7 +1146,7 @@ export default function LandingPage() {
                   margin: '0 0 24px',
                   letterSpacing: '-0.03em',
                 }}>
-                  Le Point de Vente
+                  {t.landing.heroTitle1}
                   <br />
                   <span style={{
                     background: 'linear-gradient(90deg, #4ade80, #22d3ee)',
@@ -1298,9 +1154,9 @@ export default function LandingPage() {
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
                   }}>
-                    intelligent
+                    {t.landing.heroTitle2}
                   </span>
-                  {' '}pour l&apos;Afrique
+                  {' '}{t.landing.heroTitle3}
                 </h1>
 
                 <p style={{
@@ -1310,7 +1166,7 @@ export default function LandingPage() {
                   margin: '0 0 40px',
                   maxWidth: 520,
                 }}>
-                  Gerez vos boutiques meme sans internet. POS Mano Verde fonctionne hors-ligne, synchronise automatiquement, et imprime vos tickets via Bluetooth.
+                  {t.landing.heroSubtitle}
                 </p>
 
                 {/* CTA buttons */}
@@ -1346,9 +1202,8 @@ export default function LandingPage() {
                       e.currentTarget.style.transform = 'translateY(0)'
                       e.currentTarget.style.boxShadow = '0 4px 24px rgba(22,163,74,0.4)'
                     }}
-                    aria-label="Commencer gratuitement"
                   >
-                    Commencer gratuitement
+                    {t.landing.heroCTA1}
                     <IconArrowRight size={18} />
                   </button>
                   <button
@@ -1377,10 +1232,9 @@ export default function LandingPage() {
                       e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
                     }}
-                    aria-label="Voir la demo"
                   >
                     <IconPlay size={16} />
-                    Voir la demo
+                    {t.landing.heroCTA2}
                   </button>
                 </div>
 
@@ -1393,21 +1247,21 @@ export default function LandingPage() {
                   <div ref={stat1.ref} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 800, color: '#4ade80' }}>{stat1.count}+</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
-                      Commercants<br />actifs
+                      {t.landing.heroStat1Label}
                     </span>
                   </div>
                   <div className="landing-hero-stats-divider" style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
                   <div ref={stat2.ref} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 28, fontWeight: 800, color: '#22d3ee' }}>{stat2.count}</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
-                      Pays<br />en Afrique
+                      {t.landing.heroStat2Label}
                     </span>
                   </div>
                   <div className="landing-hero-stats-divider" style={{ width: 1, backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'stretch' }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 28, fontWeight: 800, color: '#ffffff' }}>99.9%</span>
+                    <span style={{ fontSize: 28, fontWeight: 800, color: '#ffffff' }}>{t.landing.heroStat3Value}</span>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.3 }}>
-                      Disponibilite<br />uptime
+                      {t.landing.heroStat3Label}
                     </span>
                   </div>
                 </div>
@@ -1481,21 +1335,21 @@ export default function LandingPage() {
                         gap: 4,
                       }}>
                         <div style={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#fff' }} />
-                        En ligne
+                        {t.sidebar.online}
                       </div>
                     </div>
 
                     {/* Mock products */}
                     <div style={{ padding: '16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>Caisse - Vente #1042</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>{t.nav.pos} - #1042</span>
                         <span style={{ fontSize: 10, color: '#64748b' }}>14:32</span>
                       </div>
                       {[
                         { name: 'Riz Basmati 5kg', price: '4 500', qty: 2 },
                         { name: 'Huile Palme 1L', price: '1 800', qty: 1 },
                         { name: 'Savon Marseille', price: '750', qty: 3 },
-                        { name: 'Sucre en poudre 1kg', price: '950', qty: 1 },
+                        { name: 'Sucre 1kg', price: '950', qty: 1 },
                       ].map((item, i) => (
                         <div key={i} style={{
                           display: 'flex',
@@ -1535,14 +1389,14 @@ export default function LandingPage() {
                           padding: '12px', textAlign: 'center', color: '#fff',
                           fontSize: 11, fontWeight: 700,
                         }}>
-                          Encaisser
+                          {t.pos.confirmPayment}
                         </div>
                         <div style={{
                           flex: 1, backgroundColor: '#f1f5f9', borderRadius: 10,
                           padding: '12px', textAlign: 'center', color: '#64748b',
                           fontSize: 11, fontWeight: 600,
                         }}>
-                          Imprimer
+                          {t.pos.printReceipt}
                         </div>
                       </div>
                     </div>
@@ -1569,8 +1423,8 @@ export default function LandingPage() {
                     <IconCheck size={18} color="#16a34a" />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Vente validee</div>
-                    <div style={{ color: '#64748b', fontSize: 10 }}>Ticket imprime via Bluetooth</div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{t.pos.orderSuccess}</div>
+                    <div style={{ color: '#64748b', fontSize: 10 }}>Bluetooth &#10003;</div>
                   </div>
                 </div>
 
@@ -1593,8 +1447,8 @@ export default function LandingPage() {
                     <IconRefresh />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>Sync terminee</div>
-                    <div style={{ color: '#64748b', fontSize: 10 }}>42 transactions envoyees</div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>{t.sync.synced}</div>
+                    <div style={{ color: '#64748b', fontSize: 10 }}>42 &#10003;</div>
                   </div>
                 </div>
               </div>
@@ -1632,7 +1486,7 @@ export default function LandingPage() {
           letterSpacing: '0.1em',
           marginBottom: 24,
         }}>
-          Utilise par des commercants dans toute l&apos;Afrique
+          {t.landing.trustBadge}
         </p>
         <div style={{
           display: 'flex',
@@ -1669,11 +1523,11 @@ export default function LandingPage() {
             letterSpacing: '0.1em',
             marginBottom: 12,
           }}>
-            Fonctionnalites
+            {t.landing.navFeatures}
           </p>
-          <h2 style={sectionTitleStyle}>Pourquoi POS Mano Verde ?</h2>
+          <h2 style={sectionTitleStyle}>{t.landing.featuresTitle}</h2>
           <p style={sectionSubtitleStyle}>
-            Une solution de caisse pensee pour les realites africaines. Pas d&apos;internet ? Pas de probleme.
+            {t.landing.featuresSubtitle}
           </p>
 
           <div className="landing-features-grid" style={{
@@ -1757,11 +1611,11 @@ export default function LandingPage() {
             letterSpacing: '0.1em',
             marginBottom: 12,
           }}>
-            Demarrage rapide
+            {t.landing.howBadge}
           </p>
-          <h2 style={sectionTitleStyle}>Comment ca marche ?</h2>
+          <h2 style={sectionTitleStyle}>{t.landing.howTitle}</h2>
           <p style={sectionSubtitleStyle}>
-            En 3 etapes simples, votre point de vente est operationnel. Aucune connaissance technique requise.
+            {t.landing.howSubtitle}
           </p>
 
           <div className="landing-steps-grid" style={{
@@ -1771,26 +1625,7 @@ export default function LandingPage() {
             maxWidth: 960,
             margin: '0 auto',
           }}>
-            {[
-              {
-                step: '01',
-                title: 'Inscrivez-vous gratuitement',
-                description: 'Creez votre compte en 30 secondes. Pas de carte bancaire requise, pas d\'engagement.',
-                color: '#2563eb',
-              },
-              {
-                step: '02',
-                title: 'Configurez votre boutique',
-                description: 'Ajoutez vos produits, configurez votre imprimante Bluetooth et personnalisez vos tickets.',
-                color: '#16a34a',
-              },
-              {
-                step: '03',
-                title: 'Commencez a vendre',
-                description: 'Votre caisse est prete. Vendez, encaissez, imprimez les tickets - meme sans internet.',
-                color: '#9333ea',
-              },
-            ].map((step, index) => (
+            {HOW_STEPS.map((step, index) => (
               <div key={index} style={{ textAlign: 'center', position: 'relative' }}>
                 {/* Connector line */}
                 {index < 2 && (
@@ -1864,11 +1699,11 @@ export default function LandingPage() {
             letterSpacing: '0.1em',
             marginBottom: 12,
           }}>
-            Tarifs
+            {t.landing.navPricing}
           </p>
-          <h2 style={sectionTitleStyle}>Tarifs simples et transparents</h2>
+          <h2 style={sectionTitleStyle}>{t.landing.pricingTitle}</h2>
           <p style={sectionSubtitleStyle}>
-            Commencez gratuitement, evoluez a votre rythme. Pas de frais caches, pas de surprise.
+            {t.landing.pricingSubtitle}
           </p>
 
           {/* Billing toggle */}
@@ -1885,11 +1720,10 @@ export default function LandingPage() {
               color: billingYearly ? '#94a3b8' : '#0f172a',
               transition: 'all 0.2s',
             }}>
-              Mensuel
+              {t.landing.pricingMonthly}
             </span>
             <button
               onClick={() => setBillingYearly(!billingYearly)}
-              aria-label={billingYearly ? 'Passer au paiement mensuel' : 'Passer au paiement annuel'}
               style={{
                 width: 52,
                 height: 28,
@@ -1921,7 +1755,7 @@ export default function LandingPage() {
               color: billingYearly ? '#0f172a' : '#94a3b8',
               transition: 'all 0.2s',
             }}>
-              Annuel
+              {t.landing.pricingYearly}
             </span>
             {billingYearly && (
               <span style={{
@@ -1933,7 +1767,7 @@ export default function LandingPage() {
                 borderRadius: 100,
                 whiteSpace: 'nowrap',
               }}>
-                2 mois offerts
+                {t.landing.pricingYearlySave}
               </span>
             )}
           </div>
@@ -2038,7 +1872,7 @@ export default function LandingPage() {
                           fontWeight: 800,
                           color: '#0f172a',
                         }}>
-                          Sur devis
+                          {t.landing.pricingCustom}
                         </span>
                       </div>
                     ) : plan.price === 0 ? (
@@ -2065,7 +1899,7 @@ export default function LandingPage() {
                           fontWeight: 600,
                           margin: '4px 0 0',
                         }}>
-                          Toujours gratuit
+                          {t.landing.pricingFreeForever}
                         </p>
                       </div>
                     ) : (
@@ -2084,7 +1918,7 @@ export default function LandingPage() {
                           color: '#64748b',
                           marginLeft: 4,
                         }}>
-                          FCFA{plan.period}
+                          FCFA{t.landing.pricingPerMonth}
                         </span>
                         {billingYearly && plan.price > 0 && (
                           <p style={{
@@ -2093,7 +1927,7 @@ export default function LandingPage() {
                             fontWeight: 600,
                             margin: '4px 0 0',
                           }}>
-                            soit {formatPrice(plan.priceYearly * 12)} FCFA/an
+                            {formatPrice(plan.priceYearly * 12)} FCFA{t.landing.pricingPerYear}
                           </p>
                         )}
                       </div>
@@ -2103,7 +1937,6 @@ export default function LandingPage() {
                   {/* CTA button */}
                   <button
                     onClick={() => handlePlanCTA(plan.id)}
-                    aria-label={plan.cta}
                     style={{
                       width: '100%',
                       padding: '14px 20px',
@@ -2199,10 +2032,10 @@ export default function LandingPage() {
             </div>
             <div style={{ textAlign: 'left' }}>
               <p style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', margin: '0 0 2px' }}>
-                Satisfait ou rembourse 30 jours
+                {t.landing.pricingGuaranteeTitle}
               </p>
               <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-                Testez sans risque. Si vous n&apos;etes pas satisfait, nous vous remboursons integralement.
+                {t.landing.pricingGuaranteeDesc}
               </p>
             </div>
           </div>
@@ -2213,7 +2046,7 @@ export default function LandingPage() {
             marginTop: 32,
           }}>
             <p style={{ fontSize: 12, color: '#94a3b8', margin: '0 0 12px' }}>
-              Paiement securise par
+              {t.landing.pricingSecurePayment}
             </p>
             <div style={{
               display: 'flex',
@@ -2256,11 +2089,11 @@ export default function LandingPage() {
             letterSpacing: '0.1em',
             marginBottom: 12,
           }}>
-            Temoignages
+            {t.landing.navTestimonials}
           </p>
-          <h2 style={sectionTitleStyle}>Ce que disent nos clients</h2>
+          <h2 style={sectionTitleStyle}>{t.landing.testimonialsTitle}</h2>
           <p style={sectionSubtitleStyle}>
-            Des centaines de commercants font confiance a POS Mano Verde pour gerer leur activite au quotidien.
+            {t.landing.testimonialsSubtitle}
           </p>
 
           <div className="landing-testimonials-grid" style={{
@@ -2331,7 +2164,7 @@ export default function LandingPage() {
                       {testimonial.name}
                     </p>
                     <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>
-                      {testimonial.role} - {testimonial.location}
+                      {testimonial.role}
                     </p>
                   </div>
                 </div>
@@ -2355,11 +2188,11 @@ export default function LandingPage() {
             letterSpacing: '0.1em',
             marginBottom: 12,
           }}>
-            FAQ
+            {t.landing.navFaq}
           </p>
-          <h2 style={sectionTitleStyle}>Questions frequentes</h2>
+          <h2 style={sectionTitleStyle}>{t.landing.faqTitle}</h2>
           <p style={sectionSubtitleStyle}>
-            Tout ce que vous devez savoir avant de commencer. Vous ne trouvez pas la reponse ? Contactez-nous.
+            {t.landing.faqSubtitle}
           </p>
 
           <div style={{
@@ -2379,10 +2212,10 @@ export default function LandingPage() {
             borderRadius: 16,
           }}>
             <p style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', margin: '0 0 8px' }}>
-              Vous avez d&apos;autres questions ?
+              {t.landing.faqMoreQuestions}
             </p>
             <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 16px' }}>
-              Notre equipe est disponible pour vous repondre.
+              {t.landing.faqMoreQuestionsDesc}
             </p>
             <a
               href="mailto:infos@manovande.com"
@@ -2407,9 +2240,8 @@ export default function LandingPage() {
                 e.currentTarget.style.backgroundColor = 'transparent'
                 e.currentTarget.style.color = '#2563eb'
               }}
-              aria-label="Nous contacter par email"
             >
-              Nous contacter
+              {t.landing.faqContact}
             </a>
           </div>
         </div>
@@ -2446,16 +2278,7 @@ export default function LandingPage() {
             letterSpacing: '-0.02em',
             lineHeight: 1.2,
           }}>
-            Pret a transformer
-            <br />
-            <span style={{
-              background: 'linear-gradient(90deg, #4ade80, #22d3ee)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              votre commerce ?
-            </span>
+            {t.landing.ctaTitle}
           </h2>
           <p style={{
             fontSize: 'clamp(16px, 2vw, 18px)',
@@ -2464,12 +2287,11 @@ export default function LandingPage() {
             margin: '0 auto 40px',
             lineHeight: 1.6,
           }}>
-            Rejoignez les centaines de commercants qui gerent leurs boutiques efficacement avec POS Mano Verde.
+            {t.landing.ctaSubtitle}
           </p>
 
           <button
             onClick={handleStartApp}
-            aria-label="Commencer gratuitement"
             style={{
               padding: '18px 40px',
               borderRadius: 14,
@@ -2496,7 +2318,7 @@ export default function LandingPage() {
               e.currentTarget.style.boxShadow = '0 4px 24px rgba(22,163,74,0.4)'
             }}
           >
-            Commencer gratuitement
+            {t.landing.ctaButton}
             <IconArrowRight size={20} />
           </button>
 
@@ -2510,7 +2332,7 @@ export default function LandingPage() {
             gap: 6,
           }}>
             <IconShield />
-            Pas de carte bancaire requise - Demarrez en 2 minutes
+            {t.landing.ctaNoCard}
           </p>
         </div>
       </section>
@@ -2543,7 +2365,7 @@ export default function LandingPage() {
                 <span style={{ fontSize: 18, fontWeight: 700, color: '#ffffff' }}>POS Mano Verde</span>
               </div>
               <p style={{ fontSize: 14, lineHeight: 1.6, margin: '0 0 20px', maxWidth: 320 }}>
-                La solution de caisse intelligente concue pour les commercants africains. Fonctionnement hors-ligne, synchronisation automatique et impression Bluetooth.
+                {t.landing.footerDesc}
               </p>
 
               {/* Contact emails */}
@@ -2624,11 +2446,17 @@ export default function LandingPage() {
                 letterSpacing: '0.08em',
                 margin: '0 0 20px',
               }}>
-                Produit
+                {t.landing.footerProduct}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {['Fonctionnalites', 'Tarifs', 'Documentation', 'API', 'Changelog'].map((link) => (
-                  <li key={link} style={{ marginBottom: 12 }}>
+                {[
+                  { label: t.landing.navFeatures, action: () => scrollToSection('features') },
+                  { label: t.landing.navPricing, action: () => scrollToSection('pricing') },
+                  { label: 'Documentation', action: undefined },
+                  { label: 'API', action: undefined },
+                  { label: 'Changelog', action: undefined },
+                ].map((link, i) => (
+                  <li key={i} style={{ marginBottom: 12 }}>
                     <button
                       style={{
                         background: 'none', border: 'none', color: '#94a3b8',
@@ -2637,12 +2465,9 @@ export default function LandingPage() {
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
-                      onClick={() => {
-                        if (link === 'Fonctionnalites') scrollToSection('features')
-                        if (link === 'Tarifs') scrollToSection('pricing')
-                      }}
+                      onClick={link.action}
                     >
-                      {link}
+                      {link.label}
                     </button>
                   </li>
                 ))}
@@ -2659,14 +2484,18 @@ export default function LandingPage() {
                 letterSpacing: '0.08em',
                 margin: '0 0 20px',
               }}>
-                Support
+                {t.landing.footerSupport}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {['Centre d\'aide', 'Contact', 'Communaute', 'Statut du service', 'Tutoriels'].map((link) => (
-                  <li key={link} style={{ marginBottom: 12 }}>
-                    {link === 'Contact' ? (
+                {[
+                  { label: t.common.help, href: undefined },
+                  { label: 'Contact', href: 'mailto:infos@manovande.com' },
+                  { label: t.landing.navFaq, href: undefined, action: () => scrollToSection('faq') },
+                ].map((link, i) => (
+                  <li key={i} style={{ marginBottom: 12 }}>
+                    {link.href ? (
                       <a
-                        href="mailto:infos@manovande.com"
+                        href={link.href}
                         style={{
                           background: 'none', border: 'none', color: '#94a3b8',
                           fontSize: 14, cursor: 'pointer', padding: 0,
@@ -2676,7 +2505,7 @@ export default function LandingPage() {
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
                       >
-                        {link}
+                        {link.label}
                       </a>
                     ) : (
                       <button
@@ -2687,8 +2516,9 @@ export default function LandingPage() {
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
                         onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                        onClick={(link as any).action}
                       >
-                        {link}
+                        {link.label}
                       </button>
                     )}
                   </li>
@@ -2706,10 +2536,10 @@ export default function LandingPage() {
                 letterSpacing: '0.08em',
                 margin: '0 0 20px',
               }}>
-                Legal
+                {t.landing.footerLegal}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {['Conditions d\'utilisation', 'Politique de confidentialite', 'Mentions legales', 'CGV'].map((link) => (
+                {['CGV', 'RGPD'].map((link) => (
                   <li key={link} style={{ marginBottom: 12 }}>
                     <button
                       style={{
@@ -2741,7 +2571,7 @@ export default function LandingPage() {
               gap: 16,
             }}>
               <p style={{ fontSize: 13, margin: 0, color: '#64748b' }}>
-                &copy; 2024-2026 Mano Verde SA. Tous droits reserves.
+                {t.landing.footerCopyright}
               </p>
               <p style={{
                 fontSize: 13,
@@ -2751,7 +2581,7 @@ export default function LandingPage() {
                 alignItems: 'center',
                 gap: 6,
               }}>
-                Concu et developpe au Cameroun
+                {t.landing.footerMadeIn}
                 <span role="img" aria-label="Cameroon flag" style={{ fontSize: 16 }}>
                   &#x1F1E8;&#x1F1F2;
                 </span>
@@ -2767,7 +2597,6 @@ export default function LandingPage() {
       <button
         className={`landing-scroll-top ${showScrollTop ? 'visible' : ''}`}
         onClick={scrollToTop}
-        aria-label="Retour en haut de la page"
         tabIndex={showScrollTop ? 0 : -1}
       >
         <IconArrowUp size={20} />

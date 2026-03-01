@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 import { useSyncStore } from '../../stores/syncStore'
+import { useLanguageStore } from '../../stores/languageStore'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,17 +44,6 @@ const colors = {
 // ---------------------------------------------------------------------------
 // Connection status helpers
 // ---------------------------------------------------------------------------
-
-function connectionLabel(status: string): string {
-  switch (status) {
-    case 'online':
-      return 'En ligne'
-    case 'local-only':
-      return 'Local'
-    default:
-      return 'Hors ligne'
-  }
-}
 
 function connectionBadgeStyle(status: string): React.CSSProperties {
   switch (status) {
@@ -96,6 +86,7 @@ function ConnectionIcon({ status }: { status: string }) {
 const Topbar: React.FC<TopbarProps> = ({ title, subtitle, children }) => {
   const { connectionStatus } = useAppStore()
   const { pendingCount, isSyncing, syncToServer } = useSyncStore()
+  const { t, language } = useLanguageStore()
   const [time, setTime] = useState(new Date())
   const [syncHover, setSyncHover] = useState(false)
 
@@ -105,18 +96,32 @@ const Topbar: React.FC<TopbarProps> = ({ title, subtitle, children }) => {
     return () => clearInterval(interval)
   }, [])
 
-  const formattedTime = time.toLocaleTimeString('fr-FR', {
+  const locale = language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : language === 'de' ? 'de-DE' : language === 'it' ? 'it-IT' : language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'fr-FR'
+
+  const formattedTime = time.toLocaleTimeString(locale, {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   })
 
-  const formattedDate = time.toLocaleDateString('fr-FR', {
+  const formattedDate = time.toLocaleDateString(locale, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   })
+
+  // ── Connection label ───────────────────────────────────────────────────
+  const connectionLabel = (): string => {
+    switch (connectionStatus) {
+      case 'online':
+        return t.sidebar.online
+      case 'local-only':
+        return t.sidebar.localOnly
+      default:
+        return t.sidebar.offline
+    }
+  }
 
   // ── Sync handler ────────────────────────────────────────────────────────
   const handleSync = () => {
@@ -199,7 +204,7 @@ const Topbar: React.FC<TopbarProps> = ({ title, subtitle, children }) => {
           }}
         >
           <ConnectionIcon status={connectionStatus} />
-          <span>{connectionLabel(connectionStatus)}</span>
+          <span>{connectionLabel()}</span>
         </div>
 
         {/* Sync button with pending count */}
@@ -210,10 +215,10 @@ const Topbar: React.FC<TopbarProps> = ({ title, subtitle, children }) => {
           disabled={isSyncing}
           title={
             isSyncing
-              ? 'Synchronisation en cours...'
+              ? t.sync.syncing
               : pendingCount > 0
-                ? `${pendingCount} en attente de sync`
-                : 'Synchroniser'
+                ? `${pendingCount} ${t.sidebar.pendingSync}`
+                : t.sidebar.synchronize
           }
           style={{
             position: 'relative',

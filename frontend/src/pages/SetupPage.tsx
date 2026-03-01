@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   UtensilsCrossed,
   ShoppingBasket,
@@ -12,34 +12,76 @@ import {
   ArrowRight,
   Check,
   Store,
+  Search,
+  Beer,
+  Croissant,
+  Hotel,
+  Scissors,
+  Sparkles,
+  Dumbbell,
+  Waves,
+  Car,
+  Fuel,
+  WashingMachine,
+  Wrench,
+  Baby,
+  GraduationCap,
+  Home,
+  Flower2,
+  PawPrint,
+  BookOpen,
+  Printer as PrinterIcon,
+  Building2,
+  Plane,
+  Globe,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
 import type { Activity, Mode } from '../types'
+import { generateUUID } from '../utils/uuid'
+import { goToLanding } from '../utils/navigation'
 
 type Step = 1 | 2 | 3
 
-const activities: { key: Activity; label: string; icon: React.ReactNode; desc: string }[] = [
-  { key: 'restaurant', label: 'Restaurant', icon: <UtensilsCrossed size={28} />, desc: 'Restaurants, bars, cafes' },
-  { key: 'supermarket', label: 'Supermarche', icon: <ShoppingBasket size={28} />, desc: 'Epiceries, superettes' },
-  { key: 'pharmacy', label: 'Pharmacie', icon: <Pill size={28} />, desc: 'Pharmacies, parapharmacies' },
-  { key: 'fashion', label: 'Mode', icon: <Shirt size={28} />, desc: 'Vetements, accessoires' },
-  { key: 'electronics', label: 'Electronique', icon: <Smartphone size={28} />, desc: 'High-tech, telephonie' },
-  { key: 'services', label: 'Services', icon: <Briefcase size={28} />, desc: 'Prestations de services' },
-]
+// ── Activity icon mapping ────────────────────────────────────────────────────
 
-const modes: { key: Mode; label: string; icon: React.ReactNode; desc: string }[] = [
-  {
-    key: 'server',
-    label: 'Mode Serveur',
-    icon: <Server size={28} />,
-    desc: 'Terminal principal. Gere les produits, employes et la base de donnees locale. Ideal pour le poste principal.',
-  },
-  {
-    key: 'client',
-    label: 'Mode Client',
-    icon: <Monitor size={28} />,
-    desc: 'Terminal de caisse. Se connecte a un serveur sur le reseau local pour synchroniser les donnees. Ideal pour les postes secondaires.',
-  },
+const ACTIVITY_ICONS: Record<Activity, React.ElementType> = {
+  restaurant: UtensilsCrossed,
+  supermarket: ShoppingBasket,
+  pharmacy: Pill,
+  fashion: Shirt,
+  electronics: Smartphone,
+  services: Briefcase,
+  bar: Beer,
+  bakery: Croissant,
+  hotel: Hotel,
+  hair_salon: Scissors,
+  spa: Sparkles,
+  gym: Dumbbell,
+  pool: Waves,
+  car_wash: Car,
+  gas_station: Fuel,
+  laundry: WashingMachine,
+  auto_repair: Wrench,
+  daycare: Baby,
+  school: GraduationCap,
+  home_cleaning: Home,
+  florist: Flower2,
+  pet_shop: PawPrint,
+  bookstore: BookOpen,
+  printing: PrinterIcon,
+  real_estate: Building2,
+  travel_agency: Plane,
+}
+
+// ── Ordered activities list ──────────────────────────────────────────────────
+
+const ALL_ACTIVITIES: Activity[] = [
+  'restaurant', 'supermarket', 'pharmacy', 'fashion', 'electronics', 'services',
+  'bar', 'bakery', 'hotel', 'hair_salon', 'spa', 'gym',
+  'pool', 'car_wash', 'gas_station', 'laundry', 'auto_repair',
+  'daycare', 'school', 'home_cleaning', 'florist', 'pet_shop',
+  'bookstore', 'printing', 'real_estate', 'travel_agency',
 ]
 
 export default function SetupPage() {
@@ -48,8 +90,21 @@ export default function SetupPage() {
   const [selectedMode, setSelectedMode] = useState<Mode | null>(null)
   const [serverUrlInput, setServerUrlInput] = useState('')
   const [storeNameInput, setStoreNameInput] = useState('')
+  const [activitySearch, setActivitySearch] = useState('')
 
   const { setActivity, setMode, setServerUrl, setCurrentStore, setSection } = useAppStore()
+  const { t } = useLanguageStore()
+
+  // ── Filter activities ──────────────────────────────────────────────────
+  const filteredActivities = useMemo(() => {
+    if (!activitySearch.trim()) return ALL_ACTIVITIES
+    const q = activitySearch.toLowerCase()
+    return ALL_ACTIVITIES.filter((a) => {
+      const label = (t.setup[a as keyof typeof t.setup] || a).toLowerCase()
+      const desc = (t.setup[`${a}Desc` as keyof typeof t.setup] || '').toLowerCase()
+      return label.includes(q) || desc.includes(q) || a.includes(q)
+    })
+  }, [activitySearch, t.setup])
 
   const handleFinish = () => {
     if (!selectedActivity || !selectedMode) return
@@ -63,7 +118,7 @@ export default function SetupPage() {
 
     if (selectedMode === 'server' && storeNameInput) {
       const store = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: storeNameInput,
         address: '',
         phone: '',
@@ -106,13 +161,13 @@ export default function SetupPage() {
     borderRadius: 16,
     boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
     width: '100%',
-    maxWidth: 640,
+    maxWidth: 720,
     overflow: 'hidden',
   }
 
   const headerStyle: React.CSSProperties = {
     textAlign: 'center',
-    padding: '32px 24px 0',
+    padding: '24px 24px 0',
   }
 
   const logoContainerStyle: React.CSSProperties = {
@@ -139,10 +194,10 @@ export default function SetupPage() {
     margin: 0,
   }
 
-  // Step dots
   const dotsContainerStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 8,
     padding: '20px 0',
   }
@@ -161,12 +216,15 @@ export default function SetupPage() {
 
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-    gap: 12,
+    gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+    gap: 10,
+    maxHeight: 420,
+    overflowY: 'auto',
+    paddingRight: 4,
   }
 
   const tileStyle = (isSelected: boolean): React.CSSProperties => ({
-    padding: '20px 16px',
+    padding: '16px 12px',
     borderRadius: 12,
     border: `2px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
     backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
@@ -176,7 +234,7 @@ export default function SetupPage() {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   })
 
   const tileIconStyle = (isSelected: boolean): React.CSSProperties => ({
@@ -184,16 +242,18 @@ export default function SetupPage() {
   })
 
   const tileLabelStyle = (isSelected: boolean): React.CSSProperties => ({
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 600,
     color: isSelected ? '#2563eb' : '#1e293b',
     margin: 0,
+    lineHeight: 1.3,
   })
 
   const tileDescStyle: React.CSSProperties = {
-    fontSize: 11,
+    fontSize: 10,
     color: '#94a3b8',
     margin: 0,
+    lineHeight: 1.3,
   }
 
   const modeGridStyle: React.CSSProperties = {
@@ -236,6 +296,19 @@ export default function SetupPage() {
     marginTop: 8,
   }
 
+  const searchInputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '10px 14px 10px 38px',
+    borderRadius: 8,
+    border: '1px solid #e2e8f0',
+    fontSize: 14,
+    color: '#1e293b',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
+    marginBottom: 12,
+  }
+
   const labelStyle: React.CSSProperties = {
     display: 'block',
     fontSize: 14,
@@ -263,7 +336,6 @@ export default function SetupPage() {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    visibility: step === 1 ? 'hidden' : 'visible',
   }
 
   const nextButtonStyle: React.CSSProperties = {
@@ -282,21 +354,43 @@ export default function SetupPage() {
   }
 
   const getStepTitle = (): string => {
-    if (step === 1) return 'Type d\'activite'
-    if (step === 2) return 'Mode de fonctionnement'
-    return 'Configuration'
+    if (step === 1) return t.setup.chooseActivity
+    if (step === 2) return t.setup.chooseMode
+    return t.setup.configure
   }
 
   const getStepDesc = (): string => {
-    if (step === 1) return 'Choisissez votre secteur d\'activite'
-    if (step === 2) return 'Comment souhaitez-vous utiliser ce terminal ?'
-    if (selectedMode === 'client') return 'Configurez la connexion au serveur'
-    return 'Donnez un nom a votre magasin'
+    if (step === 1) return t.setup.activitySubtitle
+    if (step === 2) return t.setup.modeSubtitle
+    if (selectedMode === 'client') return t.setup.configureServer
+    return t.setup.storeName
   }
 
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
+        {/* Back to website link */}
+        <div style={{ padding: '12px 24px 0', textAlign: 'left' }}>
+          <button
+            onClick={goToLanding}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#64748b',
+              fontSize: 13,
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: 0,
+            }}
+          >
+            <Globe size={14} />
+            {t.setup.backToWebsite}
+          </button>
+        </div>
+
         {/* Header */}
         <div style={headerStyle}>
           <div style={logoContainerStyle}>
@@ -311,41 +405,76 @@ export default function SetupPage() {
           {[1, 2, 3].map((s) => (
             <div key={s} style={dotStyle(s === step, s < step)} />
           ))}
+          <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>
+            {t.setup.step} {step} {t.setup.of} 3
+          </span>
         </div>
 
         {/* Content */}
         <div style={contentStyle}>
           {/* Step 1: Activity */}
           {step === 1 && (
-            <div style={gridStyle}>
-              {activities.map((a) => (
-                <div
-                  key={a.key}
-                  style={tileStyle(selectedActivity === a.key)}
-                  onClick={() => setSelectedActivity(a.key)}
-                >
-                  <div style={tileIconStyle(selectedActivity === a.key)}>{a.icon}</div>
-                  <p style={tileLabelStyle(selectedActivity === a.key)}>{a.label}</p>
-                  <p style={tileDescStyle}>{a.desc}</p>
-                </div>
-              ))}
+            <div>
+              {/* Search */}
+              <div style={{ position: 'relative' }}>
+                <Search size={16} style={{ position: 'absolute', left: 12, top: 11, color: '#94a3b8' }} />
+                <input
+                  style={searchInputStyle}
+                  type="text"
+                  placeholder={t.setup.searchActivities}
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                />
+              </div>
+              <div style={gridStyle}>
+                {filteredActivities.map((actKey) => {
+                  const Icon = ACTIVITY_ICONS[actKey]
+                  const label = t.setup[actKey as keyof typeof t.setup] || actKey
+                  const desc = t.setup[`${actKey}Desc` as keyof typeof t.setup] || ''
+                  return (
+                    <div
+                      key={actKey}
+                      style={tileStyle(selectedActivity === actKey)}
+                      onClick={() => setSelectedActivity(actKey)}
+                    >
+                      <div style={tileIconStyle(selectedActivity === actKey)}>
+                        <Icon size={24} />
+                      </div>
+                      <p style={tileLabelStyle(selectedActivity === actKey)}>{label}</p>
+                      <p style={tileDescStyle}>{desc}</p>
+                    </div>
+                  )
+                })}
+                {filteredActivities.length === 0 && (
+                  <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#94a3b8', fontSize: 14, padding: 20 }}>
+                    {t.common.noData}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
           {/* Step 2: Mode */}
           {step === 2 && (
             <div style={modeGridStyle}>
-              {modes.map((m) => (
-                <div
-                  key={m.key}
-                  style={modeTileStyle(selectedMode === m.key)}
-                  onClick={() => setSelectedMode(m.key)}
-                >
-                  <div style={tileIconStyle(selectedMode === m.key)}>{m.icon}</div>
-                  <p style={tileLabelStyle(selectedMode === m.key)}>{m.label}</p>
-                  <p style={modeDescStyle}>{m.desc}</p>
-                </div>
-              ))}
+              <div
+                style={modeTileStyle(selectedMode === 'server')}
+                onClick={() => setSelectedMode('server')}
+              >
+                <div style={tileIconStyle(selectedMode === 'server')}><Server size={28} /></div>
+                <p style={tileLabelStyle(selectedMode === 'server')}>{t.setup.serverMode}</p>
+                <p style={modeDescStyle}>{t.setup.serverModeDesc}</p>
+              </div>
+              <div
+                style={modeTileStyle(selectedMode === 'client')}
+                onClick={() => setSelectedMode('client')}
+              >
+                <div style={tileIconStyle(selectedMode === 'client')}><Monitor size={28} /></div>
+                <p style={tileLabelStyle(selectedMode === 'client')}>{t.setup.clientMode}</p>
+                <p style={modeDescStyle}>{t.setup.clientModeDesc}</p>
+              </div>
             </div>
           )}
 
@@ -354,7 +483,7 @@ export default function SetupPage() {
             <div>
               {selectedMode === 'client' ? (
                 <div>
-                  <label style={labelStyle}>URL du serveur</label>
+                  <label style={labelStyle}>{t.auth.serverUrl}</label>
                   <input
                     style={inputStyle}
                     type="url"
@@ -366,12 +495,12 @@ export default function SetupPage() {
                     autoFocus
                   />
                   <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
-                    Entrez l'adresse IP et le port du serveur POS sur votre reseau local.
+                    {t.setup.serverUrlHint}
                   </p>
                 </div>
               ) : (
                 <div>
-                  <label style={labelStyle}>Nom du magasin</label>
+                  <label style={labelStyle}>{t.setup.storeName}</label>
                   <input
                     style={inputStyle}
                     type="text"
@@ -383,7 +512,7 @@ export default function SetupPage() {
                     autoFocus
                   />
                   <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
-                    Ce nom apparaitra sur les reçus et dans l'application.
+                    {t.setup.storeNameHint}
                   </p>
                 </div>
               )}
@@ -394,10 +523,13 @@ export default function SetupPage() {
         {/* Footer */}
         <div style={footerStyle}>
           <button
-            style={backButtonStyle}
+            style={{
+              ...backButtonStyle,
+              visibility: step === 1 ? 'hidden' : 'visible',
+            }}
             onClick={() => setStep((s) => (s > 1 ? (s - 1) as Step : s))}
           >
-            <ArrowLeft size={16} /> Retour
+            <ArrowLeft size={16} /> {t.common.back}
           </button>
 
           {step < 3 ? (
@@ -406,7 +538,7 @@ export default function SetupPage() {
               onClick={() => canGoNext() && setStep((s) => (s + 1) as Step)}
               disabled={!canGoNext()}
             >
-              Suivant <ArrowRight size={16} />
+              {t.common.next} <ArrowRight size={16} />
             </button>
           ) : (
             <button
@@ -414,7 +546,7 @@ export default function SetupPage() {
               onClick={() => canGoNext() && handleFinish()}
               disabled={!canGoNext()}
             >
-              <Check size={16} /> Terminer
+              <Check size={16} /> {t.common.finish}
             </button>
           )}
         </div>

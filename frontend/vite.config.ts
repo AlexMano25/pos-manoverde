@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import legacy from '@vitejs/plugin-legacy'
 
 export default defineConfig({
   plugins: [
     react(),
+    legacy({
+      targets: ['defaults', 'Chrome >= 59', 'iOS >= 10.3', 'Android >= 7'],
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: [
@@ -115,6 +119,7 @@ export default defineConfig({
     host: true,
   },
   build: {
+    target: 'es2017',
     sourcemap: false,
     rollupOptions: {
       output: {

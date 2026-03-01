@@ -11,35 +11,37 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  Globe,
 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useSyncStore } from '../../stores/syncStore'
+import { useLanguageStore } from '../../stores/languageStore'
+import { goToLanding } from '../../utils/navigation'
 import LanguageSelector from '../common/LanguageSelector'
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-type NavItem = {
+type NavItemDef = {
   key: string
-  label: string
   icon: React.ElementType
-  serverOnly?: boolean // hidden when mode === 'client'
+  serverOnly?: boolean
 }
 
 // ---------------------------------------------------------------------------
-// Navigation definition
+// Navigation definition (labels come from translations)
 // ---------------------------------------------------------------------------
 
-const NAV_ITEMS: NavItem[] = [
-  { key: 'dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-  { key: 'pos', label: 'Caisse', icon: ShoppingCart },
-  { key: 'products', label: 'Produits', icon: Package },
-  { key: 'orders', label: 'Commandes', icon: ClipboardList },
-  { key: 'stock', label: 'Stock', icon: BarChart3 },
-  { key: 'employees', label: 'Employes', icon: Users, serverOnly: true },
-  { key: 'settings', label: 'Parametres', icon: Settings, serverOnly: true },
+const NAV_ITEM_DEFS: NavItemDef[] = [
+  { key: 'dashboard', icon: LayoutDashboard },
+  { key: 'pos', icon: ShoppingCart },
+  { key: 'products', icon: Package },
+  { key: 'orders', icon: ClipboardList },
+  { key: 'stock', icon: BarChart3 },
+  { key: 'employees', icon: Users, serverOnly: true },
+  { key: 'settings', icon: Settings, serverOnly: true },
 ]
 
 // ---------------------------------------------------------------------------
@@ -82,7 +84,7 @@ function connectionDotColor(status: string): string {
 function roleBadgeBg(role: string): string {
   switch (role) {
     case 'admin':
-      return '#7c3aed' // purple-600
+      return '#7c3aed'
     case 'manager':
       return colors.primary
     case 'cashier':
@@ -102,6 +104,7 @@ const Sidebar: React.FC = () => {
   const { section, setSection, mode, connectionStatus } = useAppStore()
   const { user, logout } = useAuthStore()
   const { pendingCount, isSyncing, syncToServer, countPending } = useSyncStore()
+  const { t } = useLanguageStore()
   const [isMobile, setIsMobile] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
 
@@ -125,8 +128,31 @@ const Sidebar: React.FC = () => {
     }
   }, [isSyncing, syncToServer])
 
+  // ── Nav labels from translations ────────────────────────────────────────
+  const navLabels: Record<string, string> = {
+    dashboard: t.nav.dashboard,
+    pos: t.nav.pos,
+    products: t.nav.products,
+    orders: t.nav.orders,
+    stock: t.nav.stock,
+    employees: t.nav.employees,
+    settings: t.nav.settings,
+  }
+
+  // ── Connection label ───────────────────────────────────────────────────
+  const connectionLabel = (): string => {
+    switch (connectionStatus) {
+      case 'online':
+        return t.sidebar.online
+      case 'local-only':
+        return t.sidebar.localOnly
+      default:
+        return t.sidebar.offline
+    }
+  }
+
   // ── Filter nav items by mode ────────────────────────────────────────────
-  const visibleItems = NAV_ITEMS.filter(
+  const visibleItems = NAV_ITEM_DEFS.filter(
     (item) => !item.serverOnly || mode !== 'client'
   )
 
@@ -174,8 +200,7 @@ const Sidebar: React.FC = () => {
               }}
             >
               <Icon size={20} />
-              <span style={{ fontSize: 10, lineHeight: 1 }}>{item.label}</span>
-              {/* Sync badge on the sync-related section or first icon */}
+              <span style={{ fontSize: 10, lineHeight: 1 }}>{navLabels[item.key] || item.key}</span>
               {item.key === 'dashboard' && pendingCount > 0 && (
                 <span
                   style={{
@@ -288,7 +313,7 @@ const Sidebar: React.FC = () => {
               }}
             >
               <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
-              <span>{item.label}</span>
+              <span>{navLabels[item.key] || item.key}</span>
             </button>
           )
         })}
@@ -322,7 +347,7 @@ const Sidebar: React.FC = () => {
               animation: isSyncing ? 'spin 1s linear infinite' : 'none',
             }}
           />
-          <span>Synchroniser</span>
+          <span>{t.sidebar.synchronize}</span>
           {pendingCount > 0 && (
             <span
               style={{
@@ -367,18 +392,34 @@ const Sidebar: React.FC = () => {
             flexShrink: 0,
           }}
         />
-        <span>
-          {connectionStatus === 'online'
-            ? 'En ligne'
-            : connectionStatus === 'local-only'
-              ? 'Local uniquement'
-              : 'Hors ligne'}
-        </span>
+        <span>{connectionLabel()}</span>
         {connectionStatus === 'online' ? (
           <Wifi size={14} style={{ marginLeft: 'auto' }} />
         ) : (
           <WifiOff size={14} style={{ marginLeft: 'auto' }} />
         )}
+      </div>
+
+      {/* ── Back to website ──────────────────────────────────────────── */}
+      <div style={{ padding: '4px 20px 8px' }}>
+        <button
+          onClick={goToLanding}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            width: '100%',
+            padding: '8px 0',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: colors.textMuted,
+            fontSize: 12,
+          }}
+        >
+          <Globe size={14} />
+          <span>{t.sidebar.backToWebsite}</span>
+        </button>
       </div>
 
       {/* ── Language selector ─────────────────────────────────────────── */}
@@ -433,7 +474,7 @@ const Sidebar: React.FC = () => {
               textOverflow: 'ellipsis',
             }}
           >
-            {user?.name ?? 'Utilisateur'}
+            {user?.name ?? t.common.welcome}
           </div>
           {user?.role && (
             <span
@@ -458,7 +499,7 @@ const Sidebar: React.FC = () => {
         {/* Logout button */}
         <button
           onClick={logout}
-          title="Deconnexion"
+          title={t.sidebar.disconnect}
           style={{
             background: 'none',
             border: 'none',

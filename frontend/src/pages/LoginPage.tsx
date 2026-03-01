@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Store, Eye, EyeOff, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Store, Eye, EyeOff, ChevronDown, ChevronUp, Loader2, Globe } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
+import { goToLanding } from '../utils/navigation'
 
 type TabKey = 'email' | 'pin'
 
@@ -21,6 +23,7 @@ export default function LoginPage() {
   const loginWithPin = useAuthStore((s) => s.loginWithPin)
   const user = useAuthStore((s) => s.user)
   const { serverUrl, setServerUrl, setSection } = useAppStore()
+  const { t } = useLanguageStore()
 
   useEffect(() => {
     setServerUrlInput(serverUrl || '')
@@ -40,7 +43,7 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password.trim()) {
-      setError('Veuillez remplir tous les champs')
+      setError(t.common.required)
       return
     }
     setLoading(true)
@@ -48,7 +51,7 @@ export default function LoginPage() {
     try {
       await login(email, password)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Echec de la connexion')
+      setError(err instanceof Error ? err.message : t.auth.connectionFailed)
     } finally {
       setLoading(false)
     }
@@ -60,13 +63,13 @@ export default function LoginPage() {
     try {
       await loginWithPin(fullPin)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'PIN invalide')
+      setError(err instanceof Error ? err.message : t.auth.invalidCredentials)
       setPin(['', '', '', ''])
       pinRefs.current[0]?.focus()
     } finally {
       setLoading(false)
     }
-  }, [loginWithPin])
+  }, [loginWithPin, t.auth.invalidCredentials])
 
   const handlePinChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return
@@ -306,151 +309,175 @@ export default function LoginPage() {
 
   return (
     <div style={pageStyle}>
-      <div style={cardStyle}>
-        {/* Branding */}
-        <div style={brandingStyle}>
-          <div style={logoContainerStyle}>
-            <Store size={32} color="#ffffff" />
-          </div>
-          <h1 style={titleStyle}>POS Mano Verde</h1>
-          <p style={subtitleStyle}>Systeme de caisse intelligent</p>
-        </div>
-
-        {/* Tabs */}
-        <div style={tabsContainerStyle}>
+      <div style={{ maxWidth: 420, width: '100%' }}>
+        {/* Back to website link */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <button
-            style={tabStyle(activeTab === 'email')}
-            onClick={() => { setActiveTab('email'); setError('') }}
+            onClick={goToLanding}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 13,
+              fontWeight: 500,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 16px',
+            }}
           >
-            Connexion
-          </button>
-          <button
-            style={tabStyle(activeTab === 'pin')}
-            onClick={() => { setActiveTab('pin'); setError('') }}
-          >
-            PIN rapide
+            <Globe size={14} />
+            {t.setup.backToWebsite}
           </button>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div style={{ padding: '16px 24px 0' }}>
-            <div style={errorStyle}>{error}</div>
-          </div>
-        )}
-
-        {/* Email / Password Form */}
-        {activeTab === 'email' && (
-          <form style={formStyle} onSubmit={handleEmailLogin}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Adresse email</label>
-              <input
-                style={inputStyle}
-                type="email"
-                placeholder="admin@manoverde.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-                onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
-                disabled={loading}
-                autoComplete="email"
-              />
+        <div style={cardStyle}>
+          {/* Branding */}
+          <div style={brandingStyle}>
+            <div style={logoContainerStyle}>
+              <Store size={32} color="#ffffff" />
             </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Mot de passe</label>
-              <div style={inputContainerStyle}>
+            <h1 style={titleStyle}>POS Mano Verde</h1>
+            <p style={subtitleStyle}>{t.auth.loginSubtitle}</p>
+          </div>
+
+          {/* Tabs */}
+          <div style={tabsContainerStyle}>
+            <button
+              style={tabStyle(activeTab === 'email')}
+              onClick={() => { setActiveTab('email'); setError('') }}
+            >
+              {t.auth.emailLogin}
+            </button>
+            <button
+              style={tabStyle(activeTab === 'pin')}
+              onClick={() => { setActiveTab('pin'); setError('') }}
+            >
+              {t.auth.pinLogin}
+            </button>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div style={{ padding: '16px 24px 0' }}>
+              <div style={errorStyle}>{error}</div>
+            </div>
+          )}
+
+          {/* Email / Password Form */}
+          {activeTab === 'email' && (
+            <form style={formStyle} onSubmit={handleEmailLogin}>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>{t.auth.emailLabel}</label>
                 <input
-                  style={{ ...inputStyle, paddingRight: 40 }}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Entrez votre mot de passe"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  style={inputStyle}
+                  type="email"
+                  placeholder="admin@manoverde.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
                   onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
                   disabled={loading}
-                  autoComplete="current-password"
+                  autoComplete="email"
                 />
-                <button
-                  type="button"
-                  style={eyeButtonStyle}
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>{t.auth.passwordLabel}</label>
+                <div style={inputContainerStyle}>
+                  <input
+                    style={{ ...inputStyle, paddingRight: 40 }}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                    onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                    disabled={loading}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    style={eyeButtonStyle}
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" style={buttonStyle} disabled={loading}>
+                {loading && <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />}
+                {loading ? t.auth.loggingIn : t.auth.loginButton}
+              </button>
+              <div style={hintStyle}>
+                {t.auth.defaultCredentials}
+              </div>
+            </form>
+          )}
+
+          {/* PIN Form */}
+          {activeTab === 'pin' && (
+            <div style={formStyle}>
+              <p style={{ textAlign: 'center', color: '#64748b', fontSize: 14, marginBottom: 24, marginTop: 0 }}>
+                {t.auth.pinLabel}
+              </p>
+              <div style={pinContainerStyle}>
+                {pin.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { pinRefs.current[i] = el }}
+                    style={{
+                      ...pinInputStyle,
+                      borderColor: digit ? '#2563eb' : '#e2e8f0',
+                    }}
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handlePinChange(i, e.target.value)}
+                    onKeyDown={(e) => handlePinKeyDown(i, e)}
+                    onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                    onBlur={(e) => (e.target.style.borderColor = digit ? '#2563eb' : '#e2e8f0')}
+                    disabled={loading}
+                    autoFocus={i === 0}
+                  />
+                ))}
+              </div>
+              {loading && (
+                <div style={{ textAlign: 'center', color: '#2563eb' }}>
+                  <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Server Settings */}
+          <button style={settingsToggleStyle} onClick={() => setShowSettings(!showSettings)}>
+            {t.auth.serverSettings}
+            {showSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          {showSettings && (
+            <div style={settingsBoxStyle}>
+              <label style={{ ...labelStyle, marginBottom: 6 }}>{t.auth.serverUrl}</label>
+              <div style={settingsInputRow}>
+                <input
+                  style={{ ...inputStyle, flex: 1 }}
+                  type="url"
+                  placeholder="http://192.168.1.100:3000/api"
+                  value={serverUrlInput}
+                  onChange={(e) => setServerUrlInput(e.target.value)}
+                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                />
+                <button style={saveButtonStyle} onClick={handleSaveServerUrl}>
+                  {t.common.save}
                 </button>
               </div>
             </div>
-            <button type="submit" style={buttonStyle} disabled={loading}>
-              {loading && <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />}
-              {loading ? 'Connexion...' : 'Se connecter'}
-            </button>
-            <div style={hintStyle}>
-              Identifiants par defaut : admin@manoverde.com / admin123
-            </div>
-          </form>
-        )}
-
-        {/* PIN Form */}
-        {activeTab === 'pin' && (
-          <div style={formStyle}>
-            <p style={{ textAlign: 'center', color: '#64748b', fontSize: 14, marginBottom: 24, marginTop: 0 }}>
-              Entrez votre code PIN a 4 chiffres
-            </p>
-            <div style={pinContainerStyle}>
-              {pin.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { pinRefs.current[i] = el }}
-                  style={{
-                    ...pinInputStyle,
-                    borderColor: digit ? '#2563eb' : '#e2e8f0',
-                  }}
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handlePinChange(i, e.target.value)}
-                  onKeyDown={(e) => handlePinKeyDown(i, e)}
-                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-                  onBlur={(e) => (e.target.style.borderColor = digit ? '#2563eb' : '#e2e8f0')}
-                  disabled={loading}
-                  autoFocus={i === 0}
-                />
-              ))}
-            </div>
-            {loading && (
-              <div style={{ textAlign: 'center', color: '#2563eb' }}>
-                <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Server Settings */}
-        <button style={settingsToggleStyle} onClick={() => setShowSettings(!showSettings)}>
-          Parametres serveur
-          {showSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
-
-        {showSettings && (
-          <div style={settingsBoxStyle}>
-            <label style={{ ...labelStyle, marginBottom: 6 }}>URL du serveur</label>
-            <div style={settingsInputRow}>
-              <input
-                style={{ ...inputStyle, flex: 1 }}
-                type="url"
-                placeholder="http://192.168.1.100:3000/api"
-                value={serverUrlInput}
-                onChange={(e) => setServerUrlInput(e.target.value)}
-                onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-                onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
-              />
-              <button style={saveButtonStyle} onClick={handleSaveServerUrl}>
-                Sauver
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Spinner animation keyframes injected into head */}

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Product, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
+import { generateUUID } from '../utils/uuid'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ async function addToSyncQueue(
   storeId: string
 ): Promise<void> {
   const entry: SyncEntry = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     entity_type: entityType,
     entity_id: entityId,
     operation,

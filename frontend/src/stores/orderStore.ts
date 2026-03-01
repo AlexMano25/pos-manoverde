@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { CartItem, Order, PaymentMethod, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
+import { generateUUID } from '../utils/uuid'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ async function addToSyncQueue(
   storeId: string
 ): Promise<void> {
   const entry: SyncEntry = {
-    id: crypto.randomUUID(),
+    id: generateUUID(),
     entity_type: entityType,
     entity_id: entityId,
     operation,
@@ -99,7 +100,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
       const total = subtotal - discount + tax
 
       const order: Order = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         store_id: storeId,
         user_id: userId,
         device_id: deviceId,
