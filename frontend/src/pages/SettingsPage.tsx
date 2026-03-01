@@ -315,7 +315,7 @@ export default function SettingsPage() {
             onChange={(e) => setStoreName(e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = C.primary)}
             onBlur={(e) => (e.target.style.borderColor = C.border)}
-            disabled={mode === 'client'}
+            disabled={mode !== 'server' && mode !== 'all_in_one'}
             placeholder="Mano Verde SA"
           />
         </div>
@@ -329,7 +329,7 @@ export default function SettingsPage() {
             onChange={(e) => setStoreAddress(e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = C.primary)}
             onBlur={(e) => (e.target.style.borderColor = C.border)}
-            disabled={mode === 'client'}
+            disabled={mode !== 'server' && mode !== 'all_in_one'}
             placeholder="Rue de la Joie, Douala"
           />
         </div>
@@ -343,12 +343,12 @@ export default function SettingsPage() {
             onChange={(e) => setStorePhone(e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = C.primary)}
             onBlur={(e) => (e.target.style.borderColor = C.border)}
-            disabled={mode === 'client'}
+            disabled={mode !== 'server' && mode !== 'all_in_one'}
             placeholder="+237 6XX XXX XXX"
           />
         </div>
 
-        {mode === 'server' && (
+        {(mode === 'server' || mode === 'all_in_one') && (
           <button
             style={storeSaved ? successBtnStyle : primaryBtnStyle}
             onClick={handleSaveStore}
@@ -431,8 +431,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ── QR Code (Server mode only) ──────────────────────────────── */}
-      {mode === 'server' && qrUrl && (
+      {/* ── QR Code (Server and All-in-One modes) ─────────────────────── */}
+      {(mode === 'server' || mode === 'all_in_one') && qrUrl && (
         <div style={sectionCardStyle}>
           <QRCodeDisplay url={qrUrl} />
         </div>
@@ -539,7 +539,7 @@ export default function SettingsPage() {
         <div style={infoRowStyle}>
           <span style={infoLabelStyle}>{t.settings.mode}</span>
           <span style={{ ...infoValueStyle, fontFamily: 'inherit' }}>
-            {mode === 'server' ? t.setup.serverMode : t.setup.clientMode}
+            {mode === 'server' ? t.setup.serverMode : mode === 'all_in_one' ? t.setup.allInOne : t.setup.clientMode}
           </span>
         </div>
 

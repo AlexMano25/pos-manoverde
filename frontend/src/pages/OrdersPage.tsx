@@ -4,13 +4,19 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
-  Download,
   FileText,
   X,
+  MessageCircle,
+  Mail,
+  Receipt,
 } from 'lucide-react'
 import { useOrderStore } from '../stores/orderStore'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
+import ExportMenu from '../components/common/ExportMenu'
+import { exportSalesReport, exportInvoice, exportReceipt } from '../utils/pdfExport'
+import { shareViaWhatsApp, shareViaEmail, formatOrderForSharing } from '../utils/sharing'
 import type { Order, PaymentMethod, OrderStatus } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -27,41 +33,11 @@ const C = {
   danger: '#dc2626',
 } as const
 
-function formatFCFA(amount: number): string {
-  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
-}
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }) + ' ' + d.toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-const paymentLabels: Record<PaymentMethod, string> = {
-  cash: 'Especes',
-  card: 'Carte',
-  momo: 'MoMo',
-  transfer: 'Virement',
-}
-
 const paymentColors: Record<PaymentMethod, string> = {
   cash: '#16a34a',
   card: '#2563eb',
   momo: '#f59e0b',
   transfer: '#8b5cf6',
-}
-
-const statusLabels: Record<OrderStatus, string> = {
-  paid: 'Paye',
-  pending: 'En attente',
-  refunded: 'Rembourse',
-  cancelled: 'Annule',
 }
 
 const statusColors: Record<OrderStatus, string> = {
@@ -77,11 +53,43 @@ export default function OrdersPage() {
   const { orders, loading, loadOrders } = useOrderStore()
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
+  const { t, language } = useLanguageStore()
 
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+
+  function formatFCFA(amount: number): string {
+    return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : 'en-US').format(amount) + ' FCFA'
+  }
+
+  function formatDateTime(iso: string): string {
+    const locale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'zh' ? 'zh-CN' : 'en-US'
+    const d = new Date(iso)
+    return d.toLocaleDateString(locale, {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }) + ' ' + d.toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const paymentLabels: Record<PaymentMethod, string> = {
+    cash: t.pos.cash,
+    card: t.pos.card,
+    momo: t.pos.momo,
+    transfer: t.pos.transfer,
+  }
+
+  const statusLabels: Record<OrderStatus, string> = {
+    paid: t.orders.paid,
+    pending: t.orders.pending,
+    refunded: t.orders.refunded,
+    cancelled: t.orders.cancelled,
+  }
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -111,13 +119,39 @@ export default function OrdersPage() {
   const canRefund = user?.role === 'admin' || user?.role === 'manager'
 
   const handleRefund = async (order: Order) => {
-    // Placeholder - in production, call orderStore or API
     console.log('Refund requested for order:', order.id)
-    alert(`Remboursement de la commande #${order.id.slice(0, 8).toUpperCase()} - Fonctionnalite bientot disponible`)
+    alert(`${t.orders.refund} #${order.id.slice(0, 8).toUpperCase()} - ${t.common.comingSoon}`)
   }
 
-  const handleExport = () => {
-    alert('Export des commandes - Fonctionnalite bientot disponible')
+  const storeName = currentStore?.name || 'POS'
+
+  const handleExportSalesReport = () => {
+    exportSalesReport(filteredOrders, storeName, dateFilter || undefined, {
+      orderId: t.orders.orderId,
+      date: t.orders.dateTime,
+      items: t.orders.itemCount,
+      total: t.common.total,
+      payment: t.orders.paymentMethod,
+      status: t.common.status,
+    })
+  }
+
+  const handleExportInvoice = (order: Order) => {
+    exportInvoice(order, storeName, currentStore?.address, currentStore?.phone, user?.name)
+  }
+
+  const handleExportReceipt = (order: Order) => {
+    exportReceipt(order, storeName, currentStore?.address, currentStore?.phone, user?.name)
+  }
+
+  const handleShareWhatsApp = (order: Order) => {
+    const text = formatOrderForSharing(order, storeName)
+    shareViaWhatsApp(text)
+  }
+
+  const handleShareEmail = (order: Order) => {
+    const text = formatOrderForSharing(order, storeName)
+    shareViaEmail(`Order #${order.id.slice(0, 8).toUpperCase()} — ${storeName}`, text)
   }
 
   const toggleExpand = (orderId: string) => {
@@ -281,6 +315,18 @@ export default function OrdersPage() {
     marginTop: 12,
   }
 
+  const actionBtnSmStyle: React.CSSProperties = {
+    padding: '6px 12px',
+    borderRadius: 6,
+    border: 'none',
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+  }
+
   const emptyStyle: React.CSSProperties = {
     padding: 60,
     textAlign: 'center',
@@ -290,7 +336,7 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: C.textSecondary, fontSize: 16 }}>Chargement des commandes...</p>
+        <p style={{ color: C.textSecondary, fontSize: 16 }}>{t.common.loading}</p>
       </div>
     )
   }
@@ -299,10 +345,17 @@ export default function OrdersPage() {
     <div style={pageStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Commandes</h1>
-        <button style={exportBtnStyle} onClick={handleExport}>
-          <Download size={16} /> Exporter
-        </button>
+        <h1 style={titleStyle}>{t.orders.title}</h1>
+        <ExportMenu
+          label={t.common.export}
+          items={[
+            {
+              label: t.orders.salesReport,
+              icon: <FileText size={14} color={C.primary} />,
+              onClick: handleExportSalesReport,
+            },
+          ]}
+        />
       </div>
 
       {/* Toolbar */}
@@ -312,7 +365,7 @@ export default function OrdersPage() {
           <input
             style={searchInputStyle}
             type="text"
-            placeholder="Rechercher par numero ou produit..."
+            placeholder={t.common.search + '...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -338,11 +391,11 @@ export default function OrdersPage() {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="">Tous les statuts</option>
-          <option value="paid">Paye</option>
-          <option value="pending">En attente</option>
-          <option value="refunded">Rembourse</option>
-          <option value="cancelled">Annule</option>
+          <option value="">{t.orders.allStatuses}</option>
+          <option value="paid">{t.orders.paid}</option>
+          <option value="pending">{t.orders.pending}</option>
+          <option value="refunded">{t.orders.refunded}</option>
+          <option value="cancelled">{t.orders.cancelled}</option>
         </select>
 
         {(dateFilter || statusFilter) && (
@@ -350,7 +403,7 @@ export default function OrdersPage() {
             style={{ ...exportBtnStyle, padding: '10px 14px' }}
             onClick={() => { setDateFilter(''); setStatusFilter('') }}
           >
-            <X size={14} /> Reinitialiser
+            <X size={14} /> {t.common.reset}
           </button>
         )}
       </div>
@@ -360,19 +413,19 @@ export default function OrdersPage() {
         {filteredOrders.length === 0 ? (
           <div style={emptyStyle}>
             <FileText size={40} color={C.border} style={{ marginBottom: 12 }} />
-            <p style={{ fontSize: 14, margin: 0 }}>Aucune commande trouvee</p>
+            <p style={{ fontSize: 14, margin: 0 }}>{t.orders.noOrders}</p>
           </div>
         ) : (
           <table style={tableStyle}>
             <thead>
               <tr>
                 <th style={thStyle}></th>
-                <th style={thStyle}>N&deg; Commande</th>
-                <th style={thStyle}>Date / Heure</th>
-                <th style={thStyle}>Articles</th>
-                <th style={thStyle}>Total</th>
-                <th style={thStyle}>Paiement</th>
-                <th style={thStyle}>Statut</th>
+                <th style={thStyle}>{t.orders.orderId}</th>
+                <th style={thStyle}>{t.orders.dateTime}</th>
+                <th style={thStyle}>{t.orders.itemCount}</th>
+                <th style={thStyle}>{t.orders.totalAmount}</th>
+                <th style={thStyle}>{t.orders.paymentMethod}</th>
+                <th style={thStyle}>{t.orders.statusLabel}</th>
               </tr>
             </thead>
             <tbody>
@@ -396,7 +449,7 @@ export default function OrdersPage() {
                     </td>
                     <td style={tdStyle}>{formatDateTime(order.created_at)}</td>
                     <td style={tdStyle}>
-                      {order.items.length} article{order.items.length > 1 ? 's' : ''}
+                      {order.items.length} {t.common.articles}
                     </td>
                     <td style={{ ...tdStyle, fontWeight: 600 }}>{formatFCFA(order.total)}</td>
                     <td style={tdStyle}>
@@ -418,7 +471,7 @@ export default function OrdersPage() {
                         <div style={expandedRowStyle}>
                           <div style={expandedContentStyle}>
                             <p style={{ fontSize: 13, fontWeight: 600, color: C.textSecondary, margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Detail de la commande
+                              {t.orders.orderDetail}
                             </p>
 
                             {order.items.map((item, idx) => (
@@ -434,23 +487,23 @@ export default function OrdersPage() {
                             <div style={{ height: 1, backgroundColor: C.border, margin: '10px 0' }} />
 
                             <div style={detailItemRowStyle}>
-                              <span style={{ color: C.textSecondary }}>Sous-total</span>
+                              <span style={{ color: C.textSecondary }}>{t.pos.subtotal}</span>
                               <span>{formatFCFA(order.subtotal)}</span>
                             </div>
                             {order.discount > 0 && (
                               <div style={detailItemRowStyle}>
-                                <span style={{ color: C.textSecondary }}>Remise</span>
+                                <span style={{ color: C.textSecondary }}>{t.pos.discount}</span>
                                 <span style={{ color: C.danger }}>-{formatFCFA(order.discount)}</span>
                               </div>
                             )}
                             {order.tax > 0 && (
                               <div style={detailItemRowStyle}>
-                                <span style={{ color: C.textSecondary }}>Taxe</span>
+                                <span style={{ color: C.textSecondary }}>{t.pos.tax}</span>
                                 <span>{formatFCFA(order.tax)}</span>
                               </div>
                             )}
                             <div style={{ ...detailItemRowStyle, fontWeight: 700, fontSize: 15 }}>
-                              <span>Total</span>
+                              <span>{t.common.total}</span>
                               <span>{formatFCFA(order.total)}</span>
                             </div>
 
@@ -458,17 +511,45 @@ export default function OrdersPage() {
                               <>
                                 <div style={{ height: 1, backgroundColor: C.border, margin: '8px 0' }} />
                                 <div style={detailItemRowStyle}>
-                                  <span style={{ color: C.textSecondary }}>Montant recu</span>
+                                  <span style={{ color: C.textSecondary }}>{t.pos.amountReceived}</span>
                                   <span>{formatFCFA(order.amount_received)}</span>
                                 </div>
                                 {order.change_due != null && order.change_due > 0 && (
                                   <div style={detailItemRowStyle}>
-                                    <span style={{ color: C.textSecondary }}>Monnaie rendue</span>
+                                    <span style={{ color: C.textSecondary }}>{t.pos.changeDue}</span>
                                     <span style={{ color: C.success }}>{formatFCFA(order.change_due)}</span>
                                   </div>
                                 )}
                               </>
                             )}
+
+                            {/* Order action buttons */}
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                              <button
+                                style={{ ...actionBtnSmStyle, backgroundColor: C.primary + '10', color: C.primary }}
+                                onClick={(e) => { e.stopPropagation(); handleExportInvoice(order) }}
+                              >
+                                <FileText size={13} /> {t.orders.invoice}
+                              </button>
+                              <button
+                                style={{ ...actionBtnSmStyle, backgroundColor: C.success + '10', color: C.success }}
+                                onClick={(e) => { e.stopPropagation(); handleExportReceipt(order) }}
+                              >
+                                <Receipt size={13} /> {t.orders.receipt}
+                              </button>
+                              <button
+                                style={{ ...actionBtnSmStyle, backgroundColor: '#25D366' + '15', color: '#25D366' }}
+                                onClick={(e) => { e.stopPropagation(); handleShareWhatsApp(order) }}
+                              >
+                                <MessageCircle size={13} /> WhatsApp
+                              </button>
+                              <button
+                                style={{ ...actionBtnSmStyle, backgroundColor: C.textSecondary + '10', color: C.textSecondary }}
+                                onClick={(e) => { e.stopPropagation(); handleShareEmail(order) }}
+                              >
+                                <Mail size={13} /> Email
+                              </button>
+                            </div>
 
                             {/* Refund button */}
                             {canRefund && order.status === 'paid' && (
@@ -479,7 +560,7 @@ export default function OrdersPage() {
                                   handleRefund(order)
                                 }}
                               >
-                                <RotateCcw size={14} /> Rembourser
+                                <RotateCcw size={14} /> {t.orders.refund}
                               </button>
                             )}
                           </div>

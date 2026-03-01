@@ -6,7 +6,7 @@
 // -- Application modes -------------------------------------------------------
 
 /** server = manager terminal (back-office) | client = cashier terminal */
-export type Mode = 'server' | 'client'
+export type Mode = 'server' | 'client' | 'all_in_one'
 
 // -- Activity types ----------------------------------------------------------
 

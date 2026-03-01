@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { SyncEntry } from '../types'
 import { db } from '../db/dexie'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
+import { useAppStore } from './appStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -278,8 +279,9 @@ export const useSyncStore = create<SyncState & SyncActions>()((set, get) => ({
         return
       }
 
-      // Try local server first
-      const localAvailable = await checkLocalServer()
+      // For all_in_one mode, skip local server check and go directly to cloud
+      const appMode = useAppStore.getState().mode
+      const localAvailable = appMode === 'all_in_one' ? false : await checkLocalServer()
 
       if (localAvailable) {
         // ── Push to local server (existing behavior) ──
@@ -356,8 +358,9 @@ export const useSyncStore = create<SyncState & SyncActions>()((set, get) => ({
     set({ isSyncing: true, syncError: null })
 
     try {
-      // Try local server first
-      const localAvailable = await checkLocalServer()
+      // For all_in_one mode, skip local server check and go directly to cloud
+      const appMode2 = useAppStore.getState().mode
+      const localAvailable = appMode2 === 'all_in_one' ? false : await checkLocalServer()
 
       if (localAvailable) {
         // ── Pull from local server (existing behavior) ──

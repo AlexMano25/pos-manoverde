@@ -7,10 +7,18 @@ import {
   X,
   Package,
   Loader2,
+  FileText,
+  BarChart3,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
+import ImageUpload from '../components/common/ImageUpload'
+import BarcodeDisplay from '../components/common/BarcodeDisplay'
+import ExportMenu from '../components/common/ExportMenu'
+import type { ExportMenuItem } from '../components/common/ExportMenu'
+import { exportProductsCatalog, exportBarcodesSheet, exportInventoryReport } from '../utils/pdfExport'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
 import type { Product } from '../types'
 import { generateUUID } from '../utils/uuid'
 
@@ -28,10 +36,6 @@ const C = {
   danger: '#dc2626',
 } as const
 
-function formatFCFA(amount: number): string {
-  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
-}
-
 // ── Blank product form state ─────────────────────────────────────────────
 
 interface ProductForm {
@@ -42,6 +46,7 @@ interface ProductForm {
   category: string
   sku: string
   barcode: string
+  imageUrl: string
 }
 
 const emptyForm: ProductForm = {
@@ -52,6 +57,7 @@ const emptyForm: ProductForm = {
   category: '',
   sku: '',
   barcode: '',
+  imageUrl: '',
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -59,6 +65,7 @@ const emptyForm: ProductForm = {
 export default function ProductsPage() {
   const { products, categories, loading, loadProducts, addProduct, updateProduct, deleteProduct } = useProductStore()
   const { currentStore } = useAppStore()
+  const { t, language } = useLanguageStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -69,6 +76,10 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+
+  function formatFCFA(amount: number): string {
+    return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : 'en-US').format(amount) + ' FCFA'
+  }
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -110,6 +121,7 @@ export default function ProductsPage() {
       category: product.category,
       sku: product.sku || '',
       barcode: product.barcode || '',
+      imageUrl: product.image_url || '',
     })
     setFormError('')
     setShowModal(true)
@@ -120,13 +132,19 @@ export default function ProductsPage() {
     setShowDeleteModal(true)
   }
 
+  const handleGenerateBarcode = () => {
+    const prefix = (currentStore?.activity?.slice(0, 3).toUpperCase() || 'POS')
+    const barcode = prefix + '-' + Date.now().toString(36).toUpperCase()
+    updateField('barcode', barcode)
+  }
+
   const handleSave = async () => {
     if (!form.name.trim()) {
-      setFormError('Le nom est requis')
+      setFormError(t.products.productName + ' - ' + t.common.required)
       return
     }
     if (!form.price || parseFloat(form.price) <= 0) {
-      setFormError('Le prix doit etre superieur a 0')
+      setFormError(t.common.price + ' - ' + t.common.required)
       return
     }
     if (!currentStore) return
@@ -144,6 +162,7 @@ export default function ProductsPage() {
           category: form.category.trim() || 'General',
           sku: form.sku.trim() || undefined,
           barcode: form.barcode.trim() || undefined,
+          image_url: form.imageUrl || undefined,
         })
       } else {
         const now = new Date().toISOString()
@@ -157,6 +176,7 @@ export default function ProductsPage() {
           category: form.category.trim() || 'General',
           sku: form.sku.trim() || undefined,
           barcode: form.barcode.trim() || undefined,
+          image_url: form.imageUrl || undefined,
           is_active: true,
           created_at: now,
           updated_at: now,
@@ -166,7 +186,7 @@ export default function ProductsPage() {
       setShowModal(false)
       setForm(emptyForm)
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
+      setFormError(err instanceof Error ? err.message : t.common.error)
     } finally {
       setSaving(false)
     }
@@ -187,6 +207,43 @@ export default function ProductsPage() {
     setForm((prev) => ({ ...prev, [field]: value }))
     setFormError('')
   }
+
+  // ── Export menu items ─────────────────────────────────────────────────
+
+  const storeName = currentStore?.name || 'POS'
+
+  const exportItems: ExportMenuItem[] = [
+    {
+      label: t.products.title + ' - PDF',
+      icon: <FileText size={14} color={C.textSecondary} />,
+      onClick: () => exportProductsCatalog(products, storeName, {
+        name: t.common.name,
+        category: t.common.category,
+        price: t.common.price,
+        stock: t.products.stock,
+        sku: t.products.sku,
+      }),
+    },
+    {
+      label: t.products.barcode + ' - PDF',
+      icon: <FileText size={14} color={C.textSecondary} />,
+      onClick: () => exportBarcodesSheet(products, storeName),
+    },
+    {
+      label: t.stock?.inventoryReport || 'Inventory Report',
+      icon: <BarChart3 size={14} color={C.textSecondary} />,
+      onClick: () => exportInventoryReport(products, storeName, {
+        product: t.common.name,
+        category: t.common.category,
+        stock: t.products.stock,
+        minStock: t.products.minStock,
+        status: t.common.status,
+        price: t.common.price,
+        value: t.common.total,
+      }),
+      divider: true,
+    },
+  ]
 
   // ── Styles ───────────────────────────────────────────────────────────────
 
@@ -209,6 +266,12 @@ export default function ProductsPage() {
     fontWeight: 700,
     color: C.text,
     margin: 0,
+  }
+
+  const headerActionsStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
   }
 
   const addBtnStyle: React.CSSProperties = {
@@ -326,6 +389,25 @@ export default function ProductsPage() {
     backgroundColor: bgColor + '15',
   })
 
+  const thumbnailStyle: React.CSSProperties = {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    objectFit: 'cover',
+    border: `1px solid ${C.border}`,
+  }
+
+  const thumbnailPlaceholderStyle: React.CSSProperties = {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    border: `1px solid ${C.border}`,
+    backgroundColor: C.bg,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+
   // Form styles
   const formFieldStyle: React.CSSProperties = {
     marginBottom: 16,
@@ -417,10 +499,41 @@ export default function ProductsPage() {
     cursor: 'pointer',
   }
 
+  const generateBarcodeBtnStyle: React.CSSProperties = {
+    padding: '6px 12px',
+    borderRadius: 6,
+    border: `1px solid ${C.primary}30`,
+    backgroundColor: C.primary + '10',
+    color: C.primary,
+    fontSize: 12,
+    fontWeight: 500,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  }
+
+  const barcodePreviewStyle: React.CSSProperties = {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: C.bg,
+    borderRadius: 8,
+    border: `1px solid ${C.border}`,
+    textAlign: 'center',
+  }
+
+  const barcodePreviewLabelStyle: React.CSSProperties = {
+    fontSize: 11,
+    color: C.textSecondary,
+    marginBottom: 6,
+    fontWeight: 500,
+  }
+
   if (loading) {
     return (
       <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: C.textSecondary, fontSize: 16 }}>Chargement des produits...</p>
+        <p style={{ color: C.textSecondary, fontSize: 16 }}>{t.common.loading}</p>
       </div>
     )
   }
@@ -429,10 +542,13 @@ export default function ProductsPage() {
     <div style={pageStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Produits</h1>
-        <button style={addBtnStyle} onClick={openAddModal}>
-          <Plus size={16} /> Ajouter un produit
-        </button>
+        <h1 style={titleStyle}>{t.products.title}</h1>
+        <div style={headerActionsStyle}>
+          <ExportMenu items={exportItems} label={t.common.exportPDF} />
+          <button style={addBtnStyle} onClick={openAddModal}>
+            <Plus size={16} /> {t.products.addProduct}
+          </button>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -442,7 +558,7 @@ export default function ProductsPage() {
           <input
             style={searchInputStyle}
             type="text"
-            placeholder="Rechercher par nom, SKU ou code-barres..."
+            placeholder={t.common.search + '...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -461,7 +577,7 @@ export default function ProductsPage() {
           value={selectedCategory ?? ''}
           onChange={(e) => setSelectedCategory(e.target.value || null)}
         >
-          <option value="">Toutes categories</option>
+          <option value="">{t.common.all} - {t.common.category}</option>
           {categories.map((cat) => (
             <option key={cat} value={cat}>{cat}</option>
           ))}
@@ -473,18 +589,19 @@ export default function ProductsPage() {
         {filteredProducts.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center', color: C.textSecondary }}>
             <Package size={40} color={C.border} style={{ marginBottom: 12 }} />
-            <p style={{ fontSize: 14, margin: 0 }}>Aucun produit trouve</p>
+            <p style={{ fontSize: 14, margin: 0 }}>{t.products.noProducts}</p>
           </div>
         ) : (
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Nom / SKU</th>
-                <th style={thStyle}>Categorie</th>
-                <th style={thStyle}>Prix</th>
-                <th style={thStyle}>Stock</th>
-                <th style={thStyle}>Statut</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
+                <th style={{ ...thStyle, width: 56, padding: '10px 8px 10px 16px' }}></th>
+                <th style={thStyle}>{t.common.name} / {t.products.sku}</th>
+                <th style={thStyle}>{t.common.category}</th>
+                <th style={thStyle}>{t.common.price}</th>
+                <th style={thStyle}>{t.products.stock}</th>
+                <th style={thStyle}>{t.common.status}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{t.common.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -492,6 +609,19 @@ export default function ProductsPage() {
                 const isLowStock = product.stock <= (product.min_stock ?? 5)
                 return (
                   <tr key={product.id}>
+                    <td style={{ ...tdStyle, width: 56, padding: '8px 8px 8px 16px' }}>
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          style={thumbnailStyle}
+                        />
+                      ) : (
+                        <div style={thumbnailPlaceholderStyle}>
+                          <Package size={18} color={C.border} />
+                        </div>
+                      )}
+                    </td>
                     <td style={tdStyle}>
                       <div>
                         <span style={{ fontWeight: 600 }}>{product.name}</span>
@@ -509,22 +639,22 @@ export default function ProductsPage() {
                     <td style={isLowStock ? lowStockTd : tdStyle}>
                       {product.stock}
                       {isLowStock && product.stock > 0 && (
-                        <span style={{ fontSize: 11, marginLeft: 6 }}>(faible)</span>
+                        <span style={{ fontSize: 11, marginLeft: 6 }}>({t.products.lowStockAlert})</span>
                       )}
                       {product.stock === 0 && (
-                        <span style={{ fontSize: 11, marginLeft: 6 }}>(rupture)</span>
+                        <span style={{ fontSize: 11, marginLeft: 6 }}>({t.products.outOfStockLabel})</span>
                       )}
                     </td>
                     <td style={tdStyle}>
                       <span style={badgeStyle(product.is_active ? C.success : C.textSecondary)}>
-                        {product.is_active ? 'Actif' : 'Inactif'}
+                        {product.is_active ? t.common.active : t.common.inactive}
                       </span>
                     </td>
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
                       <button
                         style={actionBtnStyle(C.primary)}
                         onClick={() => openEditModal(product)}
-                        title="Modifier"
+                        title={t.common.edit}
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = C.primary + '10')}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
@@ -533,7 +663,7 @@ export default function ProductsPage() {
                       <button
                         style={actionBtnStyle(C.danger)}
                         onClick={() => openDeleteModal(product)}
-                        title="Supprimer"
+                        title={t.common.delete}
                         onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = C.danger + '10')}
                         onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                       >
@@ -552,13 +682,24 @@ export default function ProductsPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingProduct ? 'Modifier le produit' : 'Ajouter un produit'}
+        title={editingProduct ? t.products.editProduct : t.products.addProduct}
         size="md"
       >
         {formError && <div style={formErrorStyle}>{formError}</div>}
 
+        {/* Image Upload */}
+        <div style={{ ...formFieldStyle, textAlign: 'center' }}>
+          <ImageUpload
+            value={form.imageUrl || undefined}
+            onChange={(dataUrl) => updateField('imageUrl', dataUrl || '')}
+            uploadLabel={t.products.imageUpload}
+            cameraLabel={t.products.takePhoto}
+            removeLabel={t.products.removeImage}
+          />
+        </div>
+
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Nom du produit *</label>
+          <label style={formLabelStyle}>{t.products.productName} *</label>
           <input
             style={formInputStyle}
             type="text"
@@ -573,7 +714,7 @@ export default function ProductsPage() {
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Prix de vente (FCFA) *</label>
+            <label style={formLabelStyle}>{t.products.priceLabel} (FCFA) *</label>
             <input
               style={formInputStyle}
               type="number"
@@ -586,7 +727,7 @@ export default function ProductsPage() {
             />
           </div>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Prix d'achat (FCFA)</label>
+            <label style={formLabelStyle}>{t.products.cost} (FCFA)</label>
             <input
               style={formInputStyle}
               type="number"
@@ -602,7 +743,7 @@ export default function ProductsPage() {
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Stock initial</label>
+            <label style={formLabelStyle}>{t.products.initialStock}</label>
             <input
               style={formInputStyle}
               type="number"
@@ -615,7 +756,7 @@ export default function ProductsPage() {
             />
           </div>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Categorie</label>
+            <label style={formLabelStyle}>{t.common.category}</label>
             <input
               style={formInputStyle}
               type="text"
@@ -636,7 +777,7 @@ export default function ProductsPage() {
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>SKU</label>
+            <label style={formLabelStyle}>{t.products.sku}</label>
             <input
               style={formInputStyle}
               type="text"
@@ -648,7 +789,7 @@ export default function ProductsPage() {
             />
           </div>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Code-barres</label>
+            <label style={formLabelStyle}>{t.products.barcode}</label>
             <input
               style={formInputStyle}
               type="text"
@@ -658,16 +799,32 @@ export default function ProductsPage() {
               onFocus={(e) => (e.target.style.borderColor = C.primary)}
               onBlur={(e) => (e.target.style.borderColor = C.border)}
             />
+            <button
+              type="button"
+              style={generateBarcodeBtnStyle}
+              onClick={handleGenerateBarcode}
+            >
+              <Package size={12} />
+              {t.products.generateBarcode}
+            </button>
+
+            {/* Barcode preview */}
+            {form.barcode.trim() && (
+              <div style={barcodePreviewStyle}>
+                <div style={barcodePreviewLabelStyle}>{t.products.barcodePreview}</div>
+                <BarcodeDisplay value={form.barcode.trim()} height={50} width={1.5} />
+              </div>
+            )}
           </div>
         </div>
 
         <div style={formBtnRowStyle}>
           <button style={cancelBtnStyle} onClick={() => setShowModal(false)}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button style={saveBtnStyle} onClick={handleSave} disabled={saving}>
             {saving && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-            {saving ? 'Sauvegarde...' : editingProduct ? 'Modifier' : 'Ajouter'}
+            {saving ? t.common.loading : editingProduct ? t.common.edit : t.common.add}
           </button>
         </div>
       </Modal>
@@ -676,22 +833,22 @@ export default function ProductsPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Confirmer la suppression"
+        title={t.products.deleteConfirm}
         size="sm"
       >
         <p style={{ fontSize: 14, color: C.text, margin: '0 0 8px' }}>
-          Etes-vous sur de vouloir supprimer le produit <strong>{deletingProduct?.name}</strong> ?
+          {t.products.deleteMessage}
         </p>
         <p style={{ fontSize: 13, color: C.textSecondary, margin: 0 }}>
-          Cette action est irreversible.
+          <strong>{deletingProduct?.name}</strong>
         </p>
         <div style={deleteModalBtnRow}>
           <button style={cancelBtnStyle} onClick={() => setShowDeleteModal(false)}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button style={deleteBtnStyle} onClick={handleDelete}>
             <Trash2 size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-            Supprimer
+            {t.common.delete}
           </button>
         </div>
       </Modal>

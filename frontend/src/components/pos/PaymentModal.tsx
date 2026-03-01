@@ -12,6 +12,7 @@ import { useCartStore } from '../../stores/cartStore'
 import { useOrderStore } from '../../stores/orderStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useAppStore } from '../../stores/appStore'
+import { useLanguageStore } from '../../stores/languageStore'
 import type { PaymentMethod } from '../../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -27,19 +28,6 @@ const C = {
   warning: '#f59e0b',
   danger: '#dc2626',
 } as const
-
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function formatFCFA(amount: number): string {
-  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
-}
-
-const paymentLabels: Record<PaymentMethod, string> = {
-  cash: 'Especes',
-  card: 'Carte bancaire',
-  momo: 'Mobile Money',
-  transfer: 'Virement',
-}
 
 const paymentIcons: Record<PaymentMethod, React.ReactNode> = {
   cash: <Banknote size={20} />,
@@ -63,11 +51,27 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const { createOrder } = useOrderStore()
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
+  const { t, language } = useLanguageStore()
 
   const [amountReceived, setAmountReceived] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+
+  // ── Locale-aware helpers ────────────────────────────────────────────────
+
+  const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
+
+  function formatFCFA(amount: number): string {
+    return new Intl.NumberFormat(intlLocale).format(amount) + ' FCFA'
+  }
+
+  const paymentLabels: Record<PaymentMethod, string> = {
+    cash: t.pos.cash,
+    card: t.pos.card,
+    momo: t.pos.momo,
+    transfer: t.pos.transfer,
+  }
 
   const subtotal = getTotal()
   const discount = 0
@@ -103,7 +107,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
         onClose()
       }, 1500)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la creation')
+      setError(err instanceof Error ? err.message : t.common.error)
     } finally {
       setLoading(false)
     }
@@ -120,144 +124,33 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
 
   // ── Styles ─────────────────────────────────────────────────────────────
 
-  const sectionStyle: React.CSSProperties = {
-    marginBottom: 20,
-  }
-
-  const sectionTitleStyle: React.CSSProperties = {
-    fontSize: 13,
-    fontWeight: 600,
-    color: C.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    marginBottom: 10,
-    margin: '0 0 10px',
-  }
-
-  const itemRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '6px 0',
-    fontSize: 14,
-    color: C.text,
-  }
-
-  const dividerStyle: React.CSSProperties = {
-    height: 1,
-    backgroundColor: C.border,
-    margin: '12px 0',
-  }
-
-  const totalRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px 0',
-    fontSize: 20,
-    fontWeight: 700,
-    color: C.text,
-  }
-
-  const paymentMethodBoxStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '12px 16px',
-    borderRadius: 10,
-    backgroundColor: C.primary + '10',
-    color: C.primary,
-    fontWeight: 600,
-    fontSize: 14,
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: 8,
-    border: `1px solid ${C.border}`,
-    fontSize: 16,
-    fontWeight: 600,
-    color: C.text,
-    outline: 'none',
-    transition: 'border-color 0.2s',
-    boxSizing: 'border-box',
-  }
-
-  const changeBoxStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 16px',
-    borderRadius: 10,
-    backgroundColor: changeDue > 0 ? C.success + '10' : C.bg,
-    marginTop: 10,
-  }
-
-  const confirmBtnStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '14px 20px',
-    borderRadius: 10,
-    border: 'none',
-    backgroundColor: canConfirm ? C.primary : '#94a3b8',
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 700,
-    cursor: canConfirm && !loading ? 'pointer' : 'not-allowed',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 10,
-    transition: 'background-color 0.2s',
-    opacity: loading ? 0.7 : 1,
-  }
-
-  const cancelBtnStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '12px 20px',
-    borderRadius: 10,
-    border: 'none',
-    backgroundColor: 'transparent',
-    color: C.textSecondary,
-    fontSize: 14,
-    fontWeight: 500,
-    cursor: loading ? 'not-allowed' : 'pointer',
-  }
-
-  const errorStyle: React.CSSProperties = {
-    backgroundColor: '#fef2f2',
-    color: C.danger,
-    padding: '10px 14px',
-    borderRadius: 8,
-    fontSize: 13,
-    marginBottom: 16,
-    textAlign: 'center',
-  }
-
-  const successOverlayStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px 20px',
-    textAlign: 'center',
-  }
+  const sectionStyle: React.CSSProperties = { marginBottom: 20 }
+  const sectionTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10, margin: '0 0 10px' }
+  const itemRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', fontSize: 14, color: C.text }
+  const dividerStyle: React.CSSProperties = { height: 1, backgroundColor: C.border, margin: '12px 0' }
+  const totalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', fontSize: 20, fontWeight: 700, color: C.text }
+  const paymentMethodBoxStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 10, backgroundColor: C.primary + '10', color: C.primary, fontWeight: 600, fontSize: 14 }
+  const inputStyle: React.CSSProperties = { width: '100%', padding: '12px 14px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 16, fontWeight: 600, color: C.text, outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' }
+  const changeBoxStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderRadius: 10, backgroundColor: changeDue > 0 ? C.success + '10' : C.bg, marginTop: 10 }
+  const confirmBtnStyle: React.CSSProperties = { width: '100%', padding: '14px 20px', borderRadius: 10, border: 'none', backgroundColor: canConfirm ? C.primary : '#94a3b8', color: '#ffffff', fontSize: 16, fontWeight: 700, cursor: canConfirm && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10, transition: 'background-color 0.2s', opacity: loading ? 0.7 : 1 }
+  const cancelBtnStyle: React.CSSProperties = { width: '100%', padding: '12px 20px', borderRadius: 10, border: 'none', backgroundColor: 'transparent', color: C.textSecondary, fontSize: 14, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer' }
+  const errorStyle: React.CSSProperties = { backgroundColor: '#fef2f2', color: C.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16, textAlign: 'center' }
+  const successOverlayStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }
 
   if (success) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Paiement">
+      <Modal isOpen={isOpen} onClose={handleClose} title={t.pos.paymentTitle}>
         <div style={successOverlayStyle}>
           <CheckCircle2 size={64} color={C.success} />
           <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: '16px 0 4px' }}>
-            Paiement confirme !
+            {t.pos.paymentConfirmed}
           </h3>
           <p style={{ color: C.textSecondary, fontSize: 14, margin: 0 }}>
-            Commande enregistree avec succes
+            {t.pos.orderCreated}
           </p>
           {paymentMethod === 'cash' && changeDue > 0 && (
             <p style={{ color: C.success, fontSize: 18, fontWeight: 700, marginTop: 12 }}>
-              Monnaie a rendre : {formatFCFA(changeDue)}
+              {t.pos.changeDue} : {formatFCFA(changeDue)}
             </p>
           )}
         </div>
@@ -266,10 +159,10 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Confirmer le paiement">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t.pos.confirmPayment}>
       {/* Order Summary */}
       <div style={sectionStyle}>
-        <p style={sectionTitleStyle}>Resume de la commande</p>
+        <p style={sectionTitleStyle}>{t.pos.orderSummary}</p>
         {items.map((item) => (
           <div key={item.product_id} style={itemRowStyle}>
             <span>
@@ -283,30 +176,30 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       {/* Totals */}
       <div style={dividerStyle} />
       <div style={itemRowStyle}>
-        <span style={{ color: C.textSecondary }}>Sous-total</span>
+        <span style={{ color: C.textSecondary }}>{t.pos.subtotal}</span>
         <span>{formatFCFA(subtotal)}</span>
       </div>
       {discount > 0 && (
         <div style={itemRowStyle}>
-          <span style={{ color: C.textSecondary }}>Remise</span>
+          <span style={{ color: C.textSecondary }}>{t.pos.discount}</span>
           <span style={{ color: C.danger }}>-{formatFCFA(discount)}</span>
         </div>
       )}
       {tax > 0 && (
         <div style={itemRowStyle}>
-          <span style={{ color: C.textSecondary }}>Taxe ({taxRate}%)</span>
+          <span style={{ color: C.textSecondary }}>{t.pos.tax} ({taxRate}%)</span>
           <span>{formatFCFA(tax)}</span>
         </div>
       )}
       <div style={dividerStyle} />
       <div style={totalRowStyle}>
-        <span>TOTAL</span>
+        <span>{t.pos.grandTotal}</span>
         <span>{formatFCFA(total)}</span>
       </div>
 
       {/* Payment Method */}
       <div style={{ ...sectionStyle, marginTop: 16 }}>
-        <p style={sectionTitleStyle}>Moyen de paiement</p>
+        <p style={sectionTitleStyle}>{t.orders.paymentMethod}</p>
         <div style={paymentMethodBoxStyle}>
           {paymentIcons[paymentMethod]}
           {paymentLabels[paymentMethod]}
@@ -316,11 +209,11 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       {/* Cash-specific: Amount Received */}
       {paymentMethod === 'cash' && (
         <div style={sectionStyle}>
-          <p style={sectionTitleStyle}>Montant recu</p>
+          <p style={sectionTitleStyle}>{t.pos.amountReceived}</p>
           <input
             style={inputStyle}
             type="number"
-            placeholder="Entrez le montant recu"
+            placeholder={t.pos.amountReceived}
             value={amountReceived}
             onChange={(e) => setAmountReceived(e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = C.primary)}
@@ -329,7 +222,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
             autoFocus
           />
           <div style={changeBoxStyle}>
-            <span style={{ fontSize: 14, color: C.textSecondary }}>Monnaie a rendre</span>
+            <span style={{ fontSize: 14, color: C.textSecondary }}>{t.pos.changeDue}</span>
             <span style={{ fontSize: 18, fontWeight: 700, color: changeDue > 0 ? C.success : C.text }}>
               {formatFCFA(changeDue)}
             </span>
@@ -350,16 +243,16 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           {loading ? (
             <>
               <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-              Traitement...
+              {t.pos.processing}
             </>
           ) : (
             <>
-              <CheckCircle2 size={18} /> Confirmer le paiement
+              <CheckCircle2 size={18} /> {t.pos.confirmPayment}
             </>
           )}
         </button>
         <button style={cancelBtnStyle} onClick={handleClose} disabled={loading}>
-          Annuler
+          {t.common.cancel}
         </button>
       </div>
 

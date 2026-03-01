@@ -171,8 +171,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
       login: async (email: string, password: string) => {
         // ── Strategy: Try Supabase Auth first if configured ──
         if (isSupabaseConfigured && supabase) {
-          // First check if local server is available
-          const localAvailable = await isLocalServerReachable()
+          // For all_in_one mode, skip local server check and go directly to Supabase
+          const appMode = useAppStore.getState().mode
+          const localAvailable = appMode === 'all_in_one' ? false : await isLocalServerReachable()
 
           if (!localAvailable) {
             // Use Supabase Auth (cloud mode)
@@ -263,7 +264,8 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
       loginWithPin: async (pin: string) => {
         // ── Supabase cloud mode: PIN login via direct users table lookup ──
         if (isSupabaseConfigured && supabase) {
-          const localAvailable = await isLocalServerReachable()
+          const appMode = useAppStore.getState().mode
+          const localAvailable = appMode === 'all_in_one' ? false : await isLocalServerReachable()
 
           if (!localAvailable) {
             // Look up user by PIN in the users table

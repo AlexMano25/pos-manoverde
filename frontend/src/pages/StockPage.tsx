@@ -8,11 +8,15 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   RefreshCw,
+  Download,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
 import { useProductStore } from '../stores/productStore'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
+import ExportMenu from '../components/common/ExportMenu'
+import { exportInventoryReport } from '../utils/pdfExport'
 import { db, getDeviceId } from '../db/dexie'
 import type { Product, StockMove, StockMoveType } from '../types'
 import { generateUUID } from '../utils/uuid'
@@ -31,23 +35,7 @@ const C = {
   danger: '#dc2626',
 } as const
 
-// formatFCFA removed -- not used in this page (available in bluetooth.ts if needed)
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
-    ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-}
-
 const MIN_STOCK_THRESHOLD = 5
-
-const moveTypeLabels: Record<StockMoveType, string> = {
-  in: 'Entree',
-  out: 'Sortie',
-  adjust: 'Ajustement',
-  sale: 'Vente',
-  return: 'Retour',
-}
 
 const moveTypeColors: Record<StockMoveType, string> = {
   in: '#16a34a',
@@ -63,6 +51,7 @@ export default function StockPage() {
   const { products, loadProducts, updateProduct } = useProductStore()
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
+  const { t, language } = useLanguageStore()
 
   const [showAdjustModal, setShowAdjustModal] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState('')
@@ -72,6 +61,21 @@ export default function StockPage() {
   const [saving, setSaving] = useState(false)
   const [stockMoves, setStockMoves] = useState<StockMove[]>([])
   const [movesLoading, setMovesLoading] = useState(false)
+
+  function formatDateTime(iso: string): string {
+    const locale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'zh' ? 'zh-CN' : 'en-US'
+    const d = new Date(iso)
+    return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ' ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+  }
+
+  const moveTypeLabels: Record<StockMoveType, string> = {
+    in: t.stock.moveIn,
+    out: t.stock.moveOut,
+    adjust: t.stock.moveAdjust,
+    sale: t.orders.title,
+    return: t.common.back,
+  }
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -108,9 +112,9 @@ export default function StockPage() {
   )
 
   const getStockStatus = (product: Product): { label: string; color: string } => {
-    if (product.stock === 0) return { label: 'Rupture', color: C.danger }
-    if (product.stock <= (product.min_stock ?? MIN_STOCK_THRESHOLD)) return { label: 'Faible', color: C.warning }
-    return { label: 'Normal', color: C.success }
+    if (product.stock === 0) return { label: t.stock.outOfStock, color: C.danger }
+    if (product.stock <= (product.min_stock ?? MIN_STOCK_THRESHOLD)) return { label: t.stock.low, color: C.warning }
+    return { label: t.stock.normal, color: C.success }
   }
 
   const getStockBarWidth = (product: Product): number => {
@@ -376,10 +380,29 @@ export default function StockPage() {
     <div style={pageStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Gestion du Stock</h1>
-        <button style={addBtnStyle} onClick={openAdjustModal}>
-          <Plus size={16} /> Ajustement de stock
-        </button>
+        <h1 style={titleStyle}>{t.stock.title}</h1>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <ExportMenu
+            label={t.stock.inventoryReport}
+            items={[
+              {
+                label: t.stock.inventoryReport,
+                icon: <Download size={14} color="#8b5cf6" />,
+                onClick: () => exportInventoryReport(products, currentStore?.name || 'POS', {
+                  product: t.stock.product,
+                  category: t.common.category,
+                  stock: t.stock.currentStock,
+                  minStock: t.stock.minThreshold,
+                  status: t.stock.stockStatus,
+                  price: t.common.price,
+                }),
+              },
+            ]}
+          />
+          <button style={addBtnStyle} onClick={openAdjustModal}>
+            <Plus size={16} /> {t.stock.adjustmentTitle}
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -388,14 +411,14 @@ export default function StockPage() {
           <div style={iconBoxStyle('#8b5cf6')}>
             <Package size={20} color="#8b5cf6" />
           </div>
-          <p style={summaryLabelStyle}>Total produits</p>
+          <p style={summaryLabelStyle}>{t.stock.totalProducts}</p>
           <p style={summaryValueStyle}>{products.length}</p>
         </div>
         <div style={summaryCardStyle}>
           <div style={iconBoxStyle(C.warning)}>
             <AlertTriangle size={20} color={C.warning} />
           </div>
-          <p style={summaryLabelStyle}>Alertes stock faible</p>
+          <p style={summaryLabelStyle}>{t.stock.lowStockAlerts}</p>
           <p style={{ ...summaryValueStyle, color: lowStockProducts.length > 0 ? C.warning : C.text }}>
             {lowStockProducts.length}
           </p>
@@ -404,7 +427,7 @@ export default function StockPage() {
           <div style={iconBoxStyle(C.danger)}>
             <XCircle size={20} color={C.danger} />
           </div>
-          <p style={summaryLabelStyle}>Rupture de stock</p>
+          <p style={summaryLabelStyle}>{t.stock.outOfStockCount}</p>
           <p style={{ ...summaryValueStyle, color: outOfStockProducts.length > 0 ? C.danger : C.text }}>
             {outOfStockProducts.length}
           </p>
@@ -413,22 +436,22 @@ export default function StockPage() {
 
       {/* Stock Table */}
       <div style={sectionStyle}>
-        <h3 style={sectionTitleStyle}>Inventaire des produits</h3>
+        <h3 style={sectionTitleStyle}>{t.stock.product}</h3>
         <div style={tableCardStyle}>
           {products.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center', color: C.textSecondary }}>
               <Package size={40} color={C.border} style={{ marginBottom: 12 }} />
-              <p style={{ fontSize: 14, margin: 0 }}>Aucun produit en stock</p>
+              <p style={{ fontSize: 14, margin: 0 }}>{t.products.noProducts}</p>
             </div>
           ) : (
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Produit</th>
-                  <th style={thStyle}>Categorie</th>
-                  <th style={thStyle}>Stock actuel</th>
-                  <th style={thStyle}>Seuil min.</th>
-                  <th style={thStyle}>Statut</th>
+                  <th style={thStyle}>{t.stock.product}</th>
+                  <th style={thStyle}>{t.common.category}</th>
+                  <th style={thStyle}>{t.stock.currentStock}</th>
+                  <th style={thStyle}>{t.stock.minThreshold}</th>
+                  <th style={thStyle}>{t.stock.stockStatus}</th>
                 </tr>
               </thead>
               <tbody>
@@ -462,26 +485,26 @@ export default function StockPage() {
 
       {/* Stock Movement History */}
       <div style={sectionStyle}>
-        <h3 style={sectionTitleStyle}>Historique des mouvements</h3>
+        <h3 style={sectionTitleStyle}>{t.stock.movementHistory}</h3>
         <div style={tableCardStyle}>
           {movesLoading ? (
             <div style={{ padding: 40, textAlign: 'center', color: C.textSecondary }}>
-              Chargement...
+              {t.common.loading}
             </div>
           ) : stockMoves.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center', color: C.textSecondary }}>
               <RefreshCw size={32} color={C.border} style={{ marginBottom: 8 }} />
-              <p style={{ fontSize: 14, margin: 0 }}>Aucun mouvement de stock enregistre</p>
+              <p style={{ fontSize: 14, margin: 0 }}>{t.common.noData}</p>
             </div>
           ) : (
             <table style={tableStyle}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Date</th>
-                  <th style={thStyle}>Produit</th>
-                  <th style={thStyle}>Type</th>
-                  <th style={thStyle}>Quantite</th>
-                  <th style={thStyle}>Raison</th>
+                  <th style={thStyle}>{t.common.date}</th>
+                  <th style={thStyle}>{t.stock.product}</th>
+                  <th style={thStyle}>{t.stock.moveType}</th>
+                  <th style={thStyle}>{t.stock.qty}</th>
+                  <th style={thStyle}>{t.stock.reason}</th>
                 </tr>
               </thead>
               <tbody>
@@ -515,55 +538,55 @@ export default function StockPage() {
       <Modal
         isOpen={showAdjustModal}
         onClose={() => setShowAdjustModal(false)}
-        title="Ajustement de stock"
+        title={t.stock.adjustmentTitle}
         size="md"
       >
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Produit</label>
+          <label style={formLabelStyle}>{t.stock.product}</label>
           <select
             style={formSelectStyle}
             value={selectedProductId}
             onChange={(e) => setSelectedProductId(e.target.value)}
           >
-            <option value="">Selectionner un produit</option>
+            <option value="">{t.common.search}...</option>
             {products.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.name} (Stock: {p.stock})
+                {p.name} ({t.products.stock}: {p.stock})
               </option>
             ))}
           </select>
         </div>
 
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Type de mouvement</label>
+          <label style={formLabelStyle}>{t.stock.moveType}</label>
           <div style={moveTypeTilesStyle}>
             <div
               style={moveTypeTileStyle(moveType === 'in', C.success)}
               onClick={() => setMoveType('in')}
             >
               <ArrowDownCircle size={18} />
-              Entree
+              {t.stock.moveIn}
             </div>
             <div
               style={moveTypeTileStyle(moveType === 'out', C.danger)}
               onClick={() => setMoveType('out')}
             >
               <ArrowUpCircle size={18} />
-              Sortie
+              {t.stock.moveOut}
             </div>
             <div
               style={moveTypeTileStyle(moveType === 'adjust', C.warning)}
               onClick={() => setMoveType('adjust')}
             >
               <RefreshCw size={18} />
-              Ajuster
+              {t.stock.moveAdjust}
             </div>
           </div>
         </div>
 
         <div style={formFieldStyle}>
           <label style={formLabelStyle}>
-            {moveType === 'adjust' ? 'Nouveau stock' : 'Quantite'}
+            {moveType === 'adjust' ? t.products.stock : t.common.quantity}
           </label>
           <input
             style={formInputStyle}
@@ -578,11 +601,11 @@ export default function StockPage() {
         </div>
 
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Raison (optionnel)</label>
+          <label style={formLabelStyle}>{t.stock.reason}</label>
           <input
             style={formInputStyle}
             type="text"
-            placeholder="Ex: Livraison fournisseur, Inventaire..."
+            placeholder="..."
             value={moveReason}
             onChange={(e) => setMoveReason(e.target.value)}
             onFocus={(e) => (e.target.style.borderColor = C.primary)}
@@ -592,7 +615,7 @@ export default function StockPage() {
 
         <div style={formBtnRowStyle}>
           <button style={cancelBtnStyle} onClick={() => setShowAdjustModal(false)}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button
             style={saveBtnStyle}
@@ -600,7 +623,7 @@ export default function StockPage() {
             disabled={saving || !selectedProductId || !moveQty}
           >
             {saving && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? t.common.loading : t.common.save}
           </button>
         </div>
       </Modal>

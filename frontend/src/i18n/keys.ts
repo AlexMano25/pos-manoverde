@@ -53,6 +53,15 @@ export type TranslationKeys = {
     version: string
     noData: string
     required: string
+    exportPDF: string
+    share: string
+    shareWhatsApp: string
+    shareEmail: string
+    download: string
+    viewAll: string
+    articles: string
+    comingSoon: string
+    clear: string
   }
 
   // Auth
@@ -153,6 +162,8 @@ export type TranslationKeys = {
     serverUrlHint: string
     storeNameHint: string
     configure: string
+    allInOne: string
+    allInOneDesc: string
   }
 
   // Navigation
@@ -184,6 +195,8 @@ export type TranslationKeys = {
     orderCount: string
     catalog: string
     units: string
+    viewAll: string
+    noOrdersYet: string
   }
 
   // POS
@@ -212,6 +225,12 @@ export type TranslationKeys = {
     printReceipt: string
     newOrder: string
     inStock: string
+    clearCart: string
+    addToCartHint: string
+    perUnit: string
+    orderSummary: string
+    processing: string
+    paymentConfirmed: string
   }
 
   // Products
@@ -234,6 +253,12 @@ export type TranslationKeys = {
     outOfStockLabel: string
     priceLabel: string
     categoryLabel: string
+    imageUpload: string
+    takePhoto: string
+    removeImage: string
+    generateBarcode: string
+    barcodePreview: string
+    initialStock: string
   }
 
   // Orders
@@ -257,6 +282,10 @@ export type TranslationKeys = {
     refunded: string
     cancelled: string
     allStatuses: string
+    receipt: string
+    invoice: string
+    salesReport: string
+    quote: string
   }
 
   // Stock
@@ -283,6 +312,7 @@ export type TranslationKeys = {
     low: string
     critical: string
     outOfStock: string
+    inventoryReport: string
   }
 
   // Employees

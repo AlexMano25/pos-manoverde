@@ -34,6 +34,7 @@ import {
   Building2,
   Plane,
   Globe,
+  MonitorSmartphone,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -116,7 +117,7 @@ export default function SetupPage() {
       setServerUrl(serverUrlInput.replace(/\/+$/, ''))
     }
 
-    if (selectedMode === 'server' && storeNameInput) {
+    if ((selectedMode === 'server' || selectedMode === 'all_in_one') && storeNameInput) {
       const store = {
         id: generateUUID(),
         name: storeNameInput,
@@ -139,6 +140,7 @@ export default function SetupPage() {
     if (step === 2) return selectedMode !== null
     if (step === 3) {
       if (selectedMode === 'client') return serverUrlInput.trim().length > 0
+      // server and all_in_one both need store name
       return storeNameInput.trim().length > 0
     }
     return false
@@ -258,7 +260,7 @@ export default function SetupPage() {
 
   const modeGridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr',
     gap: 16,
   }
 
@@ -474,6 +476,14 @@ export default function SetupPage() {
                 <div style={tileIconStyle(selectedMode === 'client')}><Monitor size={28} /></div>
                 <p style={tileLabelStyle(selectedMode === 'client')}>{t.setup.clientMode}</p>
                 <p style={modeDescStyle}>{t.setup.clientModeDesc}</p>
+              </div>
+              <div
+                style={modeTileStyle(selectedMode === 'all_in_one')}
+                onClick={() => setSelectedMode('all_in_one')}
+              >
+                <div style={tileIconStyle(selectedMode === 'all_in_one')}><MonitorSmartphone size={28} /></div>
+                <p style={tileLabelStyle(selectedMode === 'all_in_one')}>{t.setup.allInOne}</p>
+                <p style={modeDescStyle}>{t.setup.allInOneDesc}</p>
               </div>
             </div>
           )}

@@ -22,7 +22,7 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login)
   const loginWithPin = useAuthStore((s) => s.loginWithPin)
   const user = useAuthStore((s) => s.user)
-  const { serverUrl, setServerUrl, setSection } = useAppStore()
+  const { serverUrl, setServerUrl, setSection, mode } = useAppStore()
   const { t } = useLanguageStore()
 
   useEffect(() => {
@@ -452,30 +452,34 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Server Settings */}
-          <button style={settingsToggleStyle} onClick={() => setShowSettings(!showSettings)}>
-            {t.auth.serverSettings}
-            {showSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
+          {/* Server Settings (hidden in all_in_one mode) */}
+          {mode !== 'all_in_one' && (
+            <>
+              <button style={settingsToggleStyle} onClick={() => setShowSettings(!showSettings)}>
+                {t.auth.serverSettings}
+                {showSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
 
-          {showSettings && (
-            <div style={settingsBoxStyle}>
-              <label style={{ ...labelStyle, marginBottom: 6 }}>{t.auth.serverUrl}</label>
-              <div style={settingsInputRow}>
-                <input
-                  style={{ ...inputStyle, flex: 1 }}
-                  type="url"
-                  placeholder="http://192.168.1.100:3000/api"
-                  value={serverUrlInput}
-                  onChange={(e) => setServerUrlInput(e.target.value)}
-                  onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
-                  onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
-                />
-                <button style={saveButtonStyle} onClick={handleSaveServerUrl}>
-                  {t.common.save}
-                </button>
-              </div>
-            </div>
+              {showSettings && (
+                <div style={settingsBoxStyle}>
+                  <label style={{ ...labelStyle, marginBottom: 6 }}>{t.auth.serverUrl}</label>
+                  <div style={settingsInputRow}>
+                    <input
+                      style={{ ...inputStyle, flex: 1 }}
+                      type="url"
+                      placeholder="http://192.168.1.100:3000/api"
+                      value={serverUrlInput}
+                      onChange={(e) => setServerUrlInput(e.target.value)}
+                      onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
+                      onBlur={(e) => (e.target.style.borderColor = '#e2e8f0')}
+                    />
+                    <button style={saveButtonStyle} onClick={handleSaveServerUrl}>
+                      {t.common.save}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

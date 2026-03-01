@@ -11,6 +11,7 @@ import {
 import Modal from '../components/common/Modal'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
 import { db } from '../db/dexie'
 import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
@@ -28,13 +29,6 @@ const C = {
   warning: '#f59e0b',
   danger: '#dc2626',
 } as const
-
-const roleLabels: Record<UserRole, string> = {
-  admin: 'Administrateur',
-  manager: 'Manager',
-  cashier: 'Caissier',
-  stock: 'Gestionnaire stock',
-}
 
 const roleColors: Record<UserRole, string> = {
   admin: '#dc2626',
@@ -66,6 +60,7 @@ const emptyForm: EmployeeForm = {
 export default function EmployeesPage() {
   const { user: currentUser } = useAuthStore()
   const { currentStore, mode } = useAppStore()
+  const { t } = useLanguageStore()
 
   const [employees, setEmployees] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,6 +71,13 @@ export default function EmployeesPage() {
   const [saving, setSaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingEmployee, setDeletingEmployee] = useState<User | null>(null)
+
+  const roleLabels: Record<UserRole, string> = {
+    admin: t.employees.admin,
+    manager: t.employees.manager,
+    cashier: t.employees.cashier,
+    stock: t.employees.stockRole,
+  }
 
   const loadEmployees = useCallback(async () => {
     if (!currentStore?.id) return
@@ -130,11 +132,11 @@ export default function EmployeesPage() {
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      setFormError('Le nom est requis')
+      setFormError(t.common.name + ' - ' + t.common.required)
       return
     }
     if (!form.email.trim()) {
-      setFormError('L\'email est requis')
+      setFormError(t.common.email + ' - ' + t.common.required)
       return
     }
     if (!currentStore) return
@@ -174,7 +176,7 @@ export default function EmployeesPage() {
       setForm(emptyForm)
       await loadEmployees()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'Erreur lors de la sauvegarde')
+      setFormError(err instanceof Error ? err.message : t.common.error)
     } finally {
       setSaving(false)
     }
@@ -228,10 +230,10 @@ export default function EmployeesPage() {
         <div style={{ textAlign: 'center', color: C.textSecondary }}>
           <Users size={48} color={C.border} style={{ marginBottom: 16 }} />
           <h2 style={{ fontSize: 18, fontWeight: 600, color: C.text, margin: '0 0 8px' }}>
-            Mode client
+            {t.employees.serverModeOnly}
           </h2>
           <p style={{ fontSize: 14, margin: 0 }}>
-            La gestion des employes est disponible uniquement en mode serveur.
+            {t.employees.serverModeMessage}
           </p>
         </div>
       </div>
@@ -344,7 +346,7 @@ export default function EmployeesPage() {
   if (loading) {
     return (
       <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: C.textSecondary, fontSize: 16 }}>Chargement des employes...</p>
+        <p style={{ color: C.textSecondary, fontSize: 16 }}>{t.common.loading}</p>
       </div>
     )
   }
@@ -353,9 +355,9 @@ export default function EmployeesPage() {
     <div style={pageStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>Employes</h1>
+        <h1 style={titleStyle}>{t.employees.title}</h1>
         <button style={addBtnStyle} onClick={openAddModal}>
-          <Plus size={16} /> Ajouter
+          <Plus size={16} /> {t.employees.addEmployee}
         </button>
       </div>
 
@@ -364,18 +366,18 @@ export default function EmployeesPage() {
         {employees.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center', color: C.textSecondary }}>
             <Users size={40} color={C.border} style={{ marginBottom: 12 }} />
-            <p style={{ fontSize: 14, margin: 0 }}>Aucun employe enregistre</p>
+            <p style={{ fontSize: 14, margin: 0 }}>{t.employees.noEmployees}</p>
           </div>
         ) : (
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>Nom</th>
-                <th style={thStyle}>Role</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Telephone</th>
-                <th style={thStyle}>Statut</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Actions</th>
+                <th style={thStyle}>{t.common.name}</th>
+                <th style={thStyle}>{t.employees.role}</th>
+                <th style={thStyle}>{t.common.email}</th>
+                <th style={thStyle}>{t.common.phone}</th>
+                <th style={thStyle}>{t.common.status}</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>{t.common.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -398,12 +400,12 @@ export default function EmployeesPage() {
                         background: (emp.is_active ? C.success : C.textSecondary) + '15',
                       }}
                       onClick={() => toggleActive(emp)}
-                      title={emp.is_active ? 'Desactiver' : 'Activer'}
+                      title={emp.is_active ? t.common.inactive : t.common.active}
                     >
                       {emp.is_active ? (
-                        <><UserCheck size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Actif</>
+                        <><UserCheck size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} /> {t.common.active}</>
                       ) : (
-                        <><UserX size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Inactif</>
+                        <><UserX size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} /> {t.common.inactive}</>
                       )}
                     </button>
                   </td>
@@ -411,14 +413,14 @@ export default function EmployeesPage() {
                     <button
                       style={actionBtnStyle(C.primary)}
                       onClick={() => openEditModal(emp)}
-                      title="Modifier"
+                      title={t.common.edit}
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       style={actionBtnStyle(C.danger)}
                       onClick={() => openDeleteModal(emp)}
-                      title="Supprimer"
+                      title={t.common.delete}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -434,13 +436,13 @@ export default function EmployeesPage() {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingEmployee ? 'Modifier l\'employe' : 'Ajouter un employe'}
+        title={editingEmployee ? t.employees.editEmployee : t.employees.addEmployee}
         size="md"
       >
         {formError && <div style={formErrorStyle}>{formError}</div>}
 
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Nom complet *</label>
+          <label style={formLabelStyle}>{t.common.name} *</label>
           <input
             style={formInputStyle}
             type="text"
@@ -454,7 +456,7 @@ export default function EmployeesPage() {
         </div>
 
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Email *</label>
+          <label style={formLabelStyle}>{t.common.email} *</label>
           <input
             style={formInputStyle}
             type="email"
@@ -468,22 +470,22 @@ export default function EmployeesPage() {
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Role</label>
+            <label style={formLabelStyle}>{t.employees.role}</label>
             <select
               style={formSelectStyle}
               value={form.role}
               onChange={(e) => updateField('role', e.target.value)}
             >
-              {currentUser?.role === 'admin' && <option value="admin">Administrateur</option>}
+              {currentUser?.role === 'admin' && <option value="admin">{t.employees.admin}</option>}
               {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
-                <option value="manager">Manager</option>
+                <option value="manager">{t.employees.manager}</option>
               )}
-              <option value="cashier">Caissier</option>
-              <option value="stock">Gestionnaire stock</option>
+              <option value="cashier">{t.employees.cashier}</option>
+              <option value="stock">{t.employees.stockRole}</option>
             </select>
           </div>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>Telephone</label>
+            <label style={formLabelStyle}>{t.common.phone}</label>
             <input
               style={formInputStyle}
               type="tel"
@@ -497,7 +499,7 @@ export default function EmployeesPage() {
         </div>
 
         <div style={formFieldStyle}>
-          <label style={formLabelStyle}>Code PIN (4-6 chiffres)</label>
+          <label style={formLabelStyle}>{t.employees.pin}</label>
           <input
             style={formInputStyle}
             type="password"
@@ -512,18 +514,15 @@ export default function EmployeesPage() {
             maxLength={6}
             inputMode="numeric"
           />
-          <p style={{ fontSize: 12, color: C.textSecondary, marginTop: 4, marginBottom: 0 }}>
-            Ce PIN permet a l'employe de se connecter rapidement a la caisse.
-          </p>
         </div>
 
         <div style={formBtnRowStyle}>
           <button style={cancelBtnStyle} onClick={() => setShowModal(false)}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button style={saveBtnStyle} onClick={handleSave} disabled={saving}>
             {saving && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
-            {saving ? 'Sauvegarde...' : editingEmployee ? 'Modifier' : 'Ajouter'}
+            {saving ? t.common.loading : editingEmployee ? t.common.edit : t.common.add}
           </button>
         </div>
       </Modal>
@@ -532,21 +531,21 @@ export default function EmployeesPage() {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Confirmer la suppression"
+        title={t.products.deleteConfirm}
         size="sm"
       >
         <p style={{ fontSize: 14, color: C.text, margin: '0 0 8px' }}>
-          Etes-vous sur de vouloir desactiver <strong>{deletingEmployee?.name}</strong> ?
+          {t.employees.deleteConfirm}
         </p>
         <p style={{ fontSize: 13, color: C.textSecondary, margin: 0 }}>
-          L'employe ne pourra plus se connecter a la caisse.
+          <strong>{deletingEmployee?.name}</strong>
         </p>
         <div style={formBtnRowStyle}>
           <button style={cancelBtnStyle} onClick={() => setShowDeleteModal(false)}>
-            Annuler
+            {t.common.cancel}
           </button>
           <button style={deleteBtnStyle} onClick={handleDelete}>
-            Desactiver
+            {t.common.delete}
           </button>
         </div>
       </Modal>

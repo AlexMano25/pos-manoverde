@@ -15,6 +15,7 @@ import {
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
+import { useLanguageStore } from '../stores/languageStore'
 import PaymentModal from '../components/pos/PaymentModal'
 import type { PaymentMethod, Product } from '../types'
 
@@ -32,24 +33,27 @@ const C = {
   danger: '#dc2626',
 } as const
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function formatFCFA(amount: number): string {
-  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
-}
-
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function POSPage() {
   const { products, categories, loadProducts } = useProductStore()
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()
+  const { t, language } = useLanguageStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('cash')
+
+  // ── Locale-aware helpers ────────────────────────────────────────────────
+
+  const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
+
+  function formatFCFA(amount: number): string {
+    return new Intl.NumberFormat(intlLocale).format(amount) + ' FCFA'
+  }
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -93,359 +97,44 @@ export default function POSPage() {
 
   // ── Styles ───────────────────────────────────────────────────────────────
 
-  const pageStyle: React.CSSProperties = {
-    display: 'flex',
-    height: '100%',
-    backgroundColor: C.bg,
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    overflow: 'hidden',
-  }
-
-  // Left panel (products)
-  const leftPanelStyle: React.CSSProperties = {
-    flex: '0 0 60%',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: 20,
-    overflow: 'hidden',
-  }
-
-  // Search bar
-  const searchBarStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: C.card,
-    borderRadius: 10,
-    padding: '0 16px',
-    border: `1px solid ${C.border}`,
-    marginBottom: 16,
-  }
-
-  const searchInputStyle: React.CSSProperties = {
-    flex: 1,
-    border: 'none',
-    outline: 'none',
-    padding: '12px 0',
-    fontSize: 14,
-    color: C.text,
-    backgroundColor: 'transparent',
-  }
-
-  // Category pills
-  const pillsContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: 8,
-    marginBottom: 16,
-    overflowX: 'auto',
-    paddingBottom: 4,
-    flexShrink: 0,
-  }
-
-  const pillStyle = (isActive: boolean): React.CSSProperties => ({
-    padding: '7px 16px',
-    borderRadius: 20,
-    border: `1px solid ${isActive ? C.primary : C.border}`,
-    backgroundColor: isActive ? C.primary : C.card,
-    color: isActive ? '#ffffff' : C.textSecondary,
-    fontSize: 13,
-    fontWeight: 500,
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.15s',
-    flexShrink: 0,
-  })
-
-  // Product grid
-  const gridContainerStyle: React.CSSProperties = {
-    flex: 1,
-    overflowY: 'auto',
-    paddingRight: 4,
-  }
-
-  const gridStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: 12,
-  }
-
-  const productCardStyle = (inStock: boolean): React.CSSProperties => ({
-    backgroundColor: C.card,
-    borderRadius: 10,
-    padding: 14,
-    border: `1px solid ${C.border}`,
-    cursor: inStock ? 'pointer' : 'not-allowed',
-    opacity: inStock ? 1 : 0.4,
-    transition: 'all 0.15s',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-  })
-
-  const productNameStyle: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 600,
-    color: C.text,
-    margin: 0,
-    lineHeight: 1.3,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }
-
-  const productPriceStyle: React.CSSProperties = {
-    fontSize: 15,
-    fontWeight: 700,
-    color: C.primary,
-    margin: 0,
-  }
-
-  const productStockStyle = (count: number): React.CSSProperties => ({
-    fontSize: 12,
-    color: count <= 5 ? C.danger : C.textSecondary,
-    margin: 0,
-    fontWeight: count <= 5 ? 600 : 400,
-  })
-
-  // Right panel (cart)
-  const rightPanelStyle: React.CSSProperties = {
-    flex: '0 0 40%',
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: C.card,
-    borderLeft: `1px solid ${C.border}`,
-    overflow: 'hidden',
-  }
-
-  const cartHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 20px',
-    borderBottom: `1px solid ${C.border}`,
-    flexShrink: 0,
-  }
-
-  const cartTitleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontSize: 16,
-    fontWeight: 700,
-    color: C.text,
-    margin: 0,
-  }
-
-  const cartCountBadge: React.CSSProperties = {
-    backgroundColor: C.primary,
-    color: '#ffffff',
-    fontSize: 11,
-    fontWeight: 700,
-    padding: '2px 8px',
-    borderRadius: 12,
-  }
-
-  const clearBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: C.danger,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-    fontSize: 13,
-    padding: '4px 8px',
-    borderRadius: 6,
-  }
-
-  const cartListStyle: React.CSSProperties = {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '12px 20px',
-  }
-
-  const cartItemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '10px 0',
-    borderBottom: `1px solid ${C.border}`,
-  }
-
-  const cartItemInfoStyle: React.CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-  }
-
-  const cartItemNameStyle: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 600,
-    color: C.text,
-    margin: '0 0 2px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }
-
-  const cartItemPriceStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: C.textSecondary,
-    margin: 0,
-  }
-
-  const qtyControlsStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 0,
-    border: `1px solid ${C.border}`,
-    borderRadius: 8,
-    overflow: 'hidden',
-  }
-
-  const qtyBtnStyle: React.CSSProperties = {
-    width: 30,
-    height: 30,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: 'none',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    color: C.textSecondary,
-    fontSize: 14,
-  }
-
-  const qtyInputStyle: React.CSSProperties = {
-    width: 36,
-    height: 30,
-    textAlign: 'center',
-    border: 'none',
-    borderLeft: `1px solid ${C.border}`,
-    borderRight: `1px solid ${C.border}`,
-    outline: 'none',
-    fontSize: 13,
-    fontWeight: 600,
-    color: C.text,
-    backgroundColor: 'transparent',
-  }
-
-  const cartItemTotalStyle: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 700,
-    color: C.text,
-    whiteSpace: 'nowrap',
-    minWidth: 80,
-    textAlign: 'right',
-  }
-
-  const removeItemBtnStyle: React.CSSProperties = {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: C.textSecondary,
-    padding: 4,
-    borderRadius: 4,
-    display: 'flex',
-  }
-
-  // Cart footer
-  const cartFooterStyle: React.CSSProperties = {
-    padding: '16px 20px',
-    borderTop: `1px solid ${C.border}`,
-    flexShrink: 0,
-  }
-
-  const summaryRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '4px 0',
-    fontSize: 14,
-    color: C.textSecondary,
-  }
-
-  const discountInputRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-  }
-
-  const discountInputStyle: React.CSSProperties = {
-    width: 50,
-    padding: '4px 8px',
-    borderRadius: 6,
-    border: `1px solid ${C.border}`,
-    fontSize: 13,
-    textAlign: 'center',
-    outline: 'none',
-    color: C.text,
-  }
-
-  const totalRowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '10px 0',
-    fontSize: 22,
-    fontWeight: 800,
-    color: C.text,
-  }
-
-  const paymentButtonsStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr 1fr',
-    gap: 8,
-    marginTop: 12,
-  }
-
-  const payBtnBase: React.CSSProperties = {
-    padding: '12px 8px',
-    borderRadius: 8,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: items.length > 0 ? 'pointer' : 'not-allowed',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: 4,
-    opacity: items.length > 0 ? 1 : 0.5,
-    transition: 'all 0.15s',
-  }
-
-  const payBtnPrimary: React.CSSProperties = {
-    ...payBtnBase,
-    backgroundColor: C.primary,
-    color: '#ffffff',
-    border: 'none',
-  }
-
-  const payBtnOutline: React.CSSProperties = {
-    ...payBtnBase,
-    backgroundColor: '#ffffff',
-    color: C.text,
-    border: `1px solid ${C.border}`,
-  }
-
-  const emptyCartStyle: React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: C.textSecondary,
-    gap: 8,
-    padding: 40,
-  }
-
-  const emptyGridStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 60,
-    color: C.textSecondary,
-    gap: 8,
-  }
+  const pageStyle: React.CSSProperties = { display: 'flex', height: '100%', backgroundColor: C.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', overflow: 'hidden' }
+  const leftPanelStyle: React.CSSProperties = { flex: '0 0 60%', display: 'flex', flexDirection: 'column', padding: 20, overflow: 'hidden' }
+  const searchBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 10, padding: '0 16px', border: `1px solid ${C.border}`, marginBottom: 16 }
+  const searchInputStyle: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', padding: '12px 0', fontSize: 14, color: C.text, backgroundColor: 'transparent' }
+  const pillsContainerStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, flexShrink: 0 }
+  const pillStyle = (isActive: boolean): React.CSSProperties => ({ padding: '7px 16px', borderRadius: 20, border: `1px solid ${isActive ? C.primary : C.border}`, backgroundColor: isActive ? C.primary : C.card, color: isActive ? '#ffffff' : C.textSecondary, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 })
+  const gridContainerStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', paddingRight: 4 }
+  const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }
+  const productCardStyle = (inStock: boolean): React.CSSProperties => ({ backgroundColor: C.card, borderRadius: 10, padding: 14, border: `1px solid ${C.border}`, cursor: inStock ? 'pointer' : 'not-allowed', opacity: inStock ? 1 : 0.4, transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 6 })
+  const productNameStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: C.text, margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+  const productPriceStyle: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: C.primary, margin: 0 }
+  const productStockStyle = (count: number): React.CSSProperties => ({ fontSize: 12, color: count <= 5 ? C.danger : C.textSecondary, margin: 0, fontWeight: count <= 5 ? 600 : 400 })
+  const rightPanelStyle: React.CSSProperties = { flex: '0 0 40%', display: 'flex', flexDirection: 'column', backgroundColor: C.card, borderLeft: `1px solid ${C.border}`, overflow: 'hidden' }
+  const cartHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }
+  const cartTitleStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }
+  const cartCountBadge: React.CSSProperties = { backgroundColor: C.primary, color: '#ffffff', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12 }
+  const clearBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: C.danger, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, padding: '4px 8px', borderRadius: 6 }
+  const cartListStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: '12px 20px' }
+  const cartItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${C.border}` }
+  const cartItemInfoStyle: React.CSSProperties = { flex: 1, minWidth: 0 }
+  const cartItemNameStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: C.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
+  const cartItemPriceStyle: React.CSSProperties = { fontSize: 12, color: C.textSecondary, margin: 0 }
+  const qtyControlsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 0, border: `1px solid ${C.border}`, borderRadius: 8, overflow: 'hidden' }
+  const qtyBtnStyle: React.CSSProperties = { width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', color: C.textSecondary, fontSize: 14 }
+  const qtyInputStyle: React.CSSProperties = { width: 36, height: 30, textAlign: 'center', border: 'none', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`, outline: 'none', fontSize: 13, fontWeight: 600, color: C.text, backgroundColor: 'transparent' }
+  const cartItemTotalStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }
+  const removeItemBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary, padding: 4, borderRadius: 4, display: 'flex' }
+  const cartFooterStyle: React.CSSProperties = { padding: '16px 20px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }
+  const summaryRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: 14, color: C.textSecondary }
+  const discountInputRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
+  const discountInputStyle: React.CSSProperties = { width: 50, padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 13, textAlign: 'center', outline: 'none', color: C.text }
+  const totalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', fontSize: 22, fontWeight: 800, color: C.text }
+  const paymentButtonsStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginTop: 12 }
+  const payBtnBase: React.CSSProperties = { padding: '12px 8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: items.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: items.length > 0 ? 1 : 0.5, transition: 'all 0.15s' }
+  const payBtnPrimary: React.CSSProperties = { ...payBtnBase, backgroundColor: C.primary, color: '#ffffff', border: 'none' }
+  const payBtnOutline: React.CSSProperties = { ...payBtnBase, backgroundColor: '#ffffff', color: C.text, border: `1px solid ${C.border}` }
+  const emptyCartStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: C.textSecondary, gap: 8, padding: 40 }
+  const emptyGridStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 60, color: C.textSecondary, gap: 8 }
 
   return (
     <div style={pageStyle}>
@@ -457,7 +146,7 @@ export default function POSPage() {
           <input
             style={searchInputStyle}
             type="text"
-            placeholder="Rechercher un produit (nom, SKU, code-barres)..."
+            placeholder={t.pos.searchProducts}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -477,7 +166,7 @@ export default function POSPage() {
             style={pillStyle(selectedCategory === null)}
             onClick={() => setSelectedCategory(null)}
           >
-            Tous
+            {t.common.all}
           </button>
           {categories.map((cat) => (
             <button
@@ -495,7 +184,7 @@ export default function POSPage() {
           {filteredProducts.length === 0 ? (
             <div style={emptyGridStyle}>
               <Package size={40} color={C.border} />
-              <p style={{ fontSize: 14, margin: 0 }}>Aucun produit trouve</p>
+              <p style={{ fontSize: 14, margin: 0 }}>{t.products.noProducts}</p>
             </div>
           ) : (
             <div style={gridStyle}>
@@ -517,10 +206,20 @@ export default function POSPage() {
                       e.currentTarget.style.boxShadow = 'none'
                     }}
                   >
+                    {/* Product image */}
+                    {product.image_url ? (
+                      <div style={{ width: '100%', height: 60, borderRadius: 6, overflow: 'hidden', marginBottom: 2 }}>
+                        <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ) : (
+                      <div style={{ width: '100%', height: 60, borderRadius: 6, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
+                        <Package size={24} color={C.border} />
+                      </div>
+                    )}
                     <p style={productNameStyle}>{product.name}</p>
                     <p style={productPriceStyle}>{formatFCFA(product.price)}</p>
                     <p style={productStockStyle(product.stock)}>
-                      {inStock ? `Stock: ${product.stock}` : 'Rupture'}
+                      {inStock ? `${t.pos.inStock}: ${product.stock}` : t.pos.outOfStock}
                     </p>
                   </div>
                 )
@@ -532,26 +231,24 @@ export default function POSPage() {
 
       {/* ── Right Panel: Cart ───────────────────────────────────────── */}
       <div style={rightPanelStyle}>
-        {/* Cart Header */}
         <div style={cartHeaderStyle}>
           <h2 style={cartTitleStyle}>
             <ShoppingCart size={18} />
-            Panier
+            {t.pos.cart}
             {items.length > 0 && <span style={cartCountBadge}>{items.length}</span>}
           </h2>
           {items.length > 0 && (
             <button style={clearBtnStyle} onClick={clear}>
-              <Trash2 size={14} /> Vider
+              <Trash2 size={14} /> {t.pos.clearCart}
             </button>
           )}
         </div>
 
-        {/* Cart Items */}
         {items.length === 0 ? (
           <div style={emptyCartStyle}>
             <ShoppingCart size={40} color={C.border} />
-            <p style={{ fontSize: 14, margin: 0, fontWeight: 500 }}>Panier vide</p>
-            <p style={{ fontSize: 12, margin: 0 }}>Cliquez sur un produit pour l'ajouter</p>
+            <p style={{ fontSize: 14, margin: 0, fontWeight: 500 }}>{t.pos.emptyCart}</p>
+            <p style={{ fontSize: 12, margin: 0 }}>{t.pos.addToCartHint}</p>
           </div>
         ) : (
           <>
@@ -560,37 +257,24 @@ export default function POSPage() {
                 <div key={item.product_id} style={cartItemStyle}>
                   <div style={cartItemInfoStyle}>
                     <p style={cartItemNameStyle}>{item.name}</p>
-                    <p style={cartItemPriceStyle}>{formatFCFA(item.price)}/unite</p>
+                    <p style={cartItemPriceStyle}>{formatFCFA(item.price)}{t.pos.perUnit}</p>
                   </div>
-
-                  {/* Qty controls */}
                   <div style={qtyControlsStyle}>
-                    <button
-                      style={qtyBtnStyle}
-                      onClick={() => updateQty(item.product_id, item.qty - 1)}
-                    >
+                    <button style={qtyBtnStyle} onClick={() => updateQty(item.product_id, item.qty - 1)}>
                       <Minus size={14} />
                     </button>
                     <input
                       style={qtyInputStyle}
                       type="number"
                       value={item.qty}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 0
-                        updateQty(item.product_id, val)
-                      }}
+                      onChange={(e) => { const val = parseInt(e.target.value) || 0; updateQty(item.product_id, val) }}
                       min={0}
                     />
-                    <button
-                      style={qtyBtnStyle}
-                      onClick={() => updateQty(item.product_id, item.qty + 1)}
-                    >
+                    <button style={qtyBtnStyle} onClick={() => updateQty(item.product_id, item.qty + 1)}>
                       <Plus size={14} />
                     </button>
                   </div>
-
                   <span style={cartItemTotalStyle}>{formatFCFA(item.price * item.qty)}</span>
-
                   <button
                     style={removeItemBtnStyle}
                     onClick={() => removeItem(item.product_id)}
@@ -603,16 +287,15 @@ export default function POSPage() {
               ))}
             </div>
 
-            {/* Cart Footer */}
             <div style={cartFooterStyle}>
               <div style={summaryRowStyle}>
-                <span>Sous-total</span>
+                <span>{t.pos.subtotal}</span>
                 <span style={{ fontWeight: 600, color: C.text }}>{formatFCFA(subtotal)}</span>
               </div>
 
               <div style={summaryRowStyle}>
                 <span style={discountInputRowStyle}>
-                  Remise
+                  {t.pos.discount}
                   <input
                     style={discountInputStyle}
                     type="number"
@@ -631,7 +314,7 @@ export default function POSPage() {
 
               {taxRate > 0 && (
                 <div style={summaryRowStyle}>
-                  <span>Taxe ({taxRate}%)</span>
+                  <span>{t.pos.tax} ({taxRate}%)</span>
                   <span style={{ fontWeight: 500, color: C.text }}>{formatFCFA(taxAmount)}</span>
                 </div>
               )}
@@ -639,27 +322,26 @@ export default function POSPage() {
               <div style={{ height: 1, backgroundColor: C.border, margin: '8px 0' }} />
 
               <div style={totalRowStyle}>
-                <span>TOTAL</span>
+                <span>{t.pos.grandTotal}</span>
                 <span style={{ color: C.primary }}>{formatFCFA(total)}</span>
               </div>
 
-              {/* Payment Buttons */}
               <div style={paymentButtonsStyle}>
                 <button style={payBtnPrimary} onClick={() => handlePayment('cash')}>
                   <Banknote size={18} />
-                  Especes
+                  {t.pos.cash}
                 </button>
                 <button style={payBtnOutline} onClick={() => handlePayment('card')}>
                   <CreditCard size={18} />
-                  Carte
+                  {t.pos.card}
                 </button>
                 <button style={payBtnOutline} onClick={() => handlePayment('momo')}>
                   <Smartphone size={18} />
-                  MoMo
+                  {t.pos.momo}
                 </button>
                 <button style={payBtnOutline} onClick={() => handlePayment('transfer')}>
                   <ArrowRightLeft size={18} />
-                  Virement
+                  {t.pos.transfer}
                 </button>
               </div>
             </div>
@@ -667,7 +349,6 @@ export default function POSPage() {
         )}
       </div>
 
-      {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}

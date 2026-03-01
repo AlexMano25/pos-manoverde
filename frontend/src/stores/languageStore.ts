@@ -9,18 +9,13 @@ import type { TranslationKeys } from '../i18n/translations'
 
 interface LanguageState {
   language: Language
+  t: TranslationKeys
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 
 interface LanguageActions {
   setLanguage: (lang: Language) => void
-}
-
-// ── Computed ─────────────────────────────────────────────────────────────────
-
-interface LanguageComputed {
-  t: TranslationKeys
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -35,21 +30,17 @@ function applyLanguageToDocument(lang: Language): void {
 
 // ── Store ────────────────────────────────────────────────────────────────────
 
-export const useLanguageStore = create<LanguageState & LanguageActions & LanguageComputed>()(
+export const useLanguageStore = create<LanguageState & LanguageActions>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // State
       language: DEFAULT_LANGUAGE,
-
-      // Computed (evaluated on access via getter)
-      get t(): TranslationKeys {
-        return translations[get().language]
-      },
+      t: translations[DEFAULT_LANGUAGE],
 
       // Actions
       setLanguage: (lang: Language) => {
         applyLanguageToDocument(lang)
-        set({ language: lang })
+        set({ language: lang, t: translations[lang] })
       },
     }),
     {
@@ -59,9 +50,10 @@ export const useLanguageStore = create<LanguageState & LanguageActions & Languag
       }),
       onRehydrateStorage: () => {
         return (state) => {
-          // Apply language to document when store rehydrates from localStorage
           if (state?.language) {
             applyLanguageToDocument(state.language)
+            // Restore t from the persisted language
+            state.t = translations[state.language]
           }
         }
       },

@@ -51,6 +51,15 @@ export const en: TranslationKeys = {
     version: 'Version',
     noData: 'No data available',
     required: 'Required field',
+    exportPDF: 'Export PDF',
+    share: 'Share',
+    shareWhatsApp: 'Share via WhatsApp',
+    shareEmail: 'Send by email',
+    download: 'Download',
+    viewAll: 'View all',
+    articles: 'items',
+    comingSoon: 'Coming soon',
+    clear: 'Clear',
   },
 
   // Auth
@@ -151,6 +160,8 @@ export const en: TranslationKeys = {
     serverUrlHint: 'Enter the IP address and port of the POS server on your local network.',
     storeNameHint: 'This name will appear on receipts and in the application.',
     configure: 'Configuration',
+    allInOne: 'All-in-One',
+    allInOneDesc: 'One device does everything: management, POS and stock tracking',
   },
 
   // Navigation
@@ -182,6 +193,8 @@ export const en: TranslationKeys = {
     orderCount: 'Order count',
     catalog: 'Catalog',
     units: 'units',
+    viewAll: 'View all',
+    noOrdersYet: 'No orders yet',
   },
 
   // POS
@@ -210,6 +223,12 @@ export const en: TranslationKeys = {
     printReceipt: 'Print receipt',
     newOrder: 'New order',
     inStock: 'In stock',
+    clearCart: 'Clear cart',
+    addToCartHint: 'Click on a product to add it to the cart',
+    perUnit: '/unit',
+    orderSummary: 'Order summary',
+    processing: 'Processing...',
+    paymentConfirmed: 'Payment confirmed!',
   },
 
   // Products
@@ -232,6 +251,12 @@ export const en: TranslationKeys = {
     outOfStockLabel: 'Out of stock',
     priceLabel: 'Selling price',
     categoryLabel: 'Category',
+    imageUpload: 'Product image',
+    takePhoto: 'Take a photo',
+    removeImage: 'Remove image',
+    generateBarcode: 'Generate barcode',
+    barcodePreview: 'Barcode preview',
+    initialStock: 'Initial stock',
   },
 
   // Orders
@@ -255,6 +280,10 @@ export const en: TranslationKeys = {
     refunded: 'Refunded',
     cancelled: 'Cancelled',
     allStatuses: 'All statuses',
+    receipt: 'Receipt',
+    invoice: 'Invoice',
+    salesReport: 'Sales report',
+    quote: 'Quote',
   },
 
   // Stock
@@ -281,6 +310,7 @@ export const en: TranslationKeys = {
     low: 'Low',
     critical: 'Critical',
     outOfStock: 'Out of stock',
+    inventoryReport: 'Inventory report',
   },
 
   // Employees

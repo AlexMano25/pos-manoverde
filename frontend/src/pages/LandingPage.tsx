@@ -435,7 +435,7 @@ export default function LandingPage() {
 
   const handlePlanCTA = (planId: string) => {
     if (planId === 'enterprise') {
-      handleContact('direction@manovande.com')
+      handleContact('direction@manovende.com')
     } else {
       handleStartApp()
     }
@@ -2218,7 +2218,7 @@ export default function LandingPage() {
               {t.landing.faqMoreQuestionsDesc}
             </p>
             <a
-              href="mailto:infos@manovande.com"
+              href="mailto:infos@manovende.com"
               style={{
                 display: 'inline-block',
                 padding: '12px 28px',
@@ -2371,7 +2371,7 @@ export default function LandingPage() {
               {/* Contact emails */}
               <div style={{ marginBottom: 20 }}>
                 <a
-                  href="mailto:direction@manovande.com"
+                  href="mailto:direction@manovende.com"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -2386,10 +2386,10 @@ export default function LandingPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
                 >
                   <IconMail size={14} />
-                  direction@manovande.com
+                  direction@manovende.com
                 </a>
                 <a
-                  href="mailto:infos@manovande.com"
+                  href="mailto:infos@manovende.com"
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -2403,7 +2403,7 @@ export default function LandingPage() {
                   onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
                 >
                   <IconMail size={14} />
-                  infos@manovande.com
+                  infos@manovende.com
                 </a>
               </div>
 
@@ -2489,7 +2489,7 @@ export default function LandingPage() {
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {[
                   { label: t.common.help, href: undefined },
-                  { label: 'Contact', href: 'mailto:infos@manovande.com' },
+                  { label: 'Contact', href: 'mailto:infos@manovende.com' },
                   { label: t.landing.navFaq, href: undefined, action: () => scrollToSection('faq') },
                 ].map((link, i) => (
                   <li key={i} style={{ marginBottom: 12 }}>
