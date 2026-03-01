@@ -2,7 +2,7 @@
 // useOnlineStatus -- React hook for monitoring network connectivity
 //
 // Tracks three levels of connectivity:
-//   'online'     -- Internet access AND local server reachable
+//   'online'     -- Internet access AND (local server reachable OR Supabase cloud available)
 //   'local-only' -- Local server reachable but no internet
 //   'offline'    -- Nothing reachable
 //
@@ -12,6 +12,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '../stores/appStore'
+import { isSupabaseConfigured } from '../services/supabase'
 import type { ConnectionStatus } from '../types'
 
 // How often to check server reachability (milliseconds)
@@ -48,7 +49,6 @@ async function checkServerHealth(serverUrl: string): Promise<boolean> {
     const response = await fetch(`${serverUrl}/api/health`, {
       method: 'GET',
       signal: controller.signal,
-      // Prevent caching of health checks
       cache: 'no-store',
     })
 
@@ -65,7 +65,6 @@ async function checkServerHealth(serverUrl: string): Promise<boolean> {
  * A successful response (even opaque) means the network route works.
  */
 async function checkInternetAccess(): Promise<boolean> {
-  // If the browser itself says we're offline, skip the network request
   if (!navigator.onLine) return false
 
   try {
@@ -84,8 +83,6 @@ async function checkInternetAccess(): Promise<boolean> {
 
     clearTimeout(timeoutId)
 
-    // In no-cors mode, response.type is 'opaque' and status is 0, but
-    // the fetch itself succeeding means we have internet connectivity.
     return response.type === 'opaque' || response.ok
   } catch {
     return false
@@ -117,17 +114,20 @@ export function useOnlineStatus(): UseOnlineStatusReturn {
     if (!serverOk && !browserOnline) {
       newStatus = 'offline'
     } else if (serverOk && browserOnline) {
-      // Server is reachable and browser says we're online.
-      // Optionally verify actual internet access for accuracy.
       const internetOk = await checkInternetAccess()
       newStatus = internetOk ? 'online' : 'local-only'
     } else if (serverOk && !browserOnline) {
-      // Server reachable on LAN but browser says offline (no internet)
       newStatus = 'local-only'
     } else {
-      // !serverOk && browserOnline: browser has internet but server down
-      // This is still effectively offline for our POS operations
-      newStatus = 'offline'
+      // !serverOk && browserOnline: browser has internet but local server down
+      // If Supabase is configured, we can still operate in "online" mode
+      // using the cloud backend for data sync
+      if (isSupabaseConfigured) {
+        const internetOk = await checkInternetAccess()
+        newStatus = internetOk ? 'online' : 'offline'
+      } else {
+        newStatus = 'offline'
+      }
     }
 
     setStatus(newStatus)
@@ -138,7 +138,6 @@ export function useOnlineStatus(): UseOnlineStatusReturn {
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true)
-      // Run a full check when browser comes online
       runCheck()
     }
 
@@ -159,10 +158,8 @@ export function useOnlineStatus(): UseOnlineStatusReturn {
 
   // ── Periodic ping interval ──
   useEffect(() => {
-    // Run immediately on mount
     runCheck()
 
-    // Set up periodic checks
     intervalRef.current = setInterval(runCheck, PING_INTERVAL_MS)
 
     return () => {
