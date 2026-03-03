@@ -101,18 +101,23 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity, registrationMode } = useAppStore()
+  const { activity, registrationMode, showLogin } = useAppStore()
   const { user, token } = useAuthStore()
 
   useEffect(() => {
-    if (!activity && !registrationMode) {
+    if (!activity && !registrationMode && !showLogin) {
       document.body.classList.remove('app-mode')
     }
-  }, [activity, registrationMode])
+  }, [activity, registrationMode, showLogin])
 
   // Registration flow (all plans including free)
   if (registrationMode) {
     return <RegistrationPage />
+  }
+
+  // Explicit login mode (user clicked "Already have an account?" or "Sign in")
+  if (showLogin) {
+    return <LoginPage />
   }
 
   // No activity = not registered yet → show landing
@@ -122,7 +127,7 @@ export default function App() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
-        if (parsed?.state && !parsed.state.activity && !parsed.state.registrationMode) {
+        if (parsed?.state && !parsed.state.activity && !parsed.state.registrationMode && !parsed.state.showLogin) {
           localStorage.removeItem('pos-app-store')
         }
       } catch { /* ignore */ }

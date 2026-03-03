@@ -91,6 +91,7 @@ export type TranslationKeys = {
     passwordMismatch: string
     registrationSuccess: string
     alreadyHaveAccount: string
+    noAccount: string
   }
 
   // Setup

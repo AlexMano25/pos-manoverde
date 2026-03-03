@@ -86,6 +86,7 @@ export const fr: TranslationKeys = {
     passwordMismatch: 'Les mots de passe ne correspondent pas',
     registrationSuccess: 'Compte cr\u00e9\u00e9 avec succ\u00e8s !',
     alreadyHaveAccount: 'Vous avez d\u00e9j\u00e0 un compte ?',
+    noAccount: 'Pas de compte ?',
   },
   setup: {
     title: 'Configuration initiale',

@@ -89,6 +89,7 @@ export const en: TranslationKeys = {
     passwordMismatch: 'Passwords do not match',
     registrationSuccess: 'Account created successfully!',
     alreadyHaveAccount: 'Already have an account?',
+    noAccount: 'No account?',
   },
 
   // Setup

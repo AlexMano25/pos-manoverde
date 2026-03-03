@@ -86,6 +86,7 @@ export const zh: TranslationKeys = {
     passwordMismatch: '两次密码输入不一致',
     registrationSuccess: '账户创建成功！',
     alreadyHaveAccount: '已有账户？',
+    noAccount: '没有账户？',
   },
   setup: {
     title: '初始配置',

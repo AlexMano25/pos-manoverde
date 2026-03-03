@@ -427,6 +427,17 @@ export default function LandingPage() {
     }
   }
 
+  const handleGoToLogin = () => {
+    const appStore = useAppStore.getState()
+    appStore.setShowLogin(true)
+    document.body.classList.remove('app-mode')
+    localStorage.setItem('pos-app-store', JSON.stringify({
+      state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: null, registrationMode: false, showLogin: true },
+      version: 0,
+    }))
+    window.location.reload()
+  }
+
   const handleStartApp = () => {
     const appStore = useAppStore.getState()
     appStore.setSelectedPlan('free')
@@ -997,7 +1008,7 @@ export default function LandingPage() {
                 color: headerScrolled ? '#2563eb' : '#ffffff',
                 fontWeight: 600,
               }}
-              onClick={handleStartApp}
+              onClick={handleGoToLogin}
             >
               {t.landing.navLogin}
             </button>
@@ -1088,7 +1099,7 @@ export default function LandingPage() {
               }}
               onClick={() => {
                 setMobileMenuOpen(false)
-                handleStartApp()
+                handleGoToLogin()
               }}
             >
               {t.landing.navLogin}

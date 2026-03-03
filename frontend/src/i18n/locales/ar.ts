@@ -86,6 +86,7 @@ export const ar: TranslationKeys = {
     passwordMismatch: 'كلمتا المرور غير متطابقتين',
     registrationSuccess: 'تم إنشاء الحساب بنجاح!',
     alreadyHaveAccount: 'هل لديك حساب بالفعل؟',
+    noAccount: 'ليس لديك حساب؟',
   },
   setup: {
     title: 'الإعداد الأولي',

@@ -13,6 +13,7 @@ interface AppState {
   serverUrl: string
   selectedPlan: SubscriptionPlan | null
   registrationMode: boolean
+  showLogin: boolean
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ interface AppActions {
   setServerUrl: (url: string) => void
   setSelectedPlan: (plan: SubscriptionPlan | null) => void
   setRegistrationMode: (mode: boolean) => void
+  setShowLogin: (show: boolean) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -42,6 +44,7 @@ export const useAppStore = create<AppState & AppActions>()(
       serverUrl: '',
       selectedPlan: null,
       registrationMode: false,
+      showLogin: false,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -52,6 +55,7 @@ export const useAppStore = create<AppState & AppActions>()(
       setServerUrl: (url) => set({ serverUrl: url }),
       setSelectedPlan: (plan) => set({ selectedPlan: plan }),
       setRegistrationMode: (mode) => set({ registrationMode: mode }),
+      setShowLogin: (show) => set({ showLogin: show }),
     }),
     {
       name: 'pos-app-store',
@@ -61,6 +65,7 @@ export const useAppStore = create<AppState & AppActions>()(
         serverUrl: state.serverUrl,
         selectedPlan: state.selectedPlan,
         registrationMode: state.registrationMode,
+        showLogin: state.showLogin,
       }),
     }
   )

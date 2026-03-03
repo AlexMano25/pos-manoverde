@@ -22,7 +22,7 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login)
   const loginWithPin = useAuthStore((s) => s.loginWithPin)
   const user = useAuthStore((s) => s.user)
-  const { serverUrl, setServerUrl, setSection, mode } = useAppStore()
+  const { serverUrl, setServerUrl, setSection, mode, setShowLogin, setRegistrationMode } = useAppStore()
   const { t } = useLanguageStore()
 
   useEffect(() => {
@@ -32,13 +32,14 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
+      setShowLogin(false)
       if (user.role === 'admin' || user.role === 'manager') {
         setSection('dashboard')
       } else {
         setSection('pos')
       }
     }
-  }, [user, setSection])
+  }, [user, setSection, setShowLogin])
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -313,7 +314,7 @@ export default function LoginPage() {
         {/* Back to website link */}
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
           <button
-            onClick={goToLanding}
+            onClick={() => { setShowLogin(false); goToLanding() }}
             style={{
               background: 'none',
               border: 'none',
@@ -451,6 +452,37 @@ export default function LoginPage() {
               )}
             </div>
           )}
+
+          {/* Create account link */}
+          <div style={{ textAlign: 'center', padding: '12px 0 4px', borderTop: '1px solid #e2e8f0', marginTop: 8 }}>
+            <span style={{ color: '#64748b', fontSize: 13 }}>
+              {t.auth.noAccount}{' '}
+            </span>
+            <button
+              onClick={() => {
+                setShowLogin(false)
+                setRegistrationMode(true)
+                const appStore = useAppStore.getState()
+                appStore.setSelectedPlan('free')
+                localStorage.setItem('pos-app-store', JSON.stringify({
+                  state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: 'free', registrationMode: true, showLogin: false },
+                  version: 0,
+                }))
+                window.location.reload()
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#2563eb',
+                fontSize: 13,
+                fontWeight: 600,
+                padding: 0,
+              }}
+            >
+              {t.auth.createAccount}
+            </button>
+          </div>
 
           {/* Server Settings (hidden in all_in_one mode) */}
           {mode !== 'all_in_one' && (

@@ -125,7 +125,7 @@ export default function RegistrationPage() {
   const [step, setStep] = useState<RegistrationStep>(1)
 
   // Step 1: Plan
-  const { selectedPlan, setMode } = useAppStore()
+  const { selectedPlan, setMode, setRegistrationMode, setShowLogin } = useAppStore()
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
 
   // Step 2: Organization
@@ -1078,8 +1078,8 @@ export default function RegistrationPage() {
   return (
     <div style={pageStyle}>
       <div style={cardStyle}>
-        {/* Back to website link */}
-        <div style={{ padding: '12px 24px 0', textAlign: 'left' }}>
+        {/* Back to website link + Already have account */}
+        <div style={{ padding: '12px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <button
             onClick={goToLanding}
             style={{
@@ -1097,6 +1097,20 @@ export default function RegistrationPage() {
           >
             <Globe size={14} />
             {t.setup.backToWebsite}
+          </button>
+          <button
+            onClick={() => { setRegistrationMode(false); setShowLogin(true) }}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#2563eb',
+              fontSize: 13,
+              fontWeight: 600,
+              padding: 0,
+            }}
+          >
+            {t.auth.alreadyHaveAccount} {t.auth.loginButton}
           </button>
         </div>
 
