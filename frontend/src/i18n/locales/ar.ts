@@ -653,5 +653,8 @@ export const ar: TranslationKeys = {
     bonus: 'مكافاة',
     creditLabel: 'الرصيد',
     ticketsLabel: 'تذاكر',
+    payAsYouGrowDesc: 'ادفع فقط مقابل ما تستخدمه. جميع الميزات متاحة.',
+    initialCredit: 'رصيد مجاني $10',
+    noCommitment: 'بدون التزام',
   },
 }

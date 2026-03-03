@@ -699,5 +699,8 @@ export type TranslationKeys = {
     bonus: string
     creditLabel: string
     ticketsLabel: string
+    payAsYouGrowDesc: string
+    initialCredit: string
+    noCommitment: string
   }
 }

@@ -690,5 +690,8 @@ export const en: TranslationKeys = {
     bonus: 'Bonus',
     creditLabel: 'Credit',
     ticketsLabel: 'tickets',
+    payAsYouGrowDesc: 'Pay only for what you use. All features included.',
+    initialCredit: '$10 free credit',
+    noCommitment: 'No commitment',
   },
 }

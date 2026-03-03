@@ -443,7 +443,7 @@ export default function LandingPage() {
     window.location.href = `mailto:${email}`
   }
 
-  const handlePlanSelect = (plan: 'starter' | 'pro') => {
+  const handlePlanSelect = (plan: 'starter' | 'pro' | 'pay_as_you_grow') => {
     const appStore = useAppStore.getState()
     appStore.setSelectedPlan(plan)
     appStore.setRegistrationMode(true)
@@ -464,6 +464,8 @@ export default function LandingPage() {
       handlePlanSelect('starter')
     } else if (planId === 'pro') {
       handlePlanSelect('pro')
+    } else if (planId === 'pay_as_you_grow') {
+      handlePlanSelect('pay_as_you_grow')
     } else {
       handleStartApp()
     }
@@ -561,6 +563,30 @@ export default function LandingPage() {
       cta: t.landing.planProCTA,
       ctaVariant: 'solid' as const,
       highlight: true,
+    },
+    {
+      id: 'pay_as_you_grow',
+      name: 'Pay as you grow',
+      tagline: 'FLEXIBLE',
+      price: -2,
+      priceYearly: -2,
+      currency: 'USD',
+      description: t.billing.payAsYouGrowDesc || 'Payez uniquement ce que vous utilisez. Toutes les fonctions incluses.',
+      badge: t.billing.initialCredit || '10 $ offerts',
+      badgeColor: '#f59e0b',
+      features: [
+        { text: '$0.02 USD / ticket', included: true },
+        { text: t.landing.planFeature13 || 'Produits illimites', included: true },
+        { text: t.landing.planFeature8 || 'Commandes illimitees', included: true },
+        { text: t.landing.planFeature14 || 'Synchronisation cloud', included: true },
+        { text: t.landing.planFeature15 || 'Multi-utilisateurs', included: true },
+        { text: t.landing.planFeature16 || 'Rapports avances', included: true },
+        { text: t.landing.planFeature10 || 'Impression Bluetooth', included: true },
+        { text: t.landing.planFeature17 || 'API personnalisee', included: true },
+      ],
+      cta: t.landing.planFreeCTA || 'Commencer',
+      ctaVariant: 'solid' as const,
+      highlight: false,
     },
     {
       id: 'enterprise',
@@ -1814,8 +1840,8 @@ export default function LandingPage() {
           {/* Pricing cards */}
           <div className="landing-pricing-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 20,
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: 16,
             alignItems: 'stretch',
           }}>
             {PLANS.map((plan) => (
@@ -1913,6 +1939,33 @@ export default function LandingPage() {
                         }}>
                           {t.landing.pricingCustom}
                         </span>
+                      </div>
+                    ) : plan.price === -2 ? (
+                      <div>
+                        <span style={{
+                          fontSize: 36,
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          letterSpacing: '-0.02em',
+                        }}>
+                          $0.02
+                        </span>
+                        <span style={{
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: '#64748b',
+                          marginLeft: 6,
+                        }}>
+                          USD / ticket
+                        </span>
+                        <p style={{
+                          fontSize: 13,
+                          color: '#f59e0b',
+                          fontWeight: 600,
+                          margin: '4px 0 0',
+                        }}>
+                          {t.billing.noCommitment || 'Pas d\'engagement'}
+                        </p>
                       </div>
                     ) : plan.price === 0 ? (
                       <div>

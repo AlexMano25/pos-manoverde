@@ -653,5 +653,8 @@ export const zh: TranslationKeys = {
     bonus: '奖励',
     creditLabel: '余额',
     ticketsLabel: '票',
+    payAsYouGrowDesc: '按使用量付费。包含所有功能。',
+    initialCredit: '赠送 $10 额度',
+    noCommitment: '无需承诺',
   },
 }

@@ -653,5 +653,8 @@ export const de: TranslationKeys = {
     bonus: 'Bonus',
     creditLabel: 'Guthaben',
     ticketsLabel: 'Tickets',
+    payAsYouGrowDesc: 'Zahlen Sie nur, was Sie nutzen. Alle Funktionen inklusive.',
+    initialCredit: '10 $ Startguthaben',
+    noCommitment: 'Keine Verpflichtung',
   },
 }
