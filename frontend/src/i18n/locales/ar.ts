@@ -439,7 +439,7 @@ export const ar: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'تاجر نشط',
     heroStat2Value: '12',
-    heroStat2Label: 'دولة في أفريقيا',
+    heroStat2Label: 'دولة',
     heroStat3Value: '99.9%',
     heroStat3Label: 'وقت التشغيل',
     // Features
@@ -517,7 +517,7 @@ export const ar: TranslationKeys = {
     planFeature19: 'صناديق غير محدودة',
     planFeature20: 'API مخصصة',
     // Testimonials
-    trustBadge: 'يستخدمه التجار في جميع أنحاء أفريقيا',
+    trustBadge: 'يستخدمه التجار حول العالم',
     testimonialsTitle: 'ماذا يقول عملاؤنا',
     testimonialsSubtitle: 'مئات التجار يثقون بـ POS Mano Verde لإدارة نشاطهم التجاري يومياً.',
     testimonial1Text: 'قبل POS Mano Verde، كنت أدوّن كل شيء على الورق. الآن، نادلاي الثلاثة يأخذون الطلبات على الجهاز اللوحي والإيصال يخرج تلقائياً في المطبخ. حتى عندما ينقطع الاتصال، كل شيء يستمر في العمل. قللت أخطاء الطلبات بنسبة 80%.',

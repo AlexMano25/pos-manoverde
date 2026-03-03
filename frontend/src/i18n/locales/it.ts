@@ -439,7 +439,7 @@ export const it: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'Commercianti attivi',
     heroStat2Value: '12',
-    heroStat2Label: 'Paesi in Africa',
+    heroStat2Label: 'Paesi',
     heroStat3Value: '99.9%',
     heroStat3Label: 'Disponibilit\u00e0 uptime',
     // Features
@@ -517,7 +517,7 @@ export const it: TranslationKeys = {
     planFeature19: 'Casse illimitate',
     planFeature20: 'API personalizzata',
     // Testimonials
-    trustBadge: 'Utilizzato da commercianti in tutta l\'Africa',
+    trustBadge: 'Utilizzato da commercianti in tutto il mondo',
     testimonialsTitle: 'Cosa dicono i nostri clienti',
     testimonialsSubtitle: 'Centinaia di commercianti si affidano a POS Mano Verde per gestire la propria attivit\u00e0 quotidiana.',
     testimonial1Text: 'Prima di POS Mano Verde, annotavo tutto su carta. Ora i miei 3 camerieri prendono gli ordini su tablet e lo scontrino esce automaticamente in cucina. Anche quando la rete si interrompe, tutto continua a funzionare. Ho ridotto gli errori negli ordini dell\'80%.',

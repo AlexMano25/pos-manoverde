@@ -472,7 +472,7 @@ export const en: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'Active\nmerchants',
     heroStat2Value: '12',
-    heroStat2Label: 'Countries\nin Africa',
+    heroStat2Label: 'Countries',
     heroStat3Value: '99.9%',
     heroStat3Label: 'Availability\nuptime',
     // Features
@@ -550,7 +550,7 @@ export const en: TranslationKeys = {
     planFeature19: 'Custom API',
     planFeature20: 'Unlimited stores',
     // Testimonials
-    trustBadge: 'Used by merchants across Africa',
+    trustBadge: 'Used by merchants worldwide',
     testimonialsTitle: 'What our customers say',
     testimonialsSubtitle: 'Hundreds of merchants trust POS Mano Verde to manage their business every day.',
     testimonial1Text: 'Before POS Mano Verde, I wrote everything on paper. Now my 3 servers take orders on a tablet and the ticket prints automatically in the kitchen. Even when the network goes down, everything keeps working. I reduced my order errors by 80%.',

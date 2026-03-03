@@ -439,7 +439,7 @@ export const de: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'Aktive H\u00e4ndler',
     heroStat2Value: '12',
-    heroStat2Label: 'L\u00e4nder in Afrika',
+    heroStat2Label: 'L\u00e4nder',
     heroStat3Value: '99,9%',
     heroStat3Label: 'Verf\u00fcgbarkeit (Uptime)',
     // Features
@@ -517,7 +517,7 @@ export const de: TranslationKeys = {
     planFeature19: 'Unbegrenzte Kassen',
     planFeature20: 'Individuelle API',
     // Testimonials
-    trustBadge: 'Von Handlern in ganz Afrika genutzt',
+    trustBadge: 'Von Handlern weltweit genutzt',
     testimonialsTitle: 'Was unsere Kunden sagen',
     testimonialsSubtitle: 'Hunderte von H\u00e4ndlern vertrauen POS Mano Verde f\u00fcr die t\u00e4gliche Verwaltung ihres Gesch\u00e4fts.',
     testimonial1Text: 'Vor POS Mano Verde habe ich alles auf Papier notiert. Jetzt nehmen meine 3 Kellner die Bestellungen auf dem Tablet auf und der Bon wird automatisch in der K\u00fcche gedruckt. Selbst wenn das Netzwerk ausf\u00e4llt, funktioniert alles weiter. Ich habe meine Bestellfehler um 80% reduziert.',

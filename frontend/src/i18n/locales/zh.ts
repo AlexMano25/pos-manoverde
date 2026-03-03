@@ -439,7 +439,7 @@ export const zh: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: '活跃商户',
     heroStat2Value: '12',
-    heroStat2Label: '非洲国家',
+    heroStat2Label: '国家',
     heroStat3Value: '99.9%',
     heroStat3Label: '系统可用率',
     // Features
@@ -517,7 +517,7 @@ export const zh: TranslationKeys = {
     planFeature19: '不限收银机数量',
     planFeature20: '自定义 API',
     // Testimonials
-    trustBadge: '非洲各地商户的信赖之选',
+    trustBadge: '全球各地商户的信赖之选',
     testimonialsTitle: '客户评价',
     testimonialsSubtitle: '数百位商户信赖 POS Mano Verde 来管理他们的日常业务。',
     testimonial1Text: '在使用 POS Mano Verde 之前，我什么都用纸记录。现在，我的 3 名服务员用平板电脑点餐，小票自动在厨房打印出来。即使断网，一切照常运行。我的点餐错误减少了 80%。',

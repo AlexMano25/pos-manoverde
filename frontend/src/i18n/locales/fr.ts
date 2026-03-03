@@ -439,7 +439,7 @@ export const fr: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'Commercants actifs',
     heroStat2Value: '12',
-    heroStat2Label: 'Pays en Afrique',
+    heroStat2Label: 'Pays',
     heroStat3Value: '99.9%',
     heroStat3Label: 'Disponibilite uptime',
     // Features
@@ -517,7 +517,7 @@ export const fr: TranslationKeys = {
     planFeature19: 'Caisses illimitees',
     planFeature20: 'API personnalisee',
     // Testimonials
-    trustBadge: 'Utilise par des commercants dans toute l\'Afrique',
+    trustBadge: 'Utilise par des commercants dans le monde entier',
     testimonialsTitle: 'Ce que disent nos clients',
     testimonialsSubtitle: 'Des centaines de commercants font confiance a POS Mano Verde pour gerer leur activite au quotidien.',
     testimonial1Text: 'Avant POS Mano Verde, je notais tout sur papier. Maintenant, mes 3 serveurs prennent les commandes sur tablette et le ticket sort automatiquement en cuisine. Meme quand le reseau coupe, tout continue de fonctionner. J\'ai reduit mes erreurs de commande de 80%.',

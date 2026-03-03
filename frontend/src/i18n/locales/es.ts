@@ -439,7 +439,7 @@ export const es: TranslationKeys = {
     heroStat1Value: '500+',
     heroStat1Label: 'Comerciantes activos',
     heroStat2Value: '12',
-    heroStat2Label: 'Paises en Africa',
+    heroStat2Label: 'Paises',
     heroStat3Value: '99.9%',
     heroStat3Label: 'Disponibilidad uptime',
     // Features
@@ -517,7 +517,7 @@ export const es: TranslationKeys = {
     planFeature19: 'Cajas ilimitadas',
     planFeature20: 'API personalizada',
     // Testimonials
-    trustBadge: 'Utilizado por comerciantes en toda Africa',
+    trustBadge: 'Utilizado por comerciantes en todo el mundo',
     testimonialsTitle: 'Lo que dicen nuestros clientes',
     testimonialsSubtitle: 'Cientos de comerciantes confian en POS Mano Verde para gestionar su actividad a diario.',
     testimonial1Text: 'Antes de POS Mano Verde, anotaba todo en papel. Ahora, mis 3 meseros toman los pedidos en tableta y el ticket sale automaticamente en cocina. Incluso cuando se corta la red, todo sigue funcionando. He reducido mis errores de pedido en un 80%.',
