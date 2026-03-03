@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   DollarSign,
   ShoppingCart,
@@ -8,15 +8,17 @@ import {
   Plus,
   TrendingUp,
   Download,
+  CreditCard,
 } from 'lucide-react'
 import { useOrderStore } from '../stores/orderStore'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { supabase, isSupabaseConfigured } from '../services/supabase'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportDailySummary } from '../utils/pdfExport'
 import { formatCurrency } from '../utils/currency'
-import type { Order, PaymentMethod } from '../types'
+import type { Order, PaymentMethod, CreditBalance } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -83,12 +85,32 @@ export default function DashboardPage() {
     cancelled: t.orders.cancelled,
   }
 
+  // ── Credit balance for pay-as-you-grow ────────────────────────────────
+
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
+
   useEffect(() => {
     if (currentStore?.id) {
       loadOrders(currentStore.id)
       loadProducts(currentStore.id)
     }
   }, [currentStore?.id, loadOrders, loadProducts])
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    const orgId = currentStore?.organization_id
+    if (!orgId) return
+
+    supabase
+      .from('credit_balances')
+      .select('*')
+      .eq('organization_id', orgId)
+      .single()
+      .then(({ data, error }) => {
+        if (error) console.error('[DashboardPage] Credit balance fetch failed:', error)
+        else if (data) setCreditBalance(data as CreditBalance)
+      })
+  }, [currentStore?.organization_id])
 
   const todayStr = new Date().toISOString().slice(0, 10)
 
@@ -123,7 +145,7 @@ export default function DashboardPage() {
   const actionsStyle: React.CSSProperties = { display: 'flex', gap: 10 }
   const primaryBtnStyle: React.CSSProperties = { padding: '10px 20px', borderRadius: 8, border: 'none', backgroundColor: C.primary, color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }
   const outlineBtnStyle: React.CSSProperties = { ...primaryBtnStyle, backgroundColor: '#ffffff', color: C.primary, border: `1px solid ${C.primary}` }
-  const statsGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }
+  const statsGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: creditBalance ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }
   const statCardStyle: React.CSSProperties = { backgroundColor: C.card, borderRadius: 12, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${C.border}` }
   const statHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }
   const statLabelStyle: React.CSSProperties = { fontSize: 13, color: C.textSecondary, fontWeight: 500, margin: 0 }
@@ -237,6 +259,19 @@ export default function DashboardPage() {
                 {lowStockProducts.length}
               </p>
             </div>
+
+            {creditBalance && (
+              <div style={statCardStyle}>
+                <div style={statHeaderStyle}>
+                  <p style={statLabelStyle}>{t.billing.creditLabel}</p>
+                  <div style={iconBoxStyle(C.primary)}><CreditCard size={20} color={C.primary} /></div>
+                </div>
+                <p style={statValueStyle}>${creditBalance.balance_usd.toFixed(2)}</p>
+                <p style={{ fontSize: 12, color: C.textSecondary, margin: '4px 0 0' }}>
+                  {Math.floor(creditBalance.balance_usd / 0.02).toLocaleString()} {t.billing.ticketsLabel}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Recent Orders Table */}

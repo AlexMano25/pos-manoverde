@@ -38,6 +38,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react'
+import LegalModal from '../components/common/LegalModal'
 import { useAppStore } from '../stores/appStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -93,6 +94,7 @@ const PLAN_PRICES: Record<SubscriptionPlan, { monthly: number; yearly: number }>
   starter: { monthly: 9900, yearly: 8250 },
   pro: { monthly: 29900, yearly: 24917 },
   enterprise: { monthly: 0, yearly: 0 },
+  pay_as_you_grow: { monthly: 0, yearly: 0 },
 }
 
 function formatPrice(amount: number): string {
@@ -146,6 +148,8 @@ export default function RegistrationPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
 
   // Global
   const [loading, setLoading] = useState(false)
@@ -186,11 +190,12 @@ export default function RegistrationPage() {
       )
     }
     if (step === 3) return selectedActivity !== null && storeName.trim().length > 0
-    if (step === 4) return plan === 'free' || paymentMethod.length > 0
+    if (step === 4) return plan === 'free' || plan === 'pay_as_you_grow' || paymentMethod.length > 0
     if (step === 5) {
       return (
         password.length >= 6 &&
-        password === confirmPassword
+        password === confirmPassword &&
+        termsAccepted
       )
     }
     return false
@@ -203,6 +208,7 @@ export default function RegistrationPage() {
     if (plan === 'free') return landing.planFreeName || 'Decouverte'
     if (plan === 'starter') return landing.planStarterName || 'Essentiel'
     if (plan === 'pro') return landing.planProName || 'Professionnel'
+    if (plan === 'pay_as_you_grow') return 'Pay as you grow'
     return landing.planEnterpriseName || 'Entreprise'
   }
 
@@ -222,10 +228,11 @@ export default function RegistrationPage() {
         ownerAddress,
         plan,
         billingCycle,
-        paymentMethod: plan === 'free' ? 'none' : paymentMethod,
+        paymentMethod: (plan === 'free' || plan === 'pay_as_you_grow') ? 'none' : paymentMethod,
         storeName,
         activity: selectedActivity,
         password,
+        termsAcceptedAt: new Date().toISOString(),
       })
       setMode(selectedMode)
     } catch (err: unknown) {
@@ -521,21 +528,23 @@ export default function RegistrationPage() {
 
   const renderStep1 = () => (
     <div>
-      {/* Billing cycle toggle */}
-      <div style={toggleContainerStyle}>
-        <button
-          style={toggleBtnStyle(billingCycle === 'monthly')}
-          onClick={() => setBillingCycle('monthly')}
-        >
-          {reg.monthlyBilling || 'Facturation mensuelle'}
-        </button>
-        <button
-          style={toggleBtnStyle(billingCycle === 'yearly')}
-          onClick={() => setBillingCycle('yearly')}
-        >
-          {reg.yearlyBilling || 'Facturation annuelle'}
-        </button>
-      </div>
+      {/* Billing cycle toggle (hidden for pay_as_you_grow) */}
+      {plan !== 'pay_as_you_grow' && (
+        <div style={toggleContainerStyle}>
+          <button
+            style={toggleBtnStyle(billingCycle === 'monthly')}
+            onClick={() => setBillingCycle('monthly')}
+          >
+            {reg.monthlyBilling || 'Facturation mensuelle'}
+          </button>
+          <button
+            style={toggleBtnStyle(billingCycle === 'yearly')}
+            onClick={() => setBillingCycle('yearly')}
+          >
+            {reg.yearlyBilling || 'Facturation annuelle'}
+          </button>
+        </div>
+      )}
 
       {/* Plan info card */}
       <div style={infoCardStyle}>
@@ -556,8 +565,8 @@ export default function RegistrationPage() {
             fontSize: 13,
             fontWeight: 600,
           }}>
-            {plan === 'free' ? 'Gratuit' : formatPrice(currentPrice)}
-            {plan !== 'free' && (
+            {plan === 'free' ? 'Gratuit' : plan === 'pay_as_you_grow' ? '$0.02 / ticket' : formatPrice(currentPrice)}
+            {plan !== 'free' && plan !== 'pay_as_you_grow' && (
               <span style={{ fontWeight: 400, fontSize: 12 }}>
                 {billingCycle === 'monthly'
                   ? ((t.landing as Record<string, string>).pricingPerMonth || '/mois')
@@ -567,8 +576,35 @@ export default function RegistrationPage() {
           </div>
         </div>
 
+        {/* Pay as you grow bonus badge */}
+        {plan === 'pay_as_you_grow' && (
+          <div style={{
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            borderRadius: 8,
+            padding: '10px 14px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            <Check size={16} color="#16a34a" />
+            <span style={{ fontSize: 13, color: '#15803d', fontWeight: 500 }}>
+              10 $ offerts
+            </span>
+          </div>
+        )}
+
+        {/* Pay as you grow description */}
+        {plan === 'pay_as_you_grow' && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 14, color: '#64748b', margin: 0, lineHeight: 1.6 }}>
+              Toutes les fonctions, payez a l'usage
+            </p>
+          </div>
+        )}
+
         {/* Yearly savings note */}
-        {plan !== 'free' && billingCycle === 'yearly' && (
+        {plan !== 'free' && plan !== 'pay_as_you_grow' && billingCycle === 'yearly' && (
           <div style={{
             backgroundColor: '#f0fdf4',
             border: '1px solid #bbf7d0',
@@ -586,7 +622,7 @@ export default function RegistrationPage() {
         )}
 
         {/* Total display */}
-        {plan !== 'free' && (
+        {plan !== 'free' && plan !== 'pay_as_you_grow' && (
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 14, color: '#64748b' }}>
@@ -780,7 +816,7 @@ export default function RegistrationPage() {
   // ── Step 4: Payment Method ──────────────────────────────────────────────
 
   const renderStep4 = () => {
-    if (plan === 'free') {
+    if (plan === 'free' || plan === 'pay_as_you_grow') {
       return (
         <div style={infoCardStyle}>
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -994,6 +1030,37 @@ export default function RegistrationPage() {
           ))}
         </div>
       </div>
+
+      {/* Terms acceptance */}
+      <div style={{ marginTop: 24, padding: 16, backgroundColor: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            style={{ marginTop: 4, width: 20, height: 20, accentColor: '#2563eb', flexShrink: 0 }}
+          />
+          <span style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+            J'accepte les{' '}
+            <button type="button" onClick={() => setLegalModal('cgv')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
+              Conditions Generales de Vente
+            </button>
+            , la{' '}
+            <button type="button" onClick={() => setLegalModal('rgpd')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
+              Politique de Confidentialite
+            </button>
+            {' '}et les{' '}
+            <button type="button" onClick={() => setLegalModal('terms')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
+              Conditions d'Utilisation
+            </button>
+            .
+          </span>
+        </label>
+      </div>
+
+      {legalModal && (
+        <LegalModal documentType={legalModal} onClose={() => setLegalModal(null)} />
+      )}
     </div>
   )
 

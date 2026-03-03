@@ -411,6 +411,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           p_store_name: data.storeName,
           p_activity: data.activity,
           p_auth_id: authData.user.id,
+          p_terms_accepted_at: data.termsAcceptedAt || null,
         })
         if (rpcError) throw new Error(rpcError.message)
 

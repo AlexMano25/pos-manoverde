@@ -285,7 +285,7 @@ export type AppSettings = {
 
 // -- Subscription Plans -------------------------------------------------------
 
-export type SubscriptionPlan = 'free' | 'starter' | 'pro' | 'enterprise'
+export type SubscriptionPlan = 'free' | 'starter' | 'pro' | 'enterprise' | 'pay_as_you_grow'
 export type BillingCycle = 'monthly' | 'yearly'
 export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trial'
 
@@ -339,6 +339,29 @@ export type Invoice = {
   created_at: string
 }
 
+// -- Credit Balance (Pay-as-you-grow) ----------------------------------------
+
+export type CreditBalance = {
+  id: string
+  organization_id: string
+  balance_usd: number
+  total_loaded_usd: number
+  total_consumed_usd: number
+  updated_at: string
+}
+
+export type CreditTransaction = {
+  id: string
+  organization_id: string
+  store_id?: string
+  type: 'load' | 'deduct' | 'refund' | 'bonus'
+  amount_usd: number
+  description?: string
+  reference_id?: string
+  activity?: string
+  created_at: string
+}
+
 // -- Registration Data --------------------------------------------------------
 
 export type RegistrationData = {
@@ -353,4 +376,5 @@ export type RegistrationData = {
   storeName: string
   activity: Activity
   password: string
+  termsAcceptedAt?: string
 }

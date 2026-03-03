@@ -3,6 +3,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import { useAppStore } from '../stores/appStore'
 import { languages } from '../i18n/types'
 import type { Language } from '../i18n/types'
+import LegalModal from '../components/common/LegalModal'
 
 // ============================================================================
 // POS Mano Verde - Landing / Marketing Page
@@ -398,6 +399,7 @@ export default function LandingPage() {
   const [billingYearly, setBillingYearly] = useState(false)
   const [headerScrolled, setHeaderScrolled] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
   const { t } = useLanguageStore()
 
   // Animated counters for hero stats
@@ -1517,20 +1519,31 @@ export default function LandingPage() {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'center',
-          gap: 48,
           flexWrap: 'wrap',
-          opacity: 0.4,
+          gap: '24px 48px',
+          opacity: 0.5,
+          maxWidth: 900,
+          margin: '0 auto',
         }}>
-          {['Cameroun', 'Senegal', 'Cote d\'Ivoire', 'Gabon', 'Congo', 'Mali'].map((country) => (
-            <span key={country} style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: '#64748b',
-              letterSpacing: '0.05em',
-            }}>
-              {country.toUpperCase()}
-            </span>
+          {[
+            { region: 'Afrique', countries: ['Cameroun', 'S\u00e9n\u00e9gal', 'C\u00f4te d\'Ivoire'] },
+            { region: 'Europe', countries: ['France', 'Belgique', 'Suisse'] },
+            { region: 'Am\u00e9riques', countries: ['USA', 'Canada', 'Br\u00e9sil'] },
+            { region: 'Asie', countries: ['Chine', 'Japon', 'Inde'] },
+            { region: 'Oc\u00e9anie', countries: ['Australie', 'N-Z\u00e9lande'] },
+          ].map((group) => (
+            <div key={group.region} style={{ textAlign: 'center' }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8', letterSpacing: '0.1em', display: 'block', marginBottom: 4 }}>
+                {group.region.toUpperCase()}
+              </span>
+              <div style={{ display: 'flex', gap: 16 }}>
+                {group.countries.map((c) => (
+                  <span key={c} style={{ fontSize: 14, fontWeight: 700, color: '#64748b', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>
+                    {c.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -2565,9 +2578,14 @@ export default function LandingPage() {
                 {t.landing.footerLegal}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {['CGV', 'RGPD'].map((link) => (
-                  <li key={link} style={{ marginBottom: 12 }}>
+                {[
+                  { label: 'CGV', key: 'cgv' as const },
+                  { label: 'RGPD', key: 'rgpd' as const },
+                  { label: 'Conditions d\'utilisation', key: 'terms' as const },
+                ].map((link) => (
+                  <li key={link.key} style={{ marginBottom: 12 }}>
                     <button
+                      onClick={() => setLegalModal(link.key)}
                       style={{
                         background: 'none', border: 'none', color: '#94a3b8',
                         fontSize: 14, cursor: 'pointer', padding: 0,
@@ -2576,7 +2594,7 @@ export default function LandingPage() {
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
                     >
-                      {link}
+                      {link.label}
                     </button>
                   </li>
                 ))}
@@ -2629,6 +2647,11 @@ export default function LandingPage() {
       </button>
 
       </div>{/* end .landing-page-root */}
+
+      {/* Legal document modal */}
+      {legalModal && (
+        <LegalModal documentType={legalModal} onClose={() => setLegalModal(null)} />
+      )}
     </div>
   )
 }

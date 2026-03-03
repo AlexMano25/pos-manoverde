@@ -181,6 +181,7 @@ export type TranslationKeys = {
     stock: string
     employees: string
     settings: string
+    billing: string
   }
 
   // Dashboard
@@ -672,5 +673,31 @@ export type TranslationKeys = {
     changePlan: string
     invoiceHistory: string
     noInvoices: string
+  }
+
+  // Billing (pay-as-you-grow)
+  billing: {
+    title: string
+    subtitle: string
+    balance: string
+    ticketsRemaining: string
+    recharge: string
+    consumption: string
+    activity: string
+    store: string
+    tickets: string
+    amount: string
+    transactions: string
+    date: string
+    type: string
+    description: string
+    noBalance: string
+    noTransactions: string
+    load: string
+    deduct: string
+    refund: string
+    bonus: string
+    creditLabel: string
+    ticketsLabel: string
   }
 }

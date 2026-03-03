@@ -7,6 +7,7 @@ import {
   BarChart3,
   Users,
   Settings,
+  CreditCard,
   LogOut,
   RefreshCw,
   Wifi,
@@ -41,6 +42,7 @@ const NAV_ITEM_DEFS: NavItemDef[] = [
   { key: 'orders', icon: ClipboardList },
   { key: 'stock', icon: BarChart3 },
   { key: 'employees', icon: Users, serverOnly: true },
+  { key: 'billing', icon: CreditCard, serverOnly: true },
   { key: 'settings', icon: Settings, serverOnly: true },
 ]
 
@@ -136,6 +138,7 @@ const Sidebar: React.FC = () => {
     orders: t.nav.orders,
     stock: t.nav.stock,
     employees: t.nav.employees,
+    billing: t.nav.billing,
     settings: t.nav.settings,
   }
 

@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { CartItem, Order, PaymentMethod, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
+import { supabase } from '../services/supabase'
+import { useAppStore } from './appStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -147,6 +149,26 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         set((state) => ({
           orders: [order, ...state.orders],
         }))
+
+        // Deduct credit for pay-as-you-grow billing (non-blocking)
+        if (supabase) {
+          const appState = useAppStore.getState()
+          const orgId = appState.currentStore?.organization_id
+          if (orgId) {
+            supabase
+              .rpc('deduct_ticket_credit', {
+                p_organization_id: orgId,
+                p_store_id: appState.currentStore?.id,
+                p_order_id: order.id,
+                p_activity: appState.activity || 'unknown',
+              })
+              .then(({ data, error }) => {
+                if (error) console.error('[orderStore] Credit deduction failed:', error)
+                else if (data === false)
+                  console.warn('[orderStore] Insufficient credit balance')
+              })
+          }
+        }
 
         return order
       } catch (error) {

@@ -20,6 +20,7 @@ import StockPage from './pages/StockPage'
 import EmployeesPage from './pages/EmployeesPage'
 import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
+import BillingPage from './pages/BillingPage'
 
 function AppContent() {
   const { section, setSection, mode, activity, currentStore } = useAppStore()
@@ -60,6 +61,7 @@ function AppContent() {
     stock: { title: t.nav.stock, subtitle: t.stock.subtitle, helpKey: 'stock' },
     employees: { title: t.nav.employees, subtitle: t.employees.subtitle, helpKey: 'employees' },
     settings: { title: t.nav.settings, subtitle: t.settings.subtitle, helpKey: 'settings' },
+    billing: { title: t.nav.billing, subtitle: t.billing.subtitle, helpKey: 'billing' },
   }
 
   const current = pageTitles[section] || pageTitles.dashboard
@@ -83,6 +85,8 @@ function AppContent() {
         return <EmployeesPage />
       case 'settings':
         return <SettingsPage />
+      case 'billing':
+        return <BillingPage />
       default:
         return <DashboardPage />
     }
