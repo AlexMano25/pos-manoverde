@@ -1050,17 +1050,17 @@ export default function RegistrationPage() {
             style={{ marginTop: 4, width: 20, height: 20, accentColor: '#2563eb', flexShrink: 0 }}
           />
           <span style={{ fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
-            J'accepte les{' '}
+            {t.legal.acceptTermsIntro}{' '}
             <button type="button" onClick={() => setLegalModal('cgv')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
-              Conditions Generales de Vente
+              {t.legal.cgvLabel}
             </button>
-            , la{' '}
+            ,{' '}
             <button type="button" onClick={() => setLegalModal('rgpd')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
-              Politique de Confidentialite
+              {t.legal.privacyLabel}
             </button>
-            {' '}et les{' '}
+            {' '}{t.legal.andThe}{' '}
             <button type="button" onClick={() => setLegalModal('terms')} style={{ background: 'none', border: 'none', color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', padding: 0, fontSize: 13 }}>
-              Conditions d'Utilisation
+              {t.legal.termsLabel}
             </button>
             .
           </span>

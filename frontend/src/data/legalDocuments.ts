@@ -1,3 +1,10 @@
+import { LEGAL_DOCUMENTS_EN } from './legalDocs/en'
+import { LEGAL_DOCUMENTS_ES } from './legalDocs/es'
+import { LEGAL_DOCUMENTS_DE } from './legalDocs/de'
+import { LEGAL_DOCUMENTS_IT } from './legalDocs/it'
+import { LEGAL_DOCUMENTS_ZH } from './legalDocs/zh'
+import { LEGAL_DOCUMENTS_AR } from './legalDocs/ar'
+
 export type LegalDocType = 'cgv' | 'rgpd' | 'terms'
 
 export interface LegalSection {
@@ -11,7 +18,8 @@ export interface LegalDocument {
   sections: LegalSection[]
 }
 
-export const LEGAL_DOCUMENTS: Record<LegalDocType, LegalDocument> = {
+// French (default) legal documents
+const LEGAL_DOCUMENTS_FR: Record<LegalDocType, LegalDocument> = {
   cgv: {
     title: 'Conditions Generales de Vente',
     lastUpdated: '2025-01-15',
@@ -283,4 +291,18 @@ export const LEGAL_DOCUMENTS: Record<LegalDocType, LegalDocument> = {
       },
     ],
   },
+}
+
+const ALL_LEGAL_DOCS: Record<string, Record<LegalDocType, LegalDocument>> = {
+  fr: LEGAL_DOCUMENTS_FR,
+  en: LEGAL_DOCUMENTS_EN,
+  es: LEGAL_DOCUMENTS_ES,
+  de: LEGAL_DOCUMENTS_DE,
+  it: LEGAL_DOCUMENTS_IT,
+  zh: LEGAL_DOCUMENTS_ZH,
+  ar: LEGAL_DOCUMENTS_AR,
+}
+
+export function getLegalDocuments(lang: string): Record<LegalDocType, LegalDocument> {
+  return ALL_LEGAL_DOCS[lang] || LEGAL_DOCUMENTS_FR
 }

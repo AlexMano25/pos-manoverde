@@ -597,6 +597,9 @@ export type TranslationKeys = {
     footerProduct: string
     footerSupport: string
     footerLegal: string
+    footerCGV: string
+    footerRGPD: string
+    footerTerms: string
     footerCopyright: string
     footerMadeIn: string
   }
@@ -702,5 +705,19 @@ export type TranslationKeys = {
     payAsYouGrowDesc: string
     initialCredit: string
     noCommitment: string
+  }
+
+  // Legal documents
+  legal: {
+    lastUpdated: string
+    accept: string
+    cgvTitle: string
+    rgpdTitle: string
+    termsTitle: string
+    acceptTermsIntro: string
+    cgvLabel: string
+    privacyLabel: string
+    termsLabel: string
+    andThe: string
   }
 }

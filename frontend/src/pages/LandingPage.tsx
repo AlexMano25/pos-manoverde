@@ -2632,9 +2632,9 @@ export default function LandingPage() {
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {[
-                  { label: 'CGV', key: 'cgv' as const },
-                  { label: 'RGPD', key: 'rgpd' as const },
-                  { label: 'Conditions d\'utilisation', key: 'terms' as const },
+                  { label: t.landing.footerCGV, key: 'cgv' as const },
+                  { label: t.landing.footerRGPD, key: 'rgpd' as const },
+                  { label: t.landing.footerTerms, key: 'terms' as const },
                 ].map((link) => (
                   <li key={link.key} style={{ marginBottom: 12 }}>
                     <button

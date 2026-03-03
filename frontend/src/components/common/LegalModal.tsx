@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
-import { LEGAL_DOCUMENTS, type LegalDocType } from '../../data/legalDocuments'
+import { getLegalDocuments, type LegalDocType } from '../../data/legalDocuments'
+import { useLanguageStore } from '../../stores/languageStore'
 
 interface LegalModalProps {
   documentType: LegalDocType
@@ -9,7 +10,10 @@ interface LegalModalProps {
 }
 
 export default function LegalModal({ documentType, onClose, onAccept }: LegalModalProps) {
-  const doc = LEGAL_DOCUMENTS[documentType]
+  const { language, t } = useLanguageStore()
+  const docs = getLegalDocuments(language)
+  const doc = docs[documentType]
+  const legal = t.legal
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -86,12 +90,12 @@ export default function LegalModal({ documentType, onClose, onAccept }: LegalMod
                 color: '#94a3b8',
               }}
             >
-              Derniere mise a jour : {doc.lastUpdated}
+              {legal.lastUpdated} : {doc.lastUpdated}
             </p>
           </div>
           <button
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={t.common.close}
             style={{
               background: 'none',
               border: 'none',
@@ -190,7 +194,7 @@ export default function LegalModal({ documentType, onClose, onAccept }: LegalMod
               e.currentTarget.style.borderColor = '#e2e8f0'
             }}
           >
-            Fermer
+            {t.common.close}
           </button>
           {onAccept && (
             <button
@@ -213,7 +217,7 @@ export default function LegalModal({ documentType, onClose, onAccept }: LegalMod
                 e.currentTarget.style.backgroundColor = '#16a34a'
               }}
             >
-              J'accepte
+              {legal.accept}
             </button>
           )}
         </div>
