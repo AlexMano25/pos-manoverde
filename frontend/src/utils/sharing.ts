@@ -1,6 +1,7 @@
 /**
  * Sharing utilities: WhatsApp, email, and Web Share API
  */
+import { getCurrencySymbol } from './currency'
 
 /**
  * Share text via WhatsApp (opens wa.me link)
@@ -70,7 +71,9 @@ export function formatOrderForSharing(
     created_at: string
   },
   storeName: string,
+  currency = 'XAF',
 ): string {
+  const sym = getCurrencySymbol(currency)
   const lines: string[] = [
     `📋 ${storeName}`,
     `Order #${order.id.slice(0, 8).toUpperCase()}`,
@@ -80,11 +83,11 @@ export function formatOrderForSharing(
   ]
 
   for (const item of order.items) {
-    lines.push(`• ${item.name} x${item.qty} — ${(item.price * item.qty).toLocaleString()} FCFA`)
+    lines.push(`• ${item.name} x${item.qty} — ${(item.price * item.qty).toLocaleString()} ${sym}`)
   }
 
   lines.push('')
-  lines.push(`💰 Total: ${order.total.toLocaleString()} FCFA`)
+  lines.push(`💰 Total: ${order.total.toLocaleString()} ${sym}`)
   lines.push(`💳 Payment: ${order.payment_method}`)
   lines.push(`📌 Status: ${order.status}`)
 

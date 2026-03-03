@@ -364,6 +364,10 @@ export const it: TranslationKeys = {
     deviceId: 'Identificativo del dispositivo',
     appVersion: 'Versione dell\'applicazione',
     mode: 'Modalit\u00e0',
+    currency: 'Valuta',
+    currencyDesc: 'Scegli la valuta per prezzi e fatture',
+    currencyLabel: 'Valuta del negozio',
+    currencyCustom: 'Simbolo personalizzato',
   },
   sync: {
     synced: 'Sincronizzato',

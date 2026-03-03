@@ -17,6 +17,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportSalesReport, exportInvoice, exportReceipt } from '../utils/pdfExport'
 import { shareViaWhatsApp, shareViaEmail, formatOrderForSharing } from '../utils/sharing'
+import { formatCurrency } from '../utils/currency'
 import type { Order, PaymentMethod, OrderStatus } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -62,10 +63,6 @@ export default function OrdersPage() {
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
-
-  function formatFCFA(amount: number): string {
-    return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : 'en-US').format(amount) + ' FCFA'
-  }
 
   function formatDateTime(iso: string): string {
     const locale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'zh' ? 'zh-CN' : 'en-US'
@@ -457,7 +454,7 @@ export default function OrdersPage() {
                     <td style={tdStyle}>
                       {order.items.length} {t.common.articles}
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{formatFCFA(order.total)}</td>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{formatCurrency(order.total, currentStore?.currency)}</td>
                     <td style={tdStyle}>
                       <span style={badgeStyle(paymentColors[order.payment_method])}>
                         {paymentLabels[order.payment_method]}
@@ -486,7 +483,7 @@ export default function OrdersPage() {
                                   {item.name}{' '}
                                   <span style={{ color: C.textSecondary }}>x{item.qty}</span>
                                 </span>
-                                <span style={{ fontWeight: 500 }}>{formatFCFA(item.price * item.qty)}</span>
+                                <span style={{ fontWeight: 500 }}>{formatCurrency(item.price * item.qty, currentStore?.currency)}</span>
                               </div>
                             ))}
 
@@ -494,23 +491,23 @@ export default function OrdersPage() {
 
                             <div style={detailItemRowStyle}>
                               <span style={{ color: C.textSecondary }}>{t.pos.subtotal}</span>
-                              <span>{formatFCFA(order.subtotal)}</span>
+                              <span>{formatCurrency(order.subtotal, currentStore?.currency)}</span>
                             </div>
                             {order.discount > 0 && (
                               <div style={detailItemRowStyle}>
                                 <span style={{ color: C.textSecondary }}>{t.pos.discount}</span>
-                                <span style={{ color: C.danger }}>-{formatFCFA(order.discount)}</span>
+                                <span style={{ color: C.danger }}>-{formatCurrency(order.discount, currentStore?.currency)}</span>
                               </div>
                             )}
                             {order.tax > 0 && (
                               <div style={detailItemRowStyle}>
                                 <span style={{ color: C.textSecondary }}>{t.pos.tax}</span>
-                                <span>{formatFCFA(order.tax)}</span>
+                                <span>{formatCurrency(order.tax, currentStore?.currency)}</span>
                               </div>
                             )}
                             <div style={{ ...detailItemRowStyle, fontWeight: 700, fontSize: 15 }}>
                               <span>{t.common.total}</span>
-                              <span>{formatFCFA(order.total)}</span>
+                              <span>{formatCurrency(order.total, currentStore?.currency)}</span>
                             </div>
 
                             {order.amount_received != null && (
@@ -518,12 +515,12 @@ export default function OrdersPage() {
                                 <div style={{ height: 1, backgroundColor: C.border, margin: '8px 0' }} />
                                 <div style={detailItemRowStyle}>
                                   <span style={{ color: C.textSecondary }}>{t.pos.amountReceived}</span>
-                                  <span>{formatFCFA(order.amount_received)}</span>
+                                  <span>{formatCurrency(order.amount_received, currentStore?.currency)}</span>
                                 </div>
                                 {order.change_due != null && order.change_due > 0 && (
                                   <div style={detailItemRowStyle}>
                                     <span style={{ color: C.textSecondary }}>{t.pos.changeDue}</span>
-                                    <span style={{ color: C.success }}>{formatFCFA(order.change_due)}</span>
+                                    <span style={{ color: C.success }}>{formatCurrency(order.change_due, currentStore?.currency)}</span>
                                   </div>
                                 )}
                               </>

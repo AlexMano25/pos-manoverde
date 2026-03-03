@@ -364,6 +364,10 @@ export const de: TranslationKeys = {
     deviceId: 'Ger\u00e4te-ID',
     appVersion: 'App-Version',
     mode: 'Modus',
+    currency: 'Währung',
+    currencyDesc: 'Wählen Sie die Währung für Preise und Rechnungen',
+    currencyLabel: 'Geschäftswährung',
+    currencyCustom: 'Benutzerdefiniertes Symbol',
   },
   sync: {
     synced: 'Synchronisiert',

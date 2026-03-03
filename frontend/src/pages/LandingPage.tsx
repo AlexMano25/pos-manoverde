@@ -1917,7 +1917,7 @@ export default function LandingPage() {
                           color: '#64748b',
                           marginLeft: 4,
                         }}>
-                          FCFA
+                          {plan.currency}
                         </span>
                         <p style={{
                           fontSize: 13,
@@ -1944,7 +1944,7 @@ export default function LandingPage() {
                           color: '#64748b',
                           marginLeft: 4,
                         }}>
-                          FCFA{t.landing.pricingPerMonth}
+                          {plan.currency}{t.landing.pricingPerMonth}
                         </span>
                         {billingYearly && plan.price > 0 && (
                           <p style={{
@@ -1953,7 +1953,7 @@ export default function LandingPage() {
                             fontWeight: 600,
                             margin: '4px 0 0',
                           }}>
-                            {formatPrice(plan.priceYearly * 12)} FCFA{t.landing.pricingPerYear}
+                            {formatPrice(plan.priceYearly * 12)} {plan.currency}{t.landing.pricingPerYear}
                           </p>
                         )}
                       </div>

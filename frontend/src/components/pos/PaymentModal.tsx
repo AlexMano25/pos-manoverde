@@ -13,6 +13,7 @@ import { useOrderStore } from '../../stores/orderStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useAppStore } from '../../stores/appStore'
 import { useLanguageStore } from '../../stores/languageStore'
+import { formatCurrency } from '../../utils/currency'
 import type { PaymentMethod } from '../../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -54,20 +55,12 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const { createOrder } = useOrderStore()
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
-  const { t, language } = useLanguageStore()
+  const { t } = useLanguageStore()
 
   const [amountReceived, setAmountReceived] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-
-  // ── Locale-aware helpers ────────────────────────────────────────────────
-
-  const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
-
-  function formatFCFA(amount: number): string {
-    return new Intl.NumberFormat(intlLocale).format(amount) + ' FCFA'
-  }
 
   const paymentLabels: Record<PaymentMethod, string> = {
     cash: t.pos.cash,
@@ -156,7 +149,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           </p>
           {paymentMethod === 'cash' && changeDue > 0 && (
             <p style={{ color: C.success, fontSize: 18, fontWeight: 700, marginTop: 12 }}>
-              {t.pos.changeDue} : {formatFCFA(changeDue)}
+              {t.pos.changeDue} : {formatCurrency(changeDue, currentStore?.currency)}
             </p>
           )}
         </div>
@@ -174,7 +167,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
             <span>
               {item.name} <span style={{ color: C.textSecondary }}>x{item.qty}</span>
             </span>
-            <span style={{ fontWeight: 500 }}>{formatFCFA(item.price * item.qty)}</span>
+            <span style={{ fontWeight: 500 }}>{formatCurrency(item.price * item.qty, currentStore?.currency)}</span>
           </div>
         ))}
       </div>
@@ -183,24 +176,24 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       <div style={dividerStyle} />
       <div style={itemRowStyle}>
         <span style={{ color: C.textSecondary }}>{t.pos.subtotal}</span>
-        <span>{formatFCFA(subtotal)}</span>
+        <span>{formatCurrency(subtotal, currentStore?.currency)}</span>
       </div>
       {discount > 0 && (
         <div style={itemRowStyle}>
           <span style={{ color: C.textSecondary }}>{t.pos.discount}</span>
-          <span style={{ color: C.danger }}>-{formatFCFA(discount)}</span>
+          <span style={{ color: C.danger }}>-{formatCurrency(discount, currentStore?.currency)}</span>
         </div>
       )}
       {tax > 0 && (
         <div style={itemRowStyle}>
           <span style={{ color: C.textSecondary }}>{t.pos.tax} ({taxRate}%)</span>
-          <span>{formatFCFA(tax)}</span>
+          <span>{formatCurrency(tax, currentStore?.currency)}</span>
         </div>
       )}
       <div style={dividerStyle} />
       <div style={totalRowStyle}>
         <span>{t.pos.grandTotal}</span>
-        <span>{formatFCFA(total)}</span>
+        <span>{formatCurrency(total, currentStore?.currency)}</span>
       </div>
 
       {/* Payment Method */}
@@ -230,7 +223,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           <div style={changeBoxStyle}>
             <span style={{ fontSize: 14, color: C.textSecondary }}>{t.pos.changeDue}</span>
             <span style={{ fontSize: 18, fontWeight: 700, color: changeDue > 0 ? C.success : C.text }}>
-              {formatFCFA(changeDue)}
+              {formatCurrency(changeDue, currentStore?.currency)}
             </span>
           </div>
         </div>

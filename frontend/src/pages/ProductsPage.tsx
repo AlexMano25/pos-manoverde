@@ -21,6 +21,7 @@ import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import type { Product } from '../types'
 import { generateUUID } from '../utils/uuid'
+import { formatCurrency, getCurrencySymbol } from '../utils/currency'
 import { ACTIVITY_PRODUCT_FIELDS } from '../data/activityFields'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -97,7 +98,7 @@ const emptyForm: ProductForm = {
 export default function ProductsPage() {
   const { products, categories, loading, loadProducts, addProduct, updateProduct, deleteProduct } = useProductStore()
   const { currentStore } = useAppStore()
-  const { t, language } = useLanguageStore()
+  const { t } = useLanguageStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -111,10 +112,6 @@ export default function ProductsPage() {
 
   const activity = currentStore?.activity
   const activityFields = activity ? (ACTIVITY_PRODUCT_FIELDS[activity] || []) : []
-
-  function formatFCFA(amount: number): string {
-    return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : 'en-US').format(amount) + ' FCFA'
-  }
 
   // Resolve dot-notation i18n key like "products.expiryDate" against the translations object
   const resolveI18nKey = (key: string): string => {
@@ -726,7 +723,7 @@ export default function ProductsPage() {
                     <td style={tdStyle}>
                       <span style={badgeStyle('#8b5cf6')}>{product.category}</span>
                     </td>
-                    <td style={{ ...tdStyle, fontWeight: 600 }}>{formatFCFA(product.price)}</td>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{formatCurrency(product.price, currentStore?.currency)}</td>
                     <td style={isLowStock ? lowStockTd : tdStyle}>
                       {product.stock}
                       {isLowStock && product.stock > 0 && (
@@ -805,7 +802,7 @@ export default function ProductsPage() {
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>{t.products.priceLabel} (FCFA) *</label>
+            <label style={formLabelStyle}>{t.products.priceLabel} ({getCurrencySymbol(currentStore?.currency)}) *</label>
             <input
               style={formInputStyle}
               type="number"
@@ -818,7 +815,7 @@ export default function ProductsPage() {
             />
           </div>
           <div style={formFieldStyle}>
-            <label style={formLabelStyle}>{t.products.cost} (FCFA)</label>
+            <label style={formLabelStyle}>{t.products.cost} ({getCurrencySymbol(currentStore?.currency)})</label>
             <input
               style={formInputStyle}
               type="number"

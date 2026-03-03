@@ -17,6 +17,7 @@ import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import PaymentModal from '../components/pos/PaymentModal'
+import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, Product } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -39,21 +40,13 @@ export default function POSPage() {
   const { products, categories, loadProducts } = useProductStore()
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()
-  const { t, language } = useLanguageStore()
+  const { t } = useLanguageStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [discountPercent, setDiscountPercent] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('cash')
-
-  // ── Locale-aware helpers ────────────────────────────────────────────────
-
-  const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
-
-  function formatFCFA(amount: number): string {
-    return new Intl.NumberFormat(intlLocale).format(amount) + ' FCFA'
-  }
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -217,7 +210,7 @@ export default function POSPage() {
                       </div>
                     )}
                     <p style={productNameStyle}>{product.name}</p>
-                    <p style={productPriceStyle}>{formatFCFA(product.price)}</p>
+                    <p style={productPriceStyle}>{formatCurrency(product.price, currentStore?.currency)}</p>
                     <p style={productStockStyle(product.stock)}>
                       {inStock ? `${t.pos.inStock}: ${product.stock}` : t.pos.outOfStock}
                     </p>
@@ -257,7 +250,7 @@ export default function POSPage() {
                 <div key={item.product_id} style={cartItemStyle}>
                   <div style={cartItemInfoStyle}>
                     <p style={cartItemNameStyle}>{item.name}</p>
-                    <p style={cartItemPriceStyle}>{formatFCFA(item.price)}{t.pos.perUnit}</p>
+                    <p style={cartItemPriceStyle}>{formatCurrency(item.price, currentStore?.currency)}{t.pos.perUnit}</p>
                   </div>
                   <div style={qtyControlsStyle}>
                     <button style={qtyBtnStyle} onClick={() => updateQty(item.product_id, item.qty - 1)}>
@@ -274,7 +267,7 @@ export default function POSPage() {
                       <Plus size={14} />
                     </button>
                   </div>
-                  <span style={cartItemTotalStyle}>{formatFCFA(item.price * item.qty)}</span>
+                  <span style={cartItemTotalStyle}>{formatCurrency(item.price * item.qty, currentStore?.currency)}</span>
                   <button
                     style={removeItemBtnStyle}
                     onClick={() => removeItem(item.product_id)}
@@ -290,7 +283,7 @@ export default function POSPage() {
             <div style={cartFooterStyle}>
               <div style={summaryRowStyle}>
                 <span>{t.pos.subtotal}</span>
-                <span style={{ fontWeight: 600, color: C.text }}>{formatFCFA(subtotal)}</span>
+                <span style={{ fontWeight: 600, color: C.text }}>{formatCurrency(subtotal, currentStore?.currency)}</span>
               </div>
 
               <div style={summaryRowStyle}>
@@ -308,14 +301,14 @@ export default function POSPage() {
                   <span>%</span>
                 </span>
                 <span style={{ color: C.danger, fontWeight: 500 }}>
-                  {discountAmount > 0 ? `-${formatFCFA(discountAmount)}` : '0 FCFA'}
+                  {discountAmount > 0 ? `-${formatCurrency(discountAmount, currentStore?.currency)}` : formatCurrency(0, currentStore?.currency)}
                 </span>
               </div>
 
               {taxRate > 0 && (
                 <div style={summaryRowStyle}>
                   <span>{t.pos.tax} ({taxRate}%)</span>
-                  <span style={{ fontWeight: 500, color: C.text }}>{formatFCFA(taxAmount)}</span>
+                  <span style={{ fontWeight: 500, color: C.text }}>{formatCurrency(taxAmount, currentStore?.currency)}</span>
                 </div>
               )}
 
@@ -323,7 +316,7 @@ export default function POSPage() {
 
               <div style={totalRowStyle}>
                 <span>{t.pos.grandTotal}</span>
-                <span style={{ color: C.primary }}>{formatFCFA(total)}</span>
+                <span style={{ color: C.primary }}>{formatCurrency(total, currentStore?.currency)}</span>
               </div>
 
               <div style={paymentButtonsStyle}>

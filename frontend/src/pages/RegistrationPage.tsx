@@ -42,6 +42,7 @@ import { useAppStore } from '../stores/appStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { goToLanding } from '../utils/navigation'
+import { formatCurrency } from '../utils/currency'
 import type { Activity, BillingCycle, SubscriptionPlan } from '../types'
 
 // ── Activity icon mapping (same as SetupPage) ───────────────────────────────
@@ -95,7 +96,7 @@ const PLAN_PRICES: Record<SubscriptionPlan, { monthly: number; yearly: number }>
 }
 
 function formatPrice(amount: number): string {
-  return Intl.NumberFormat('fr-FR').format(amount) + ' FCFA'
+  return formatCurrency(amount, 'XAF')
 }
 
 // ── Payment methods ─────────────────────────────────────────────────────────

@@ -387,6 +387,10 @@ export const en: TranslationKeys = {
     deviceId: 'Device ID',
     appVersion: 'App version',
     mode: 'Mode',
+    currency: 'Currency',
+    currencyDesc: 'Choose the currency for prices and invoices',
+    currencyLabel: 'Store currency',
+    currencyCustom: 'Custom symbol',
   },
 
   // Sync

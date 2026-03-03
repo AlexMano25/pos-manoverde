@@ -364,6 +364,10 @@ export const fr: TranslationKeys = {
     deviceId: 'Identifiant de l\'appareil',
     appVersion: 'Version de l\'application',
     mode: 'Mode',
+    currency: 'Devise',
+    currencyDesc: 'Choisissez la devise pour les prix et factures',
+    currencyLabel: 'Devise du magasin',
+    currencyCustom: 'Symbole personnalisé',
   },
   sync: {
     synced: 'Synchronis\u00e9',

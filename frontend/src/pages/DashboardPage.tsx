@@ -15,6 +15,7 @@ import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportDailySummary } from '../utils/pdfExport'
+import { formatCurrency } from '../utils/currency'
 import type { Order, PaymentMethod } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -59,10 +60,6 @@ export default function DashboardPage() {
   // ── Locale-aware helpers ────────────────────────────────────────────────
 
   const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
-
-  function formatFCFA(amount: number): string {
-    return new Intl.NumberFormat(intlLocale).format(amount) + ' FCFA'
-  }
 
   function formatDateTime(iso: string): string {
     const d = new Date(iso)
@@ -210,7 +207,7 @@ export default function DashboardPage() {
                 <p style={statLabelStyle}>{t.dashboard.todayRevenue}</p>
                 <div style={iconBoxStyle(C.success)}><DollarSign size={20} color={C.success} /></div>
               </div>
-              <p style={statValueStyle}>{formatFCFA(todayRevenue)}</p>
+              <p style={statValueStyle}>{formatCurrency(todayRevenue, currentStore?.currency)}</p>
             </div>
 
             <div style={statCardStyle}>
@@ -278,7 +275,7 @@ export default function DashboardPage() {
                       </td>
                       <td style={tdStyle}>{formatDateTime(order.created_at)}</td>
                       <td style={tdStyle}>{order.items.length} {t.common.articles}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600 }}>{formatFCFA(order.total)}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600 }}>{formatCurrency(order.total, currentStore?.currency)}</td>
                       <td style={tdStyle}>
                         <span style={badgeStyle(paymentColors[order.payment_method])}>
                           {paymentLabels[order.payment_method]}

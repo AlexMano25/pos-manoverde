@@ -364,6 +364,10 @@ export const zh: TranslationKeys = {
     deviceId: '设备标识',
     appVersion: '应用版本',
     mode: '模式',
+    currency: '货币',
+    currencyDesc: '选择价格和发票的货币',
+    currencyLabel: '商店货币',
+    currencyCustom: '自定义符号',
   },
   sync: {
     synced: '已同步',

@@ -6,6 +6,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type { Product, Order } from '../types'
+import { formatCurrencyPlain } from './currency'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -28,8 +29,8 @@ function addHeader(doc: jsPDF, storeName: string, title: string) {
   doc.line(14, 38, doc.internal.pageSize.width - 14, 38)
 }
 
-function fmtFCFA(amount: number): string {
-  return amount.toLocaleString('fr-FR') + ' FCFA'
+function fmtFCFA(amount: number, currency = 'XAF'): string {
+  return formatCurrencyPlain(amount, currency)
 }
 
 // ── Products Catalog ──────────────────────────────────────────────────────

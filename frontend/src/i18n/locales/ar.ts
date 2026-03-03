@@ -364,6 +364,10 @@ export const ar: TranslationKeys = {
     deviceId: 'معرّف الجهاز',
     appVersion: 'إصدار التطبيق',
     mode: 'الوضع',
+    currency: 'العملة',
+    currencyDesc: 'اختر العملة للأسعار والفواتير',
+    currencyLabel: 'عملة المتجر',
+    currencyCustom: 'رمز مخصص',
   },
   sync: {
     synced: 'تمت المزامنة',

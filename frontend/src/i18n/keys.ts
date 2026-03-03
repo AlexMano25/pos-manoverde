@@ -389,6 +389,10 @@ export type TranslationKeys = {
     deviceId: string
     appVersion: string
     mode: string
+    currency: string
+    currencyDesc: string
+    currencyLabel: string
+    currencyCustom: string
   }
 
   // Sync

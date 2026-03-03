@@ -3,6 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import type { Order, PrinterStatus } from '../types'
+import { formatCurrencyPlain } from '../utils/currency'
 
 // ── ESC/POS Command Constants ───────────────────────────────────────────────
 
@@ -214,11 +215,8 @@ export class ESCPOSEncoder {
 /**
  * Format a number as FCFA currency string: "1 234 567 FCFA"
  */
-function formatFCFA(amount: number): string {
-  const formatted = Math.round(amount)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-  return `${formatted} FCFA`
+function formatFCFA(amount: number, currency = 'XAF'): string {
+  return formatCurrencyPlain(amount, currency)
 }
 
 /**

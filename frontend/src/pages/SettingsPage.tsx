@@ -11,6 +11,7 @@ import {
   Loader2,
   Save,
   Bluetooth,
+  DollarSign,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
@@ -18,6 +19,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
+import { WORLD_CURRENCIES } from '../utils/currency'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -62,6 +64,11 @@ export default function SettingsPage() {
   const [storePhone, setStorePhone] = useState(currentStore?.phone || '')
   const [storeSaved, setStoreSaved] = useState(false)
 
+  // Currency
+  const [storeCurrency, setStoreCurrency] = useState(currentStore?.currency || 'XAF')
+  const [customCurrency, setCustomCurrency] = useState('')
+  const [currencySaved, setCurrencySaved] = useState(false)
+
   // Connection
   const [serverUrlInput, setServerUrlInput] = useState(serverUrl || '')
   const [testingConnection, setTestingConnection] = useState(false)
@@ -78,6 +85,7 @@ export default function SettingsPage() {
     setStoreName(currentStore?.name || '')
     setStoreAddress(currentStore?.address || '')
     setStorePhone(currentStore?.phone || '')
+    setStoreCurrency(currentStore?.currency || 'XAF')
   }, [currentStore])
 
   const handleSaveStore = () => {
@@ -92,6 +100,19 @@ export default function SettingsPage() {
     setCurrentStore(updated)
     setStoreSaved(true)
     setTimeout(() => setStoreSaved(false), 2000)
+  }
+
+  const handleSaveCurrency = () => {
+    if (!currentStore) return
+    const currencyCode = storeCurrency === 'custom' ? customCurrency.trim() || 'XAF' : storeCurrency
+    const updated = {
+      ...currentStore,
+      currency: currencyCode,
+      updated_at: new Date().toISOString(),
+    }
+    setCurrentStore(updated)
+    setCurrencySaved(true)
+    setTimeout(() => setCurrencySaved(false), 2000)
   }
 
   const handleSaveServerUrl = () => {
@@ -367,6 +388,64 @@ export default function SettingsPage() {
           </p>
         )}
       </div>
+
+      {/* ── Currency ──────────────────────────────────────────────── */}
+      {(mode === 'server' || mode === 'all_in_one') && (
+        <div style={sectionCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionIconStyle('#f59e0b')}>
+              <DollarSign size={18} color="#f59e0b" />
+            </div>
+            <div>
+              <h3 style={sectionTitleStyle}>{t.settings.currency}</h3>
+              <p style={sectionDescStyle}>{t.settings.currencyDesc}</p>
+            </div>
+          </div>
+
+          <div style={fieldStyle}>
+            <label style={labelStyle}>{t.settings.currencyLabel}</label>
+            <select
+              style={{ ...inputStyle, cursor: 'pointer' }}
+              value={storeCurrency}
+              onChange={(e) => setStoreCurrency(e.target.value)}
+            >
+              {WORLD_CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.symbol} — {c.name} ({c.code})
+                </option>
+              ))}
+              <option value="custom">{t.settings.currencyCustom}</option>
+            </select>
+          </div>
+
+          {storeCurrency === 'custom' && (
+            <div style={fieldStyle}>
+              <label style={labelStyle}>{t.settings.currencyCustom}</label>
+              <input
+                style={inputStyle}
+                type="text"
+                value={customCurrency}
+                onChange={(e) => setCustomCurrency(e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                onBlur={(e) => (e.target.style.borderColor = C.border)}
+                placeholder="e.g. FCFA, $, €"
+                maxLength={10}
+              />
+            </div>
+          )}
+
+          <button
+            style={currencySaved ? successBtnStyle : primaryBtnStyle}
+            onClick={handleSaveCurrency}
+          >
+            {currencySaved ? (
+              <><CheckCircle2 size={16} /> {t.common.success}</>
+            ) : (
+              <><Save size={16} /> {t.common.save}</>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* ── Connection ─────────────────────────────────────────────── */}
       <div style={sectionCardStyle}>
