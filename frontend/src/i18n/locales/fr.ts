@@ -431,7 +431,7 @@ export const fr: TranslationKeys = {
     // Hero
     heroTitle1: 'Le Point de Vente',
     heroTitle2: 'intelligent',
-    heroTitle3: 'pour l\'Afrique',
+    heroTitle3: 'pour le monde',
     heroSubtitle: 'Gerez vos boutiques meme sans internet. POS Mano Verde fonctionne hors-ligne, synchronise automatiquement, et imprime vos tickets via Bluetooth.',
     heroCTA1: 'Commencer gratuitement',
     heroCTA2: 'Voir la demo',
@@ -444,7 +444,7 @@ export const fr: TranslationKeys = {
     heroStat3Label: 'Disponibilite uptime',
     // Features
     featuresTitle: 'Pourquoi POS Mano Verde ?',
-    featuresSubtitle: 'Une solution de caisse pensee pour les realites africaines. Pas d\'internet ? Pas de probleme.',
+    featuresSubtitle: 'Une solution de caisse pensee pour les commercants du monde entier. Pas d\'internet ? Pas de probleme.',
     feature1Title: 'Fonctionne hors-ligne',
     feature1Desc: 'Vendez meme sans connexion internet. Vos donnees se synchronisent automatiquement des que le reseau revient.',
     feature2Title: 'Multi-boutiques',
@@ -454,7 +454,7 @@ export const fr: TranslationKeys = {
     feature4Title: 'Synchronisation automatique',
     feature4Desc: 'Les donnees se synchronisent automatiquement entre vos appareils. Tous vos caisses restent a jour en temps reel.',
     feature5Title: 'Multi-langues',
-    feature5Desc: 'Interface disponible en francais et en anglais. Adaptee aux besoins des commercants africains.',
+    feature5Desc: 'Interface disponible en francais et en anglais. Adaptee aux besoins des commercants partout dans le monde.',
     feature6Title: 'Installation en 2 minutes',
     feature6Desc: 'Pas de materiel couteux a acheter. Installez sur votre telephone ou tablette et commencez a vendre.',
     // How it works
@@ -523,7 +523,7 @@ export const fr: TranslationKeys = {
     testimonial1Text: 'Avant POS Mano Verde, je notais tout sur papier. Maintenant, mes 3 serveurs prennent les commandes sur tablette et le ticket sort automatiquement en cuisine. Meme quand le reseau coupe, tout continue de fonctionner. J\'ai reduit mes erreurs de commande de 80%.',
     testimonial1Name: 'Amadou Ndiaye',
     testimonial1Role: 'Proprietaire de restaurant - Douala, Cameroun',
-    testimonial2Text: 'Je gere 2 superettes avec POS Mano Verde. Le tableau de bord me montre en temps reel les ventes de chaque boutique. La gestion de stock est incroyable - je recois des alertes quand un produit atteint le seuil minimum. C\'est vraiment concu pour l\'Afrique.',
+    testimonial2Text: 'Je gere 2 superettes avec POS Mano Verde. Le tableau de bord me montre en temps reel les ventes de chaque boutique. La gestion de stock est incroyable - je recois des alertes quand un produit atteint le seuil minimum. C\'est vraiment concu pour les commercants.',
     testimonial2Name: 'Fatou Diallo',
     testimonial2Role: 'Gerante de supermarche - Abidjan, Cote d\'Ivoire',
     testimonial3Text: 'La conformite est essentielle dans la pharmacie. POS Mano Verde me permet de tracer chaque vente, de gerer les dates de peremption et d\'imprimer des factures conformes. Le support est reactif et l\'application est tres stable. Je la recommande a tous mes collegues.',
@@ -557,7 +557,7 @@ export const fr: TranslationKeys = {
     ctaButton: 'Commencer gratuitement',
     ctaNoCard: 'Pas de carte bancaire requise - Demarrez en 2 minutes',
     // Footer
-    footerDesc: 'La solution de caisse intelligente concue pour les commercants africains. Fonctionnement hors-ligne, synchronisation automatique et impression Bluetooth.',
+    footerDesc: 'La solution de caisse intelligente concue pour les commercants du monde entier. Fonctionnement hors-ligne, synchronisation automatique et impression Bluetooth.',
     footerProduct: 'Produit',
     footerSupport: 'Support',
     footerLegal: 'Legal',

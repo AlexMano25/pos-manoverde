@@ -37,6 +37,7 @@ import {
   EyeOff,
   Loader2,
   AlertCircle,
+  Zap,
 } from 'lucide-react'
 import LegalModal from '../components/common/LegalModal'
 import { useAppStore } from '../stores/appStore'
@@ -246,6 +247,7 @@ export default function RegistrationPage() {
   // ── Step title/desc ─────────────────────────────────────────────────────
 
   const reg = t.registration as Record<string, string>
+  const billing = t.billing as Record<string, string>
 
   const getStepTitle = (): string => {
     if (step === 1) return reg.step1Title || 'Votre forfait'
@@ -817,6 +819,7 @@ export default function RegistrationPage() {
 
   const renderStep4 = () => {
     if (plan === 'free' || plan === 'pay_as_you_grow') {
+      const isPayGrow = plan === 'pay_as_you_grow'
       return (
         <div style={infoCardStyle}>
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -824,19 +827,25 @@ export default function RegistrationPage() {
               width: 56,
               height: 56,
               borderRadius: '50%',
-              backgroundColor: '#f0fdf4',
+              backgroundColor: isPayGrow ? '#fffbeb' : '#f0fdf4',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 16px',
             }}>
-              <Check size={28} color="#16a34a" />
+              {isPayGrow
+                ? <Zap size={28} color="#f59e0b" />
+                : <Check size={28} color="#16a34a" />
+              }
             </div>
             <p style={{ fontSize: 16, fontWeight: 600, color: '#1e293b', margin: '0 0 8px' }}>
               {getPlanName()}
             </p>
             <p style={{ fontSize: 14, color: '#64748b', margin: 0, lineHeight: 1.6 }}>
-              {reg.freePlanNote || 'Le forfait Decouverte est gratuit, aucun paiement requis.'}
+              {isPayGrow
+                ? (billing.payAsYouGrowDesc || '$0.02 par ticket. Toutes les fonctions incluses. 10 $ de credit offerts a l\'inscription.')
+                : (reg.freePlanNote || 'Le forfait Decouverte est gratuit, aucun paiement requis.')
+              }
             </p>
           </div>
         </div>

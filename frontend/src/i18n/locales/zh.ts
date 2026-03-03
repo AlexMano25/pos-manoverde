@@ -431,7 +431,7 @@ export const zh: TranslationKeys = {
     // Hero
     heroTitle1: '智能',
     heroTitle2: '收银系统',
-    heroTitle3: '专为非洲打造',
+    heroTitle3: '面向全球',
     heroSubtitle: '即使没有网络也能管理您的店铺。POS Mano Verde 支持离线运行，自动同步数据，并通过蓝牙打印小票。',
     heroCTA1: '免费开始使用',
     heroCTA2: '查看演示',
@@ -444,7 +444,7 @@ export const zh: TranslationKeys = {
     heroStat3Label: '系统可用率',
     // Features
     featuresTitle: '为什么选择 POS Mano Verde？',
-    featuresSubtitle: '专为非洲实际情况设计的收银解决方案。没有网络？没问题。',
+    featuresSubtitle: '专为全球商户设计的收银解决方案。没有网络？没问题。',
     feature1Title: '离线运行',
     feature1Desc: '即使没有网络连接也能正常销售。当网络恢复时，您的数据会自动同步。',
     feature2Title: '多店铺管理',
@@ -454,7 +454,7 @@ export const zh: TranslationKeys = {
     feature4Title: '自动同步',
     feature4Desc: '数据在您的设备之间自动同步。所有收银终端实时保持最新状态。',
     feature5Title: '多语言支持',
-    feature5Desc: '界面支持法语和英语。专为非洲商户的需求量身定制。',
+    feature5Desc: '界面支持法语和英语。专为全球商户的需求量身定制。',
     feature6Title: '2 分钟安装',
     feature6Desc: '无需购买昂贵的硬件。安装在您的手机或平板电脑上即可开始销售。',
     // How it works
@@ -523,7 +523,7 @@ export const zh: TranslationKeys = {
     testimonial1Text: '在使用 POS Mano Verde 之前，我什么都用纸记录。现在，我的 3 名服务员用平板电脑点餐，小票自动在厨房打印出来。即使断网，一切照常运行。我的点餐错误减少了 80%。',
     testimonial1Name: 'Amadou Ndiaye',
     testimonial1Role: '餐厅老板 - 杜阿拉，喀麦隆',
-    testimonial2Text: '我用 POS Mano Verde 管理 2 家便利店。仪表盘实时显示每家店铺的销售数据。库存管理非常出色——当商品库存降至最低值时，我会收到提醒。这真的是为非洲设计的。',
+    testimonial2Text: '我用 POS Mano Verde 管理 2 家便利店。仪表盘实时显示每家店铺的销售数据。库存管理非常出色——当商品库存降至最低值时，我会收到提醒。这真的是为全球商户设计的。',
     testimonial2Name: 'Fatou Diallo',
     testimonial2Role: '超市经理 - 阿比让，科特迪瓦',
     testimonial3Text: '合规对药房至关重要。POS Mano Verde 让我能够追踪每笔销售，管理药品有效期，并打印合规发票。技术支持响应及时，应用非常稳定。我向所有同行推荐它。',
@@ -557,7 +557,7 @@ export const zh: TranslationKeys = {
     ctaButton: '免费开始使用',
     ctaNoCard: '无需银行卡 - 2 分钟即可开始',
     // Footer
-    footerDesc: '专为非洲商户打造的智能收银解决方案。支持离线运行、自动同步和蓝牙打印。',
+    footerDesc: '专为全球商户打造的智能收银解决方案。支持离线运行、自动同步和蓝牙打印。',
     footerProduct: '产品',
     footerSupport: '支持',
     footerLegal: '法律信息',

@@ -464,7 +464,7 @@ export const en: TranslationKeys = {
     // Hero
     heroTitle1: 'The Smart Point of Sale',
     heroTitle2: 'smart',
-    heroTitle3: 'for Africa',
+    heroTitle3: 'for the World',
     heroSubtitle: 'Manage your stores even without internet. POS Mano Verde works offline, syncs automatically, and prints your receipts via Bluetooth.',
     heroCTA1: 'Get started for free',
     heroCTA2: 'Watch demo',
@@ -477,7 +477,7 @@ export const en: TranslationKeys = {
     heroStat3Label: 'Availability\nuptime',
     // Features
     featuresTitle: 'Why POS Mano Verde?',
-    featuresSubtitle: 'A POS solution designed for African realities. No internet? No problem.',
+    featuresSubtitle: 'A POS solution designed for merchants worldwide. No internet? No problem.',
     feature1Title: 'Works Offline',
     feature1Desc: 'Sell even without an internet connection. Your data syncs automatically as soon as the network is back.',
     feature2Title: 'Multi-store Management',
@@ -487,7 +487,7 @@ export const en: TranslationKeys = {
     feature4Title: 'Automatic Sync',
     feature4Desc: 'Data syncs automatically between your devices. All your registers stay up to date in real time.',
     feature5Title: '7 Languages',
-    feature5Desc: 'Interface available in French, English, Spanish, Arabic, Swahili, Portuguese, and Pidgin. Adapted to African merchants\' needs.',
+    feature5Desc: 'Interface available in French, English, Spanish, Arabic, Swahili, Portuguese, and Pidgin. Adapted to merchants\' needs worldwide.',
     feature6Title: 'Ready in 2 Minutes',
     feature6Desc: 'No expensive hardware to buy. Install on your phone or tablet and start selling.',
     // How it works
@@ -556,7 +556,7 @@ export const en: TranslationKeys = {
     testimonial1Text: 'Before POS Mano Verde, I wrote everything on paper. Now my 3 servers take orders on a tablet and the ticket prints automatically in the kitchen. Even when the network goes down, everything keeps working. I reduced my order errors by 80%.',
     testimonial1Name: 'Amadou Ndiaye',
     testimonial1Role: 'Restaurant owner, Douala, Cameroon',
-    testimonial2Text: 'I manage 2 mini-markets with POS Mano Verde. The dashboard shows me sales in real time for each store. Stock management is incredible - I get alerts when a product reaches its minimum threshold. It is truly designed for Africa.',
+    testimonial2Text: 'I manage 2 mini-markets with POS Mano Verde. The dashboard shows me sales in real time for each store. Stock management is incredible - I get alerts when a product reaches its minimum threshold. It is truly designed for merchants everywhere.',
     testimonial2Name: 'Fatou Diallo',
     testimonial2Role: 'Supermarket manager, Abidjan, Ivory Coast',
     testimonial3Text: 'Compliance is essential in pharmacy. POS Mano Verde lets me track every sale, manage expiration dates, and print compliant invoices. Support is responsive and the app is very stable. I recommend it to all my colleagues.',
@@ -590,7 +590,7 @@ export const en: TranslationKeys = {
     ctaButton: 'Get started for free',
     ctaNoCard: 'No credit card required - Get started in 2 minutes',
     // Footer
-    footerDesc: 'The smart POS solution designed for African merchants. Offline operation, automatic sync, and Bluetooth printing.',
+    footerDesc: 'The smart POS solution designed for merchants worldwide. Offline operation, automatic sync, and Bluetooth printing.',
     footerProduct: 'Product',
     footerSupport: 'Support',
     footerLegal: 'Legal',

@@ -431,7 +431,7 @@ export const de: TranslationKeys = {
     // Hero
     heroTitle1: 'Das intelligente',
     heroTitle2: 'Kassensystem',
-    heroTitle3: 'f\u00fcr Afrika',
+    heroTitle3: 'f\u00fcr die Welt',
     heroSubtitle: 'Verwalten Sie Ihre Gesch\u00e4fte auch ohne Internet. POS Mano Verde funktioniert offline, synchronisiert automatisch und druckt Ihre Belege \u00fcber Bluetooth.',
     heroCTA1: 'Kostenlos starten',
     heroCTA2: 'Demo ansehen',
@@ -444,7 +444,7 @@ export const de: TranslationKeys = {
     heroStat3Label: 'Verf\u00fcgbarkeit (Uptime)',
     // Features
     featuresTitle: 'Warum POS Mano Verde?',
-    featuresSubtitle: 'Eine Kassenl\u00f6sung, die f\u00fcr die afrikanische Realit\u00e4t entwickelt wurde. Kein Internet? Kein Problem.',
+    featuresSubtitle: 'Eine Kassenl\u00f6sung, die f\u00fcr H\u00e4ndler weltweit entwickelt wurde. Kein Internet? Kein Problem.',
     feature1Title: 'Funktioniert offline',
     feature1Desc: 'Verkaufen Sie auch ohne Internetverbindung. Ihre Daten werden automatisch synchronisiert, sobald das Netzwerk wieder verf\u00fcgbar ist.',
     feature2Title: 'Mehrere Filialen',
@@ -454,7 +454,7 @@ export const de: TranslationKeys = {
     feature4Title: 'Automatische Synchronisation',
     feature4Desc: 'Die Daten werden automatisch zwischen Ihren Ger\u00e4ten synchronisiert. Alle Ihre Kassen bleiben in Echtzeit auf dem neuesten Stand.',
     feature5Title: 'Mehrsprachig',
-    feature5Desc: 'Oberfl\u00e4che verf\u00fcgbar in Franz\u00f6sisch und Englisch. Angepasst an die Bed\u00fcrfnisse afrikanischer H\u00e4ndler.',
+    feature5Desc: 'Oberfl\u00e4che verf\u00fcgbar in Franz\u00f6sisch und Englisch. Angepasst an die Bed\u00fcrfnisse von H\u00e4ndlern weltweit.',
     feature6Title: 'Installation in 2 Minuten',
     feature6Desc: 'Keine teure Hardware n\u00f6tig. Installieren Sie es auf Ihrem Smartphone oder Tablet und beginnen Sie sofort mit dem Verkauf.',
     // How it works
@@ -523,7 +523,7 @@ export const de: TranslationKeys = {
     testimonial1Text: 'Vor POS Mano Verde habe ich alles auf Papier notiert. Jetzt nehmen meine 3 Kellner die Bestellungen auf dem Tablet auf und der Bon wird automatisch in der K\u00fcche gedruckt. Selbst wenn das Netzwerk ausf\u00e4llt, funktioniert alles weiter. Ich habe meine Bestellfehler um 80% reduziert.',
     testimonial1Name: 'Amadou Ndiaye',
     testimonial1Role: 'Restaurantbesitzer - Douala, Kamerun',
-    testimonial2Text: 'Ich verwalte 2 Superm\u00e4rkte mit POS Mano Verde. Das Dashboard zeigt mir in Echtzeit die Verk\u00e4ufe jeder Filiale. Die Lagerverwaltung ist unglaublich \u2013 ich erhalte Warnungen, wenn ein Produkt den Mindestbestand erreicht. Es ist wirklich f\u00fcr Afrika konzipiert.',
+    testimonial2Text: 'Ich verwalte 2 Superm\u00e4rkte mit POS Mano Verde. Das Dashboard zeigt mir in Echtzeit die Verk\u00e4ufe jeder Filiale. Die Lagerverwaltung ist unglaublich \u2013 ich erhalte Warnungen, wenn ein Produkt den Mindestbestand erreicht. Es ist wirklich f\u00fcr H\u00e4ndler weltweit konzipiert.',
     testimonial2Name: 'Fatou Diallo',
     testimonial2Role: 'Supermarktleiterin - Abidjan, Elfenbeink\u00fcste',
     testimonial3Text: 'Konformit\u00e4t ist in der Apotheke unerl\u00e4sslich. POS Mano Verde erm\u00f6glicht es mir, jeden Verkauf nachzuverfolgen, Verfallsdaten zu verwalten und konforme Rechnungen zu drucken. Der Support ist reaktionsschnell und die Anwendung ist sehr stabil. Ich empfehle sie allen meinen Kollegen.',
@@ -557,7 +557,7 @@ export const de: TranslationKeys = {
     ctaButton: 'Kostenlos starten',
     ctaNoCard: 'Keine Kreditkarte erforderlich \u2013 In 2 Minuten startklar',
     // Footer
-    footerDesc: 'Die intelligente Kassenl\u00f6sung f\u00fcr afrikanische H\u00e4ndler. Offline-Betrieb, automatische Synchronisation und Bluetooth-Druck.',
+    footerDesc: 'Die intelligente Kassenl\u00f6sung f\u00fcr H\u00e4ndler weltweit. Offline-Betrieb, automatische Synchronisation und Bluetooth-Druck.',
     footerProduct: 'Produkt',
     footerSupport: 'Support',
     footerLegal: 'Rechtliches',

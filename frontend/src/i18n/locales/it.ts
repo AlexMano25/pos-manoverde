@@ -431,7 +431,7 @@ export const it: TranslationKeys = {
     // Hero
     heroTitle1: 'Il Punto Vendita',
     heroTitle2: 'intelligente',
-    heroTitle3: 'per l\'Africa',
+    heroTitle3: 'per il mondo',
     heroSubtitle: 'Gestisci i tuoi negozi anche senza internet. POS Mano Verde funziona offline, si sincronizza automaticamente e stampa gli scontrini via Bluetooth.',
     heroCTA1: 'Inizia gratuitamente',
     heroCTA2: 'Guarda la demo',
@@ -444,7 +444,7 @@ export const it: TranslationKeys = {
     heroStat3Label: 'Disponibilit\u00e0 uptime',
     // Features
     featuresTitle: 'Perch\u00e9 POS Mano Verde?',
-    featuresSubtitle: 'Una soluzione di cassa pensata per le realt\u00e0 africane. Niente internet? Nessun problema.',
+    featuresSubtitle: 'Una soluzione di cassa pensata per i commercianti di tutto il mondo. Niente internet? Nessun problema.',
     feature1Title: 'Funziona offline',
     feature1Desc: 'Vendi anche senza connessione internet. I tuoi dati si sincronizzano automaticamente non appena la rete torna disponibile.',
     feature2Title: 'Multi-negozio',
@@ -454,7 +454,7 @@ export const it: TranslationKeys = {
     feature4Title: 'Sincronizzazione automatica',
     feature4Desc: 'I dati si sincronizzano automaticamente tra i tuoi dispositivi. Tutte le tue casse restano aggiornate in tempo reale.',
     feature5Title: 'Multilingua',
-    feature5Desc: 'Interfaccia disponibile in francese e in inglese. Adattata alle esigenze dei commercianti africani.',
+    feature5Desc: 'Interfaccia disponibile in francese e in inglese. Adattata alle esigenze dei commercianti di tutto il mondo.',
     feature6Title: 'Installazione in 2 minuti',
     feature6Desc: 'Nessun hardware costoso da acquistare. Installa sul tuo telefono o tablet e inizia a vendere.',
     // How it works
@@ -523,7 +523,7 @@ export const it: TranslationKeys = {
     testimonial1Text: 'Prima di POS Mano Verde, annotavo tutto su carta. Ora i miei 3 camerieri prendono gli ordini su tablet e lo scontrino esce automaticamente in cucina. Anche quando la rete si interrompe, tutto continua a funzionare. Ho ridotto gli errori negli ordini dell\'80%.',
     testimonial1Name: 'Amadou Ndiaye',
     testimonial1Role: 'Proprietario di ristorante - Douala, Camerun',
-    testimonial2Text: 'Gestisco 2 minimarket con POS Mano Verde. Il cruscotto mi mostra in tempo reale le vendite di ogni negozio. La gestione del magazzino \u00e8 incredibile - ricevo avvisi quando un prodotto raggiunge la soglia minima. \u00c8 davvero pensato per l\'Africa.',
+    testimonial2Text: 'Gestisco 2 minimarket con POS Mano Verde. Il cruscotto mi mostra in tempo reale le vendite di ogni negozio. La gestione del magazzino \u00e8 incredibile - ricevo avvisi quando un prodotto raggiunge la soglia minima. \u00c8 davvero pensato per i commercianti.',
     testimonial2Name: 'Fatou Diallo',
     testimonial2Role: 'Responsabile di supermercato - Abidjan, Costa d\'Avorio',
     testimonial3Text: 'La conformit\u00e0 \u00e8 essenziale in farmacia. POS Mano Verde mi permette di tracciare ogni vendita, gestire le date di scadenza e stampare fatture conformi. L\'assistenza \u00e8 reattiva e l\'applicazione \u00e8 molto stabile. La raccomando a tutti i miei colleghi.',
@@ -557,7 +557,7 @@ export const it: TranslationKeys = {
     ctaButton: 'Inizia gratuitamente',
     ctaNoCard: 'Nessuna carta di credito richiesta - Inizia in 2 minuti',
     // Footer
-    footerDesc: 'La soluzione di cassa intelligente pensata per i commercianti africani. Funzionamento offline, sincronizzazione automatica e stampa Bluetooth.',
+    footerDesc: 'La soluzione di cassa intelligente pensata per i commercianti di tutto il mondo. Funzionamento offline, sincronizzazione automatica e stampa Bluetooth.',
     footerProduct: 'Prodotto',
     footerSupport: 'Supporto',
     footerLegal: 'Legale',
