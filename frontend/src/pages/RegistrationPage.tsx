@@ -121,7 +121,7 @@ export default function RegistrationPage() {
   const [step, setStep] = useState<RegistrationStep>(1)
 
   // Step 1: Plan
-  const { selectedPlan } = useAppStore()
+  const { selectedPlan, setMode } = useAppStore()
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly')
 
   // Step 2: Organization
@@ -135,6 +135,7 @@ export default function RegistrationPage() {
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [activitySearch, setActivitySearch] = useState('')
   const [storeName, setStoreName] = useState('')
+  const [selectedMode, setSelectedMode] = useState<'server' | 'client' | 'all_in_one'>('all_in_one')
 
   // Step 4: Payment
   const [paymentMethod, setPaymentMethod] = useState<string>('')
@@ -225,6 +226,7 @@ export default function RegistrationPage() {
         activity: selectedActivity,
         password,
       })
+      setMode(selectedMode)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed'
       setError(message)
@@ -740,6 +742,37 @@ export default function RegistrationPage() {
           onBlur={handleInputBlur}
         />
       </div>
+
+            {/* Mode selection */}
+            <div style={{ marginTop: 24 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 12 }}>
+                {t.registration.modeSelection || 'Mode de fonctionnement'}
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                {([
+                  { value: 'server' as const, label: t.registration.modeServer || 'Serveur', desc: t.registration.modeServerDesc || 'Terminal manager avec acces complet' },
+                  { value: 'client' as const, label: t.registration.modeClient || 'Client', desc: t.registration.modeClientDesc || 'Terminal caisse (ventes uniquement)' },
+                  { value: 'all_in_one' as const, label: t.registration.modeAllInOne || 'All-in-One', desc: t.registration.modeAllInOneDesc || 'Appareil autonome, toutes les fonctions' },
+                ] as const).map((m) => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => setSelectedMode(m.value)}
+                    style={{
+                      padding: '16px',
+                      border: `2px solid ${selectedMode === m.value ? '#2563eb' : '#e2e8f0'}`,
+                      borderRadius: 12,
+                      backgroundColor: selectedMode === m.value ? '#eff6ff' : '#fff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, fontSize: 14, color: '#1e293b' }}>{m.label}</div>
+                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{m.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
     </div>
   )
 

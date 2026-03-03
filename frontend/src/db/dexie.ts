@@ -52,6 +52,21 @@ export class PosDatabase extends Dexie {
       sync_queue:
         'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
     })
+
+    // Schema version 3 -- activity-specific product fields + expiry_date index
+    this.version(3).stores({
+      stores: 'id, name, activity, created_at',
+      users:
+        'id, store_id, email, role, pin, is_active, created_at, [store_id+role], [store_id+is_active]',
+      products:
+        'id, store_id, name, category, sku, barcode, is_active, price, created_at, updated_at, [store_id+category], [store_id+is_active], [store_id+barcode], [store_id+expiry_date]',
+      orders:
+        'id, store_id, user_id, device_id, status, payment_method, synced, created_at, updated_at, [store_id+status], [store_id+created_at], [store_id+synced]',
+      stock_moves:
+        'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
+      sync_queue:
+        'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
+    })
   }
 
   // ---- Clear all data (useful for store reset / logout) ----

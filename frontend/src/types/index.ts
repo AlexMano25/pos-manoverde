@@ -92,6 +92,23 @@ export type Product = {
   is_active: boolean
   created_at: string
   updated_at: string
+
+  // ── Activity-specific optional fields ──
+  description?: string       // General: long text description
+  expiry_date?: string       // pharmacy, supermarket, bakery: ISO date
+  dosage?: string            // pharmacy: e.g. "500mg", "2x/day"
+  manufacturer?: string      // pharmacy, electronics: brand/maker
+  room_type?: string         // hotel: "single", "double", "suite"
+  room_number?: string       // hotel: "101", "A-3"
+  duration_minutes?: number  // spa, gym, hair_salon, car_wash, services: session length
+  weight_kg?: number         // supermarket, bakery, florist, pet_shop: product weight
+  size?: string              // fashion: "S/M/L/XL" or "42"
+  color?: string             // fashion, florist: item color
+  vehicle_type?: string      // auto_repair, car_wash, gas_station: "car", "moto", "truck"
+  author?: string            // bookstore: book author
+  isbn?: string              // bookstore: International Standard Book Number
+  destination?: string       // travel_agency: trip destination
+  age_group?: string         // daycare, school: "0-3", "3-6", "6-12"
 }
 
 // -- Cart (in-memory, not persisted to DB) -----------------------------------

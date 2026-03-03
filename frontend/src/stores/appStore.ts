@@ -44,7 +44,7 @@ export const useAppStore = create<AppState & AppActions>()(
       registrationMode: false,
 
       // Actions
-      setMode: (mode) => set({ mode }),
+      setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
       setActivity: (activity) => set({ activity }),
       setCurrentStore: (store) => set({ currentStore: store }),
       setSection: (section) => set({ section }),

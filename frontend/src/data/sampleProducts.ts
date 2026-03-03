@@ -1,0 +1,1532 @@
+import type { Activity } from '../types'
+
+export type SampleProduct = {
+  name: string
+  price: number          // in FCFA
+  cost?: number          // in FCFA
+  stock: number
+  category: string       // plain French category name
+  unit?: string
+  // Activity-specific optional fields
+  expiry_date?: string
+  dosage?: string
+  manufacturer?: string
+  room_type?: string
+  room_number?: string
+  duration_minutes?: number
+  weight_kg?: number
+  size?: string
+  color?: string
+  vehicle_type?: string
+  author?: string
+  isbn?: string
+  destination?: string
+  age_group?: string
+  description?: string
+}
+
+export const SAMPLE_PRODUCTS: Partial<Record<Activity, SampleProduct[]>> = {
+
+  // ---------------------------------------------------------------------------
+  // PHARMACIE
+  // ---------------------------------------------------------------------------
+  pharmacy: [
+    {
+      name: 'Paracetamol 500mg',
+      price: 500,
+      cost: 250,
+      stock: 200,
+      category: 'Medicaments',
+      unit: 'boite',
+      dosage: '500mg',
+      manufacturer: 'Sanofi',
+    },
+    {
+      name: 'Amoxicilline 250mg',
+      price: 1500,
+      cost: 800,
+      stock: 120,
+      category: 'Antibiotiques',
+      unit: 'boite',
+      dosage: '250mg',
+      manufacturer: 'Cipla',
+    },
+    {
+      name: 'Eau minerale 1.5L',
+      price: 500,
+      cost: 300,
+      stock: 300,
+      category: 'Parapharmacie',
+      unit: 'bouteille',
+      manufacturer: 'Supermont',
+    },
+    {
+      name: 'Vitamine C 1000mg',
+      price: 2500,
+      cost: 1400,
+      stock: 80,
+      category: 'Vitamines',
+      unit: 'boite',
+      dosage: '1000mg',
+      manufacturer: 'Bayer',
+    },
+    {
+      name: 'Pansement adhesif',
+      price: 750,
+      cost: 350,
+      stock: 150,
+      category: 'Materiel medical',
+      unit: 'boite',
+      manufacturer: 'Hansaplast',
+    },
+    {
+      name: 'Ibuprofene 400mg',
+      price: 800,
+      cost: 400,
+      stock: 180,
+      category: 'Medicaments',
+      unit: 'boite',
+      dosage: '400mg',
+      manufacturer: 'Sanofi',
+    },
+    {
+      name: 'Sirop contre la toux',
+      price: 2000,
+      cost: 1100,
+      stock: 60,
+      category: 'Medicaments',
+      unit: 'flacon',
+      dosage: '150ml',
+      manufacturer: 'Pharmivoire',
+    },
+    {
+      name: 'Thermometre digital',
+      price: 3500,
+      cost: 1800,
+      stock: 40,
+      category: 'Materiel medical',
+      unit: 'piece',
+      manufacturer: 'Omron',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // RESTAURANT
+  // ---------------------------------------------------------------------------
+  restaurant: [
+    {
+      name: 'Poisson braise',
+      price: 3500,
+      cost: 1800,
+      stock: 30,
+      category: 'Plats principaux',
+      duration_minutes: 25,
+    },
+    {
+      name: 'Poulet DG',
+      price: 4000,
+      cost: 2000,
+      stock: 25,
+      category: 'Plats principaux',
+      duration_minutes: 35,
+    },
+    {
+      name: 'Ndole',
+      price: 3000,
+      cost: 1500,
+      stock: 20,
+      category: 'Plats principaux',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Biere 33 Export',
+      price: 800,
+      cost: 450,
+      stock: 100,
+      category: 'Boissons',
+      duration_minutes: 2,
+    },
+    {
+      name: "Jus d'ananas",
+      price: 500,
+      cost: 200,
+      stock: 50,
+      category: 'Boissons',
+      duration_minutes: 5,
+    },
+    {
+      name: 'Plantain frit',
+      price: 1000,
+      cost: 400,
+      stock: 40,
+      category: 'Accompagnements',
+      duration_minutes: 10,
+    },
+    {
+      name: 'Riz sauce arachide',
+      price: 2500,
+      cost: 1200,
+      stock: 30,
+      category: 'Plats principaux',
+      duration_minutes: 20,
+    },
+    {
+      name: 'Brochettes de boeuf',
+      price: 2000,
+      cost: 1000,
+      stock: 35,
+      category: 'Grillades',
+      duration_minutes: 15,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // SUPERMARCHE
+  // ---------------------------------------------------------------------------
+  supermarket: [
+    {
+      name: 'Riz 25kg',
+      price: 15000,
+      cost: 12000,
+      stock: 50,
+      category: 'Alimentation',
+      unit: 'sac',
+      weight_kg: 25,
+      manufacturer: 'Uncle Bens',
+      expiry_date: '2027-06-30',
+    },
+    {
+      name: 'Huile vegetale 5L',
+      price: 5500,
+      cost: 4000,
+      stock: 80,
+      category: 'Alimentation',
+      unit: 'bidon',
+      weight_kg: 5,
+      manufacturer: 'Mayor',
+      expiry_date: '2027-12-31',
+    },
+    {
+      name: 'Sucre 1kg',
+      price: 1000,
+      cost: 700,
+      stock: 150,
+      category: 'Alimentation',
+      unit: 'paquet',
+      weight_kg: 1,
+      manufacturer: 'Sosucam',
+      expiry_date: '2028-01-15',
+    },
+    {
+      name: 'Lait concentre sucre',
+      price: 600,
+      cost: 350,
+      stock: 200,
+      category: 'Produits laitiers',
+      unit: 'boite',
+      weight_kg: 0.39,
+      manufacturer: 'Bonnet Rouge',
+      expiry_date: '2027-09-01',
+    },
+    {
+      name: 'Savon de Marseille',
+      price: 500,
+      cost: 280,
+      stock: 100,
+      category: 'Hygiene',
+      unit: 'piece',
+      weight_kg: 0.2,
+      manufacturer: 'Le Fer a Cheval',
+    },
+    {
+      name: 'Sardines en conserve',
+      price: 750,
+      cost: 450,
+      stock: 120,
+      category: 'Conserves',
+      unit: 'boite',
+      weight_kg: 0.125,
+      manufacturer: 'Heron',
+      expiry_date: '2028-03-15',
+    },
+    {
+      name: 'Eau minerale pack 6x1.5L',
+      price: 2500,
+      cost: 1600,
+      stock: 60,
+      category: 'Boissons',
+      unit: 'pack',
+      weight_kg: 9,
+      manufacturer: 'Supermont',
+    },
+    {
+      name: 'Farine de ble 1kg',
+      price: 800,
+      cost: 500,
+      stock: 100,
+      category: 'Alimentation',
+      unit: 'paquet',
+      weight_kg: 1,
+      manufacturer: 'Sodeble',
+      expiry_date: '2027-08-20',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // BAR
+  // ---------------------------------------------------------------------------
+  bar: [
+    {
+      name: 'Biere 33 Export',
+      price: 800,
+      cost: 450,
+      stock: 200,
+      category: 'Bieres',
+      unit: 'bouteille',
+    },
+    {
+      name: 'Biere Castel',
+      price: 700,
+      cost: 400,
+      stock: 200,
+      category: 'Bieres',
+      unit: 'bouteille',
+    },
+    {
+      name: 'Whisky Black Label',
+      price: 3000,
+      cost: 1500,
+      stock: 30,
+      category: 'Spiritueux',
+      unit: 'verre',
+    },
+    {
+      name: 'Jus de fruits',
+      price: 500,
+      cost: 200,
+      stock: 80,
+      category: 'Boissons soft',
+      unit: 'verre',
+    },
+    {
+      name: 'Eau minerale',
+      price: 500,
+      cost: 250,
+      stock: 100,
+      category: 'Boissons soft',
+      unit: 'bouteille',
+    },
+    {
+      name: 'Brochettes',
+      price: 1500,
+      cost: 700,
+      stock: 40,
+      category: 'Snacks',
+      unit: 'portion',
+    },
+    {
+      name: 'Cacahuetes grillees',
+      price: 300,
+      cost: 150,
+      stock: 60,
+      category: 'Snacks',
+      unit: 'sachet',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // BOULANGERIE
+  // ---------------------------------------------------------------------------
+  bakery: [
+    {
+      name: 'Baguette',
+      price: 200,
+      cost: 100,
+      stock: 200,
+      category: 'Pains',
+      unit: 'piece',
+      weight_kg: 0.25,
+      expiry_date: '2026-03-04',
+    },
+    {
+      name: 'Pain complet',
+      price: 500,
+      cost: 250,
+      stock: 80,
+      category: 'Pains',
+      unit: 'piece',
+      weight_kg: 0.4,
+      expiry_date: '2026-03-04',
+    },
+    {
+      name: 'Croissant',
+      price: 300,
+      cost: 150,
+      stock: 100,
+      category: 'Viennoiseries',
+      unit: 'piece',
+      weight_kg: 0.08,
+      expiry_date: '2026-03-04',
+    },
+    {
+      name: "Gateau d'anniversaire",
+      price: 15000,
+      cost: 7000,
+      stock: 5,
+      category: 'Patisseries',
+      unit: 'piece',
+      weight_kg: 2,
+      expiry_date: '2026-03-06',
+    },
+    {
+      name: 'Pain au chocolat',
+      price: 350,
+      cost: 180,
+      stock: 80,
+      category: 'Viennoiseries',
+      unit: 'piece',
+      weight_kg: 0.07,
+      expiry_date: '2026-03-04',
+    },
+    {
+      name: 'Brioche',
+      price: 1500,
+      cost: 700,
+      stock: 30,
+      category: 'Viennoiseries',
+      unit: 'piece',
+      weight_kg: 0.3,
+      expiry_date: '2026-03-05',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // HOTEL
+  // ---------------------------------------------------------------------------
+  hotel: [
+    {
+      name: 'Chambre Simple',
+      price: 25000,
+      cost: 8000,
+      stock: 20,
+      category: 'Hebergement',
+      unit: 'nuit',
+      room_type: 'simple',
+    },
+    {
+      name: 'Chambre Double',
+      price: 40000,
+      cost: 12000,
+      stock: 15,
+      category: 'Hebergement',
+      unit: 'nuit',
+      room_type: 'double',
+    },
+    {
+      name: 'Suite Junior',
+      price: 75000,
+      cost: 25000,
+      stock: 5,
+      category: 'Hebergement',
+      unit: 'nuit',
+      room_type: 'suite_junior',
+    },
+    {
+      name: 'Suite Presidentielle',
+      price: 150000,
+      cost: 50000,
+      stock: 2,
+      category: 'Hebergement',
+      unit: 'nuit',
+      room_type: 'suite_presidentielle',
+    },
+    {
+      name: 'Petit dejeuner buffet',
+      price: 5000,
+      cost: 2000,
+      stock: 50,
+      category: 'Restauration',
+      unit: 'personne',
+      room_type: 'restaurant',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // MODE / FASHION
+  // ---------------------------------------------------------------------------
+  fashion: [
+    {
+      name: 'T-shirt homme',
+      price: 5000,
+      cost: 2500,
+      stock: 50,
+      category: 'Homme',
+      unit: 'piece',
+      size: 'M',
+      color: 'Blanc',
+      manufacturer: 'Local Brand',
+    },
+    {
+      name: 'Robe femme',
+      price: 12000,
+      cost: 6000,
+      stock: 30,
+      category: 'Femme',
+      unit: 'piece',
+      size: 'M',
+      color: 'Rouge',
+      manufacturer: 'Woodin',
+    },
+    {
+      name: 'Jean homme',
+      price: 15000,
+      cost: 7500,
+      stock: 40,
+      category: 'Homme',
+      unit: 'piece',
+      size: '42',
+      color: 'Bleu',
+      manufacturer: 'Levi\'s',
+    },
+    {
+      name: 'Chaussures sport',
+      price: 25000,
+      cost: 12000,
+      stock: 25,
+      category: 'Chaussures',
+      unit: 'paire',
+      size: '43',
+      color: 'Noir',
+      manufacturer: 'Nike',
+    },
+    {
+      name: 'Sac a main',
+      price: 18000,
+      cost: 9000,
+      stock: 15,
+      category: 'Accessoires',
+      unit: 'piece',
+      color: 'Marron',
+      manufacturer: 'Local Brand',
+    },
+    {
+      name: 'Chemise formelle',
+      price: 10000,
+      cost: 5000,
+      stock: 35,
+      category: 'Homme',
+      unit: 'piece',
+      size: 'L',
+      color: 'Blanc',
+      manufacturer: 'Pierre Cardin',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // ELECTRONIQUE
+  // ---------------------------------------------------------------------------
+  electronics: [
+    {
+      name: 'Smartphone Samsung A15',
+      price: 120000,
+      cost: 85000,
+      stock: 15,
+      category: 'Telephones',
+      unit: 'piece',
+      manufacturer: 'Samsung',
+    },
+    {
+      name: 'Ecouteurs Bluetooth',
+      price: 15000,
+      cost: 7000,
+      stock: 30,
+      category: 'Accessoires audio',
+      unit: 'piece',
+      manufacturer: 'JBL',
+    },
+    {
+      name: 'Chargeur USB-C',
+      price: 5000,
+      cost: 2000,
+      stock: 50,
+      category: 'Accessoires',
+      unit: 'piece',
+      manufacturer: 'Samsung',
+    },
+    {
+      name: 'Coque telephone',
+      price: 3000,
+      cost: 1000,
+      stock: 80,
+      category: 'Accessoires',
+      unit: 'piece',
+      manufacturer: 'Generique',
+    },
+    {
+      name: 'Television 43 pouces',
+      price: 250000,
+      cost: 180000,
+      stock: 5,
+      category: 'TV & Video',
+      unit: 'piece',
+      manufacturer: 'LG',
+    },
+    {
+      name: 'Batterie externe 10000mAh',
+      price: 12000,
+      cost: 6000,
+      stock: 25,
+      category: 'Accessoires',
+      unit: 'piece',
+      manufacturer: 'Anker',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // SALON DE COIFFURE
+  // ---------------------------------------------------------------------------
+  hair_salon: [
+    {
+      name: 'Coupe homme',
+      price: 2000,
+      cost: 500,
+      stock: 50,
+      category: 'Coupes',
+      unit: 'prestation',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Coupe femme',
+      price: 3500,
+      cost: 800,
+      stock: 50,
+      category: 'Coupes',
+      unit: 'prestation',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Tresses africaines',
+      price: 8000,
+      cost: 2000,
+      stock: 20,
+      category: 'Coiffures',
+      unit: 'prestation',
+      duration_minutes: 120,
+    },
+    {
+      name: 'Coloration',
+      price: 10000,
+      cost: 4000,
+      stock: 15,
+      category: 'Soins',
+      unit: 'prestation',
+      duration_minutes: 90,
+    },
+    {
+      name: 'Defrisage',
+      price: 7000,
+      cost: 3000,
+      stock: 20,
+      category: 'Soins',
+      unit: 'prestation',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Soin capillaire',
+      price: 5000,
+      cost: 2000,
+      stock: 30,
+      category: 'Soins',
+      unit: 'prestation',
+      duration_minutes: 45,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // SPA
+  // ---------------------------------------------------------------------------
+  spa: [
+    {
+      name: 'Massage relaxant',
+      price: 15000,
+      cost: 4000,
+      stock: 20,
+      category: 'Massages',
+      unit: 'seance',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Soin du visage',
+      price: 12000,
+      cost: 3500,
+      stock: 20,
+      category: 'Soins visage',
+      unit: 'seance',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Manucure',
+      price: 5000,
+      cost: 1500,
+      stock: 30,
+      category: 'Beaute',
+      unit: 'prestation',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Pedicure',
+      price: 6000,
+      cost: 1800,
+      stock: 30,
+      category: 'Beaute',
+      unit: 'prestation',
+      duration_minutes: 40,
+    },
+    {
+      name: 'Gommage corps',
+      price: 10000,
+      cost: 3000,
+      stock: 15,
+      category: 'Soins corps',
+      unit: 'seance',
+      duration_minutes: 50,
+    },
+    {
+      name: 'Bain de vapeur',
+      price: 8000,
+      cost: 2000,
+      stock: 15,
+      category: 'Soins corps',
+      unit: 'seance',
+      duration_minutes: 30,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // SALLE DE SPORT / GYM
+  // ---------------------------------------------------------------------------
+  gym: [
+    {
+      name: 'Abonnement mensuel',
+      price: 25000,
+      cost: 5000,
+      stock: 100,
+      category: 'Abonnements',
+      unit: 'mois',
+      duration_minutes: 0,
+    },
+    {
+      name: 'Seance coaching personnel',
+      price: 10000,
+      cost: 3000,
+      stock: 30,
+      category: 'Coaching',
+      unit: 'seance',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Cours collectif',
+      price: 3000,
+      cost: 800,
+      stock: 50,
+      category: 'Cours',
+      unit: 'seance',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Acces piscine',
+      price: 5000,
+      cost: 1000,
+      stock: 40,
+      category: 'Acces',
+      unit: 'entree',
+      duration_minutes: 120,
+    },
+    {
+      name: 'Casier journee',
+      price: 1000,
+      cost: 200,
+      stock: 50,
+      category: 'Services',
+      unit: 'journee',
+      duration_minutes: 0,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // PISCINE / POOL
+  // ---------------------------------------------------------------------------
+  pool: [
+    {
+      name: 'Entree adulte',
+      price: 3000,
+      cost: 500,
+      stock: 100,
+      category: 'Entrees',
+      unit: 'entree',
+      duration_minutes: 180,
+    },
+    {
+      name: 'Entree enfant',
+      price: 1500,
+      cost: 300,
+      stock: 100,
+      category: 'Entrees',
+      unit: 'entree',
+      duration_minutes: 180,
+    },
+    {
+      name: 'Cours de natation',
+      price: 7000,
+      cost: 2000,
+      stock: 20,
+      category: 'Cours',
+      unit: 'seance',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Location maillot',
+      price: 2000,
+      cost: 500,
+      stock: 20,
+      category: 'Location',
+      unit: 'piece',
+      duration_minutes: 180,
+    },
+    {
+      name: 'Boisson fraiche',
+      price: 1000,
+      cost: 400,
+      stock: 50,
+      category: 'Boissons',
+      unit: 'bouteille',
+      duration_minutes: 0,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // LAVAGE AUTO / CAR WASH
+  // ---------------------------------------------------------------------------
+  car_wash: [
+    {
+      name: 'Lavage simple exterieur',
+      price: 2000,
+      cost: 500,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 20,
+    },
+    {
+      name: 'Lavage complet',
+      price: 5000,
+      cost: 1200,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Lavage interieur',
+      price: 3000,
+      cost: 800,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Polissage carrosserie',
+      price: 15000,
+      cost: 5000,
+      stock: 20,
+      category: 'Soins',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 90,
+    },
+    {
+      name: 'Lavage moto',
+      price: 1000,
+      cost: 300,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'prestation',
+      vehicle_type: 'moto',
+      duration_minutes: 15,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // STATION SERVICE / GAS STATION
+  // ---------------------------------------------------------------------------
+  gas_station: [
+    {
+      name: 'Super sans plomb (litre)',
+      price: 730,
+      cost: 680,
+      stock: 5000,
+      category: 'Carburants',
+      unit: 'litre',
+      vehicle_type: 'voiture',
+    },
+    {
+      name: 'Gasoil (litre)',
+      price: 720,
+      cost: 670,
+      stock: 5000,
+      category: 'Carburants',
+      unit: 'litre',
+      vehicle_type: 'voiture',
+    },
+    {
+      name: 'Huile moteur 1L',
+      price: 5000,
+      cost: 3000,
+      stock: 50,
+      category: 'Lubrifiants',
+      unit: 'bouteille',
+      vehicle_type: 'voiture',
+    },
+    {
+      name: 'Lave-glace 2L',
+      price: 2500,
+      cost: 1200,
+      stock: 30,
+      category: 'Entretien',
+      unit: 'bidon',
+      vehicle_type: 'voiture',
+    },
+    {
+      name: 'Gonflage pneus',
+      price: 500,
+      cost: 100,
+      stock: 100,
+      category: 'Services',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // BLANCHISSERIE / LAUNDRY
+  // ---------------------------------------------------------------------------
+  laundry: [
+    {
+      name: 'Lavage 5kg',
+      price: 2500,
+      cost: 800,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'charge',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Lavage 10kg',
+      price: 4000,
+      cost: 1200,
+      stock: 50,
+      category: 'Lavage',
+      unit: 'charge',
+      duration_minutes: 90,
+    },
+    {
+      name: 'Repassage chemise',
+      price: 500,
+      cost: 150,
+      stock: 100,
+      category: 'Repassage',
+      unit: 'piece',
+      duration_minutes: 10,
+    },
+    {
+      name: 'Nettoyage costume complet',
+      price: 3500,
+      cost: 1200,
+      stock: 30,
+      category: 'Nettoyage a sec',
+      unit: 'piece',
+      duration_minutes: 120,
+    },
+    {
+      name: 'Nettoyage robe',
+      price: 2500,
+      cost: 800,
+      stock: 30,
+      category: 'Nettoyage a sec',
+      unit: 'piece',
+      duration_minutes: 120,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // REPARATION AUTO / AUTO REPAIR
+  // ---------------------------------------------------------------------------
+  auto_repair: [
+    {
+      name: 'Vidange moteur',
+      price: 15000,
+      cost: 6000,
+      stock: 30,
+      category: 'Entretien',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 45,
+    },
+    {
+      name: 'Changement pneus (4)',
+      price: 80000,
+      cost: 55000,
+      stock: 10,
+      category: 'Pneus',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Diagnostic electronique',
+      price: 10000,
+      cost: 2000,
+      stock: 50,
+      category: 'Diagnostic',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Changement plaquettes freins',
+      price: 25000,
+      cost: 12000,
+      stock: 15,
+      category: 'Freinage',
+      unit: 'prestation',
+      vehicle_type: 'voiture',
+      duration_minutes: 90,
+    },
+    {
+      name: 'Batterie neuve',
+      price: 45000,
+      cost: 30000,
+      stock: 10,
+      category: 'Electricite',
+      unit: 'piece',
+      vehicle_type: 'voiture',
+      duration_minutes: 20,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // GARDERIE / DAYCARE
+  // ---------------------------------------------------------------------------
+  daycare: [
+    {
+      name: 'Garde journee complete',
+      price: 5000,
+      cost: 2000,
+      stock: 30,
+      category: 'Garde',
+      unit: 'journee',
+      age_group: '1-3 ans',
+    },
+    {
+      name: 'Garde demi-journee',
+      price: 3000,
+      cost: 1200,
+      stock: 30,
+      category: 'Garde',
+      unit: 'demi-journee',
+      age_group: '1-3 ans',
+    },
+    {
+      name: 'Repas enfant',
+      price: 1500,
+      cost: 700,
+      stock: 50,
+      category: 'Restauration',
+      unit: 'repas',
+      age_group: '1-5 ans',
+    },
+    {
+      name: "Activites d'eveil",
+      price: 2000,
+      cost: 500,
+      stock: 30,
+      category: 'Activites',
+      unit: 'seance',
+      age_group: '2-5 ans',
+    },
+    {
+      name: 'Pack couches (10)',
+      price: 3000,
+      cost: 1800,
+      stock: 40,
+      category: 'Fournitures',
+      unit: 'pack',
+      age_group: '0-2 ans',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // ECOLE / SCHOOL
+  // ---------------------------------------------------------------------------
+  school: [
+    {
+      name: 'Inscription annuelle',
+      price: 150000,
+      cost: 50000,
+      stock: 100,
+      category: 'Inscription',
+      unit: 'annee',
+      age_group: '6-12 ans',
+    },
+    {
+      name: 'Kit fournitures scolaires',
+      price: 25000,
+      cost: 15000,
+      stock: 80,
+      category: 'Fournitures',
+      unit: 'kit',
+      age_group: '6-12 ans',
+    },
+    {
+      name: 'Uniforme complet',
+      price: 15000,
+      cost: 8000,
+      stock: 60,
+      category: 'Uniforme',
+      unit: 'ensemble',
+      age_group: '6-12 ans',
+    },
+    {
+      name: 'Cantine mensuelle',
+      price: 20000,
+      cost: 12000,
+      stock: 100,
+      category: 'Restauration',
+      unit: 'mois',
+      age_group: '6-12 ans',
+    },
+    {
+      name: 'Transport scolaire mensuel',
+      price: 15000,
+      cost: 8000,
+      stock: 50,
+      category: 'Transport',
+      unit: 'mois',
+      age_group: '6-12 ans',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // MENAGE A DOMICILE / HOME CLEANING
+  // ---------------------------------------------------------------------------
+  home_cleaning: [
+    {
+      name: 'Menage 2 heures',
+      price: 5000,
+      cost: 2000,
+      stock: 50,
+      category: 'Menage',
+      unit: 'prestation',
+      duration_minutes: 120,
+    },
+    {
+      name: 'Menage 4 heures',
+      price: 8000,
+      cost: 3500,
+      stock: 50,
+      category: 'Menage',
+      unit: 'prestation',
+      duration_minutes: 240,
+    },
+    {
+      name: 'Grand menage complet',
+      price: 20000,
+      cost: 8000,
+      stock: 20,
+      category: 'Menage',
+      unit: 'prestation',
+      duration_minutes: 480,
+    },
+    {
+      name: 'Repassage (panier)',
+      price: 3000,
+      cost: 1000,
+      stock: 40,
+      category: 'Repassage',
+      unit: 'panier',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Lavage vitres',
+      price: 4000,
+      cost: 1500,
+      stock: 30,
+      category: 'Nettoyage',
+      unit: 'prestation',
+      duration_minutes: 90,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // FLEURISTE / FLORIST
+  // ---------------------------------------------------------------------------
+  florist: [
+    {
+      name: 'Rose rouge (tige)',
+      price: 1500,
+      cost: 500,
+      stock: 100,
+      category: 'Fleurs',
+      unit: 'tige',
+      color: 'Rouge',
+    },
+    {
+      name: 'Bouquet mixte',
+      price: 15000,
+      cost: 6000,
+      stock: 20,
+      category: 'Bouquets',
+      unit: 'bouquet',
+      color: 'Multicolore',
+    },
+    {
+      name: 'Orchidee en pot',
+      price: 25000,
+      cost: 12000,
+      stock: 10,
+      category: 'Plantes',
+      unit: 'pot',
+      color: 'Blanc',
+    },
+    {
+      name: 'Couronne funeraire',
+      price: 50000,
+      cost: 20000,
+      stock: 5,
+      category: 'Funeraire',
+      unit: 'piece',
+      color: 'Blanc et violet',
+    },
+    {
+      name: 'Decoration evenement',
+      price: 100000,
+      cost: 40000,
+      stock: 5,
+      category: 'Evenementiel',
+      unit: 'prestation',
+      color: 'Sur mesure',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // ANIMALERIE / PET SHOP
+  // ---------------------------------------------------------------------------
+  pet_shop: [
+    {
+      name: 'Croquettes chien 5kg',
+      price: 15000,
+      cost: 9000,
+      stock: 30,
+      category: 'Alimentation chien',
+      unit: 'sac',
+      weight_kg: 5,
+    },
+    {
+      name: 'Croquettes chat 2kg',
+      price: 8000,
+      cost: 5000,
+      stock: 30,
+      category: 'Alimentation chat',
+      unit: 'sac',
+      weight_kg: 2,
+    },
+    {
+      name: 'Litiere chat 5L',
+      price: 5000,
+      cost: 2500,
+      stock: 25,
+      category: 'Hygiene',
+      unit: 'sac',
+      weight_kg: 3,
+    },
+    {
+      name: 'Collier reglable',
+      price: 3000,
+      cost: 1200,
+      stock: 20,
+      category: 'Accessoires',
+      unit: 'piece',
+      weight_kg: 0.1,
+    },
+    {
+      name: 'Shampoing animal 250ml',
+      price: 4000,
+      cost: 2000,
+      stock: 20,
+      category: 'Hygiene',
+      unit: 'flacon',
+      weight_kg: 0.3,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // LIBRAIRIE / BOOKSTORE
+  // ---------------------------------------------------------------------------
+  bookstore: [
+    {
+      name: 'Roman best-seller',
+      price: 8000,
+      cost: 4500,
+      stock: 25,
+      category: 'Romans',
+      unit: 'exemplaire',
+      author: 'Auteur populaire',
+      isbn: '978-2-07-036024-3',
+    },
+    {
+      name: 'Manuel scolaire CM2',
+      price: 5000,
+      cost: 3000,
+      stock: 50,
+      category: 'Scolaire',
+      unit: 'exemplaire',
+      author: 'Editions CEPER',
+      isbn: '978-2-84-129456-7',
+    },
+    {
+      name: 'Cahier 200 pages',
+      price: 1000,
+      cost: 500,
+      stock: 200,
+      category: 'Papeterie',
+      unit: 'piece',
+    },
+    {
+      name: 'Stylo bille lot de 10',
+      price: 1500,
+      cost: 600,
+      stock: 100,
+      category: 'Papeterie',
+      unit: 'lot',
+    },
+    {
+      name: 'Dictionnaire francais',
+      price: 12000,
+      cost: 7000,
+      stock: 15,
+      category: 'References',
+      unit: 'exemplaire',
+      author: 'Larousse',
+      isbn: '978-2-03-590120-0',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // IMPRIMERIE / PRINTING
+  // ---------------------------------------------------------------------------
+  printing: [
+    {
+      name: 'Impression A4 noir et blanc',
+      price: 50,
+      cost: 15,
+      stock: 5000,
+      category: 'Impressions',
+      unit: 'page',
+    },
+    {
+      name: 'Impression A4 couleur',
+      price: 150,
+      cost: 50,
+      stock: 5000,
+      category: 'Impressions',
+      unit: 'page',
+    },
+    {
+      name: 'Photocopie A4',
+      price: 25,
+      cost: 10,
+      stock: 10000,
+      category: 'Copies',
+      unit: 'page',
+    },
+    {
+      name: 'Reliure document',
+      price: 2000,
+      cost: 800,
+      stock: 100,
+      category: 'Finition',
+      unit: 'piece',
+    },
+    {
+      name: 'Carte de visite (100 pcs)',
+      price: 10000,
+      cost: 4000,
+      stock: 50,
+      category: 'Cartes',
+      unit: 'lot',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // IMMOBILIER / REAL ESTATE
+  // ---------------------------------------------------------------------------
+  real_estate: [
+    {
+      name: 'Location bureau mensuel',
+      price: 150000,
+      cost: 20000,
+      stock: 10,
+      category: 'Location',
+      unit: 'mois',
+      size: '30m2',
+    },
+    {
+      name: 'Location appartement mensuel',
+      price: 200000,
+      cost: 30000,
+      stock: 8,
+      category: 'Location',
+      unit: 'mois',
+      size: '70m2',
+    },
+    {
+      name: 'Visite guidee bien',
+      price: 10000,
+      cost: 3000,
+      stock: 50,
+      category: 'Services',
+      unit: 'visite',
+      size: 'Variable',
+    },
+    {
+      name: 'Estimation bien immobilier',
+      price: 50000,
+      cost: 10000,
+      stock: 20,
+      category: 'Services',
+      unit: 'prestation',
+      size: 'Variable',
+    },
+    {
+      name: 'Commission vente (5%)',
+      price: 500000,
+      cost: 50000,
+      stock: 10,
+      category: 'Commissions',
+      unit: 'transaction',
+      size: 'Variable',
+      description: 'Commission sur vente immobiliere',
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // AGENCE DE VOYAGE / TRAVEL AGENCY
+  // ---------------------------------------------------------------------------
+  travel_agency: [
+    {
+      name: 'Billet Douala-Yaounde',
+      price: 5000,
+      cost: 3500,
+      stock: 100,
+      category: 'Transport',
+      unit: 'billet',
+      destination: 'Yaounde',
+      duration_minutes: 240,
+    },
+    {
+      name: 'Assistance visa',
+      price: 50000,
+      cost: 15000,
+      stock: 20,
+      category: 'Visas',
+      unit: 'dossier',
+      destination: 'France',
+      duration_minutes: 0,
+    },
+    {
+      name: "Reservation d'hotel",
+      price: 25000,
+      cost: 5000,
+      stock: 30,
+      category: 'Hebergement',
+      unit: 'reservation',
+      destination: 'Variable',
+      duration_minutes: 0,
+    },
+    {
+      name: 'Circuit touristique Kribi',
+      price: 75000,
+      cost: 30000,
+      stock: 10,
+      category: 'Circuits',
+      unit: 'personne',
+      destination: 'Kribi',
+      duration_minutes: 1440,
+    },
+    {
+      name: 'Assurance voyage',
+      price: 15000,
+      cost: 8000,
+      stock: 50,
+      category: 'Assurances',
+      unit: 'contrat',
+      destination: 'International',
+      duration_minutes: 0,
+    },
+  ],
+
+  // ---------------------------------------------------------------------------
+  // SERVICES DIVERS / SERVICES
+  // ---------------------------------------------------------------------------
+  services: [
+    {
+      name: 'Consultation 30 minutes',
+      price: 10000,
+      cost: 2000,
+      stock: 50,
+      category: 'Consultations',
+      unit: 'seance',
+      duration_minutes: 30,
+    },
+    {
+      name: 'Consultation 1 heure',
+      price: 18000,
+      cost: 4000,
+      stock: 50,
+      category: 'Consultations',
+      unit: 'seance',
+      duration_minutes: 60,
+    },
+    {
+      name: 'Abonnement mensuel',
+      price: 50000,
+      cost: 10000,
+      stock: 30,
+      category: 'Abonnements',
+      unit: 'mois',
+      duration_minutes: 0,
+    },
+    {
+      name: 'Formation (journee)',
+      price: 25000,
+      cost: 8000,
+      stock: 20,
+      category: 'Formations',
+      unit: 'journee',
+      duration_minutes: 480,
+    },
+    {
+      name: 'Depannage urgence',
+      price: 15000,
+      cost: 5000,
+      stock: 30,
+      category: 'Interventions',
+      unit: 'prestation',
+      duration_minutes: 60,
+    },
+  ],
+}

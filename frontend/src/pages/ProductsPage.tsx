@@ -21,6 +21,7 @@ import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import type { Product } from '../types'
 import { generateUUID } from '../utils/uuid'
+import { ACTIVITY_PRODUCT_FIELDS } from '../data/activityFields'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -47,6 +48,22 @@ interface ProductForm {
   sku: string
   barcode: string
   imageUrl: string
+  // Activity-specific fields (all stored as strings in form state)
+  description: string
+  expiry_date: string
+  dosage: string
+  manufacturer: string
+  room_type: string
+  room_number: string
+  duration_minutes: string
+  weight_kg: string
+  size: string
+  color: string
+  vehicle_type: string
+  author: string
+  isbn: string
+  destination: string
+  age_group: string
 }
 
 const emptyForm: ProductForm = {
@@ -58,6 +75,21 @@ const emptyForm: ProductForm = {
   sku: '',
   barcode: '',
   imageUrl: '',
+  description: '',
+  expiry_date: '',
+  dosage: '',
+  manufacturer: '',
+  room_type: '',
+  room_number: '',
+  duration_minutes: '',
+  weight_kg: '',
+  size: '',
+  color: '',
+  vehicle_type: '',
+  author: '',
+  isbn: '',
+  destination: '',
+  age_group: '',
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -77,8 +109,22 @@ export default function ProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
 
+  const activity = currentStore?.activity
+  const activityFields = activity ? (ACTIVITY_PRODUCT_FIELDS[activity] || []) : []
+
   function formatFCFA(amount: number): string {
     return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'ar' ? 'ar-SA' : 'en-US').format(amount) + ' FCFA'
+  }
+
+  // Resolve dot-notation i18n key like "products.expiryDate" against the translations object
+  const resolveI18nKey = (key: string): string => {
+    const parts = key.split('.')
+    let obj: any = t
+    for (const part of parts) {
+      obj = obj?.[part]
+      if (obj === undefined) return key
+    }
+    return typeof obj === 'string' ? obj : key
   }
 
   useEffect(() => {
@@ -122,6 +168,21 @@ export default function ProductsPage() {
       sku: product.sku || '',
       barcode: product.barcode || '',
       imageUrl: product.image_url || '',
+      description: product.description || '',
+      expiry_date: product.expiry_date || '',
+      dosage: product.dosage || '',
+      manufacturer: product.manufacturer || '',
+      room_type: product.room_type || '',
+      room_number: product.room_number || '',
+      duration_minutes: product.duration_minutes?.toString() || '',
+      weight_kg: product.weight_kg?.toString() || '',
+      size: product.size || '',
+      color: product.color || '',
+      vehicle_type: product.vehicle_type || '',
+      author: product.author || '',
+      isbn: product.isbn || '',
+      destination: product.destination || '',
+      age_group: product.age_group || '',
     })
     setFormError('')
     setShowModal(true)
@@ -163,6 +224,21 @@ export default function ProductsPage() {
           sku: form.sku.trim() || undefined,
           barcode: form.barcode.trim() || undefined,
           image_url: form.imageUrl || undefined,
+          description: form.description || undefined,
+          expiry_date: form.expiry_date || undefined,
+          dosage: form.dosage || undefined,
+          manufacturer: form.manufacturer || undefined,
+          room_type: form.room_type || undefined,
+          room_number: form.room_number || undefined,
+          duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : undefined,
+          weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : undefined,
+          size: form.size || undefined,
+          color: form.color || undefined,
+          vehicle_type: form.vehicle_type || undefined,
+          author: form.author || undefined,
+          isbn: form.isbn || undefined,
+          destination: form.destination || undefined,
+          age_group: form.age_group || undefined,
         })
       } else {
         const now = new Date().toISOString()
@@ -177,6 +253,21 @@ export default function ProductsPage() {
           sku: form.sku.trim() || undefined,
           barcode: form.barcode.trim() || undefined,
           image_url: form.imageUrl || undefined,
+          description: form.description || undefined,
+          expiry_date: form.expiry_date || undefined,
+          dosage: form.dosage || undefined,
+          manufacturer: form.manufacturer || undefined,
+          room_type: form.room_type || undefined,
+          room_number: form.room_number || undefined,
+          duration_minutes: form.duration_minutes ? parseInt(form.duration_minutes) : undefined,
+          weight_kg: form.weight_kg ? parseFloat(form.weight_kg) : undefined,
+          size: form.size || undefined,
+          color: form.color || undefined,
+          vehicle_type: form.vehicle_type || undefined,
+          author: form.author || undefined,
+          isbn: form.isbn || undefined,
+          destination: form.destination || undefined,
+          age_group: form.age_group || undefined,
           is_active: true,
           created_at: now,
           updated_at: now,
@@ -817,6 +908,41 @@ export default function ProductsPage() {
             )}
           </div>
         </div>
+
+        {/* ── Activity-specific fields ─────────────────────── */}
+        {activityFields.length > 0 && (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.textSecondary, marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              {t.products.activityFields}
+            </div>
+            {activityFields.map((field) => (
+              <div key={field.key} style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 4 }}>
+                  {resolveI18nKey(field.i18nKey)}
+                </label>
+                {field.inputType === 'select' ? (
+                  <select
+                    value={(form as any)[field.key] || ''}
+                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14, backgroundColor: '#fff' }}
+                  >
+                    <option value="">--</option>
+                    {field.options?.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.inputType}
+                    value={(form as any)[field.key] || ''}
+                    onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 14 }}
+                  />
+                )}
+              </div>
+            ))}
+          </>
+        )}
 
         <div style={formBtnRowStyle}>
           <button style={cancelBtnStyle} onClick={() => setShowModal(false)}>

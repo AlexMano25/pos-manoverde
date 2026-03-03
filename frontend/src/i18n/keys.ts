@@ -268,6 +268,26 @@ export type TranslationKeys = {
     generateBarcode: string
     barcodePreview: string
     initialStock: string
+    activityFields: string
+    description: string
+    expiryDate: string
+    dosage: string
+    manufacturer: string
+    brand: string
+    publisher: string
+    roomType: string
+    roomNumber: string
+    duration: string
+    prepTime: string
+    weight: string
+    size: string
+    surface: string
+    color: string
+    vehicleType: string
+    author: string
+    isbn: string
+    destination: string
+    ageGroup: string
   }
 
   // Orders
@@ -631,6 +651,13 @@ export type TranslationKeys = {
     processing: string
     backToPlans: string
     freePlanNote: string
+    modeSelection: string
+    modeServer: string
+    modeServerDesc: string
+    modeClient: string
+    modeClientDesc: string
+    modeAllInOne: string
+    modeAllInOneDesc: string
   }
 
   // Subscription

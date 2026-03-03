@@ -426,7 +426,14 @@ export default function LandingPage() {
   }
 
   const handleStartApp = () => {
-    localStorage.setItem('pos-app-store', JSON.stringify({ state: { mode: 'server', activity: null, serverUrl: '' }, version: 0 }))
+    const appStore = useAppStore.getState()
+    appStore.setSelectedPlan('free')
+    appStore.setRegistrationMode(true)
+    document.body.classList.remove('app-mode')
+    localStorage.setItem('pos-app-store', JSON.stringify({
+      state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: 'free', registrationMode: true },
+      version: 0,
+    }))
     window.location.reload()
   }
 

@@ -152,9 +152,10 @@ const Sidebar: React.FC = () => {
   }
 
   // ── Filter nav items by mode ────────────────────────────────────────────
-  const visibleItems = NAV_ITEM_DEFS.filter(
-    (item) => !item.serverOnly || mode !== 'client'
-  )
+  const visibleItems = NAV_ITEM_DEFS.filter((item) => {
+    if (mode === 'client') return item.key === 'pos'
+    return true
+  })
 
   // =======================================================================
   // Mobile: horizontal bottom bar

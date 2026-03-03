@@ -11,7 +11,7 @@ import Layout from './components/layout/Layout'
 import HelpButton from './components/common/HelpButton'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
-import SetupPage from './pages/SetupPage'
+// SetupPage removed - registration flow handles all plans
 import DashboardPage from './pages/DashboardPage'
 import POSPage from './pages/POSPage'
 import ProductsPage from './pages/ProductsPage'
@@ -22,7 +22,7 @@ import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
 
 function AppContent() {
-  const { section, activity, currentStore } = useAppStore()
+  const { section, setSection, mode, activity, currentStore } = useAppStore()
   const { user } = useAuthStore()
   const { loadProducts } = useProductStore()
   const { loadOrders } = useOrderStore()
@@ -31,6 +31,13 @@ function AppContent() {
 
   useOnlineStatus()
   useSync()
+
+  // Client mode: force POS section
+  useEffect(() => {
+    if (mode === 'client' && section !== 'pos') {
+      setSection('pos')
+    }
+  }, [mode, section, setSection])
 
   const storeId = currentStore?.id || user?.store_id || 'default-store'
 
@@ -58,6 +65,11 @@ function AppContent() {
   const current = pageTitles[section] || pageTitles.dashboard
 
   const renderPage = () => {
+    // Client mode: always show POS
+    if (mode === 'client') {
+      return <POSPage />
+    }
+
     switch (section) {
       case 'pos':
         return <POSPage />
@@ -88,30 +100,33 @@ export default function App() {
   const { activity, registrationMode } = useAppStore()
   const { user, token } = useAuthStore()
 
-  const isPublicAccess = !activity && !user && !token
-  const hasSetupStarted = localStorage.getItem('pos-app-store')
-
-  const isLanding = isPublicAccess && !hasSetupStarted
-
-  // Remove app-mode class when showing landing/setup/login pages
   useEffect(() => {
-    if (isLanding) {
+    if (!activity && !registrationMode) {
       document.body.classList.remove('app-mode')
     }
-  }, [isLanding])
+  }, [activity, registrationMode])
 
-  if (isLanding) {
-    return <LandingPage />
-  }
-
-  if (registrationMode && !user) {
+  // Registration flow (all plans including free)
+  if (registrationMode) {
     return <RegistrationPage />
   }
 
+  // No activity = not registered yet → show landing
   if (!activity) {
-    return <SetupPage />
+    // Clear stale partial setup state
+    const stored = localStorage.getItem('pos-app-store')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (parsed?.state && !parsed.state.activity && !parsed.state.registrationMode) {
+          localStorage.removeItem('pos-app-store')
+        }
+      } catch { /* ignore */ }
+    }
+    return <LandingPage />
   }
 
+  // Has activity but not logged in
   if (!user || !token) {
     return <LoginPage />
   }

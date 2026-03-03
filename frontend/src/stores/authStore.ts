@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabase'
 import { useAppStore } from './appStore'
 import { db } from '../db/dexie'
 import type { Activity } from '../types'
+import { seedSampleProducts } from '../utils/seedProducts'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -445,6 +446,12 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
         if (store) {
           appStore.setCurrentStore(store)
         }
+
+        // 6b. Seed activity-specific sample products for the new store
+        seedSampleProducts(result.store_id, data.activity).catch((err) =>
+          console.error('[authStore] Sample product seeding failed:', err),
+        )
+
         appStore.setRegistrationMode(false)
         appStore.setSelectedPlan(null)
 
