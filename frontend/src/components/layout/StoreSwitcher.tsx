@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Store as StoreIcon, ChevronDown, Plus, Check } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
+import { useAuthStore } from '../../stores/authStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { supabase } from '../../services/supabase'
 import type { Store } from '../../types'
@@ -10,9 +11,11 @@ export default function StoreSwitcher() {
   const {
     currentStore,
     availableStores,
+    setAvailableStores,
     setCurrentStore,
     setActivity,
   } = useAppStore()
+  const { user } = useAuthStore()
   const { t } = useLanguageStore()
 
   const [isOpen, setIsOpen] = useState(false)
@@ -20,6 +23,51 @@ export default function StoreSwitcher() {
   const [switching, setSwitching] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // ── Auto-fetch stores if list is empty on mount ─────────────────────────
+  useEffect(() => {
+    if (availableStores.length > 0 || !supabase || !user) return
+
+    const fetchStores = async () => {
+      try {
+        // Get org_id from current store or user's store
+        const storeId = currentStore?.id || user.store_id
+        if (!storeId) return
+
+        // First get the org_id
+        const { data: storeData } = await supabase!
+          .from('stores')
+          .select('organization_id')
+          .eq('id', storeId)
+          .single()
+
+        if (!storeData?.organization_id) return
+
+        // Then fetch all org stores
+        const { data: orgStores } = await supabase!
+          .from('stores')
+          .select('*')
+          .eq('organization_id', storeData.organization_id)
+
+        if (orgStores && orgStores.length > 0) {
+          setAvailableStores(orgStores as Store[])
+
+          // Also restore currentStore if it's null
+          if (!currentStore && user.store_id) {
+            const myStore = orgStores.find((s) => s.id === user.store_id)
+            if (myStore) {
+              setCurrentStore(myStore as Store)
+              setActivity((myStore as Store).activity)
+            }
+          }
+        }
+      } catch (err) {
+        console.error('StoreSwitcher: failed to fetch stores', err)
+      }
+    }
+
+    fetchStores()
+  }, [availableStores.length, user, currentStore, setAvailableStores, setCurrentStore, setActivity])
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -63,19 +111,11 @@ export default function StoreSwitcher() {
     }
   }
 
-  // If only one store (or none), just show the store name without dropdown
-  if (availableStores.length <= 1) {
-    return (
-      <div style={staticContainerStyle}>
-        <div style={staticIconStyle}>
-          <StoreIcon size={16} color="#2563eb" />
-        </div>
-        <span style={staticNameStyle}>
-          {currentStore?.name || 'Store'}
-        </span>
-      </div>
-    )
-  }
+  // ── Display name ────────────────────────────────────────────────────────
+  const storeName = currentStore?.name || 'Store'
+  const activityLabel = currentStore?.activity
+    ? (t.setup as Record<string, string>)[currentStore.activity] || currentStore.activity
+    : ''
 
   // ── Styles ───────────────────────────────────────────────────────────────
 
@@ -89,8 +129,8 @@ export default function StoreSwitcher() {
     gap: 8,
     padding: '8px 12px',
     borderRadius: 8,
-    border: '1px solid #e2e8f0',
-    backgroundColor: '#ffffff',
+    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     cursor: switching ? 'wait' : 'pointer',
     width: '100%',
     textAlign: 'left',
@@ -102,22 +142,17 @@ export default function StoreSwitcher() {
     width: 28,
     height: 28,
     borderRadius: 7,
-    backgroundColor: '#eff6ff',
+    backgroundColor: 'rgba(37, 99, 235, 0.2)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   }
 
-  const triggerTextStyle: React.CSSProperties = {
-    flex: 1,
-    minWidth: 0,
-  }
-
   const triggerNameStyle: React.CSSProperties = {
     fontSize: 13,
     fontWeight: 600,
-    color: '#1e293b',
+    color: '#e2e8f0',
     margin: 0,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -127,7 +162,7 @@ export default function StoreSwitcher() {
 
   const triggerActivityStyle: React.CSSProperties = {
     fontSize: 11,
-    color: '#64748b',
+    color: '#94a3b8',
     margin: 0,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -150,7 +185,7 @@ export default function StoreSwitcher() {
     backgroundColor: '#ffffff',
     borderRadius: 10,
     border: '1px solid #e2e8f0',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.12)',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
     zIndex: 100,
     overflow: 'hidden',
     maxHeight: 300,
@@ -233,24 +268,19 @@ export default function StoreSwitcher() {
           style={triggerStyle}
           onClick={() => setIsOpen(!isOpen)}
           onMouseEnter={(e) => {
-            if (!switching) e.currentTarget.style.borderColor = '#cbd5e1'
+            if (!switching) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = '#e2e8f0'
+            e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
           }}
           disabled={switching}
         >
           <div style={triggerIconStyle}>
-            <StoreIcon size={14} color="#2563eb" />
+            <StoreIcon size={14} color="#60a5fa" />
           </div>
-          <div style={triggerTextStyle}>
-            <p style={triggerNameStyle}>{currentStore?.name || 'Store'}</p>
-            <p style={triggerActivityStyle}>
-              {currentStore?.activity
-                ? (t.setup as Record<string, string>)[currentStore.activity] || currentStore.activity
-                : ''
-              }
-            </p>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={triggerNameStyle}>{storeName}</p>
+            {activityLabel && <p style={triggerActivityStyle}>{activityLabel}</p>}
           </div>
           <div style={chevronStyle}>
             <ChevronDown size={14} />
@@ -261,7 +291,7 @@ export default function StoreSwitcher() {
         {isOpen && (
           <div style={dropdownStyle}>
             <div style={dropdownHeaderStyle}>
-              {t.stores?.switchStore || 'Changer de point de vente'}
+              {t.stores?.myStores || 'Mes points de vente'}
             </div>
 
             {availableStores.map((store) => (
@@ -349,33 +379,4 @@ export default function StoreSwitcher() {
       <AddStoreModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} />
     </>
   )
-}
-
-// ── Static display styles (single store, no dropdown) ────────────────────
-
-const staticContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '8px 12px',
-}
-
-const staticIconStyle: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  borderRadius: 7,
-  backgroundColor: 'rgba(37, 99, 235, 0.15)',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-}
-
-const staticNameStyle: React.CSSProperties = {
-  fontSize: 13,
-  fontWeight: 600,
-  color: '#e2e8f0',
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
 }
