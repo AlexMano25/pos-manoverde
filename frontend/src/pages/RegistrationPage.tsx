@@ -32,7 +32,6 @@ import {
   Building2,
   Plane,
   Globe,
-  CreditCard,
   Eye,
   EyeOff,
   Loader2,
@@ -40,12 +39,13 @@ import {
   Zap,
 } from 'lucide-react'
 import LegalModal from '../components/common/LegalModal'
+import PaymentMethodSelector from '../components/billing/PaymentMethodSelector'
 import { useAppStore } from '../stores/appStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { goToLanding } from '../utils/navigation'
 import { formatCurrency } from '../utils/currency'
-import type { Activity, BillingCycle, SubscriptionPlan } from '../types'
+import type { Activity, BillingCycle, SubscriptionPlan, PayPalResult } from '../types'
 
 // ── Activity icon mapping (same as SetupPage) ───────────────────────────────
 
@@ -101,19 +101,6 @@ const PLAN_PRICES: Record<SubscriptionPlan, { monthly: number; yearly: number }>
 function formatPrice(amount: number): string {
   return formatCurrency(amount, 'XAF')
 }
-
-// ── Payment methods ─────────────────────────────────────────────────────────
-
-type PaymentOption = {
-  id: string
-  icon: React.ElementType
-}
-
-const PAYMENT_OPTIONS: PaymentOption[] = [
-  { id: 'orange_money', icon: Smartphone },
-  { id: 'mtn_money', icon: Smartphone },
-  { id: 'carte_bancaire', icon: CreditCard },
-]
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -420,18 +407,6 @@ export default function RegistrationPage() {
     boxSizing: 'border-box',
     marginBottom: 12,
   }
-
-  const paymentCardStyle = (isSelected: boolean): React.CSSProperties => ({
-    padding: '20px',
-    borderRadius: 12,
-    border: `2px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
-    backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 16,
-  })
 
   const footerStyle: React.CSSProperties = {
     display: 'flex',
@@ -852,75 +827,78 @@ export default function RegistrationPage() {
       )
     }
 
-    const paymentLabels: Record<string, { name: string; desc: string }> = {
-      orange_money: {
-        name: reg.orangeMoney || 'Orange Money',
-        desc: reg.orangeMoneyDesc || 'Paiement via votre compte Orange Money',
-      },
-      mtn_money: {
-        name: reg.mtnMoney || 'MTN Money',
-        desc: reg.mtnMoneyDesc || 'Paiement via votre compte MTN Mobile Money',
-      },
-      carte_bancaire: {
-        name: reg.carteBancaire || 'Carte bancaire',
-        desc: reg.carteBancaireDesc || 'Paiement par carte Visa ou Mastercard',
-      },
+    // PayPal plan IDs (to be configured when PayPal developer account is set up)
+    const PAYPAL_PLAN_IDS: Record<string, string> = {
+      starter_monthly: import.meta.env.VITE_PAYPAL_PLAN_STARTER_MONTHLY || '',
+      starter_yearly: import.meta.env.VITE_PAYPAL_PLAN_STARTER_YEARLY || '',
+      pro_monthly: import.meta.env.VITE_PAYPAL_PLAN_PRO_MONTHLY || '',
+      pro_yearly: import.meta.env.VITE_PAYPAL_PLAN_PRO_YEARLY || '',
+    }
+
+    const planKey = `${plan}_${billingCycle}`
+    const paypalPlanId = PAYPAL_PLAN_IDS[planKey] || ''
+
+    const handlePayPalSuccess = (result: PayPalResult) => {
+      console.log('[Registration] PayPal payment success:', result)
+      setPaymentMethod(result.subscriptionId ? `paypal:${result.subscriptionId}` : 'paypal')
+      // Auto-advance to next step
+      setTimeout(() => {
+        setStep(5)
+      }, 500)
+    }
+
+    const handleOrangeMoneySuccess = (transactionId: string) => {
+      console.log('[Registration] Orange Money success:', transactionId)
+      setPaymentMethod(`orange_money:${transactionId}`)
+      setTimeout(() => {
+        setStep(5)
+      }, 500)
+    }
+
+    const handlePaymentError = (err: string) => {
+      console.error('[Registration] Payment error:', err)
+      setError(err)
+    }
+
+    // Build a pseudo RechargePackage for the subscription amount
+    const subscriptionPackage = {
+      id: planKey,
+      label: plan,
+      amountXAF: currentPrice,
+      amountUSD: Math.round(currentPrice / 600 * 100) / 100, // approximate XAF to USD
+      tickets: 0,
     }
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {PAYMENT_OPTIONS.map((opt) => {
-          const Icon = opt.icon
-          const info = paymentLabels[opt.id]
-          const isSelected = paymentMethod === opt.id
-          return (
-            <div
-              key={opt.id}
-              style={paymentCardStyle(isSelected)}
-              onClick={() => setPaymentMethod(opt.id)}
-            >
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                backgroundColor: isSelected ? '#dbeafe' : '#f1f5f9',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <Icon size={24} color={isSelected ? '#2563eb' : '#64748b'} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 15, fontWeight: 600, color: isSelected ? '#2563eb' : '#1e293b', margin: '0 0 2px' }}>
-                  {info.name}
-                </p>
-                <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
-                  {info.desc}
-                </p>
-              </div>
-              <div style={{
-                width: 22,
-                height: 22,
-                borderRadius: '50%',
-                border: `2px solid ${isSelected ? '#2563eb' : '#d1d5db'}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                {isSelected && (
-                  <div style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: '50%',
-                    backgroundColor: '#2563eb',
-                  }} />
-                )}
-              </div>
-            </div>
-          )
-        })}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Plan summary */}
+        <div style={{
+          padding: '14px 16px',
+          borderRadius: 10,
+          backgroundColor: '#f0f9ff',
+          border: '1px solid #bae6fd',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#0c4a6e' }}>
+            {getPlanName()} — {billingCycle === 'monthly' ? reg.monthlyBilling : reg.yearlyBilling}
+          </span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#0369a1' }}>
+            {formatPrice(currentPrice)}/{billingCycle === 'monthly' ? 'mo' : 'yr'}
+          </span>
+        </div>
+
+        {/* Payment method selector */}
+        <PaymentMethodSelector
+          context="subscription"
+          selectedPackage={subscriptionPackage}
+          paypalPlanId={paypalPlanId}
+          onPayPalSuccess={handlePayPalSuccess}
+          onOrangeMoneySuccess={handleOrangeMoneySuccess}
+          onError={handlePaymentError}
+          defaultGateway="orange_money"
+        />
       </div>
     )
   }

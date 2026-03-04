@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { CreditCard, RefreshCw, ArrowUpCircle, ArrowDownCircle, Gift, RotateCcw } from 'lucide-react'
+import { CreditCard, RefreshCw, ArrowUpCircle, ArrowDownCircle, Gift, RotateCcw, X, Check } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
-import type { CreditBalance, CreditTransaction } from '../types'
+import PaymentMethodSelector, { RECHARGE_PACKAGES } from '../components/billing/PaymentMethodSelector'
+import type { CreditBalance, CreditTransaction, RechargePackage, PayPalResult } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -36,6 +37,12 @@ export default function BillingPage() {
   >([])
   const [loading, setLoading] = useState(true)
 
+  // Recharge modal state
+  const [showRechargeModal, setShowRechargeModal] = useState(false)
+  const [selectedPackage, setSelectedPackage] = useState<RechargePackage | null>(null)
+  const [rechargeSuccess, setRechargeSuccess] = useState(false)
+  const [rechargeError, setRechargeError] = useState('')
+
   // ── Locale-aware date formatting ────────────────────────────────────────
 
   const intlLocale =
@@ -58,72 +65,141 @@ export default function BillingPage() {
 
   // ── Fetch billing data ──────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
+  const orgId = currentStore?.organization_id
+
+  const fetchBillingData = async () => {
+    if (!isSupabaseConfigured || !supabase || !orgId) {
       setLoading(false)
       return
     }
 
-    const orgId = currentStore?.organization_id
-    if (!orgId) {
-      setLoading(false)
-      return
-    }
+    setLoading(true)
+    try {
+      // Fetch credit balance
+      const { data: balanceData } = await supabase
+        .from('credit_balances')
+        .select('*')
+        .eq('organization_id', orgId)
+        .single()
 
-    async function fetchBillingData() {
-      setLoading(true)
-      try {
-        // Fetch credit balance
-        const { data: balanceData } = await supabase!
-          .from('credit_balances')
-          .select('*')
-          .eq('organization_id', orgId)
-          .single()
+      if (balanceData) {
+        setBalance(balanceData as CreditBalance)
+      }
 
-        if (balanceData) {
-          setBalance(balanceData as CreditBalance)
-        }
+      // Fetch recent transactions (last 50)
+      const { data: txData } = await supabase
+        .from('credit_transactions')
+        .select('*')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false })
+        .limit(50)
 
-        // Fetch recent transactions (last 50)
-        const { data: txData } = await supabase!
-          .from('credit_transactions')
-          .select('*')
-          .eq('organization_id', orgId)
-          .order('created_at', { ascending: false })
-          .limit(50)
+      if (txData) {
+        setTransactions(txData as CreditTransaction[])
 
-        if (txData) {
-          setTransactions(txData as CreditTransaction[])
-
-          // Build consumption breakdown from deductions
-          const deductions = (txData as CreditTransaction[]).filter(
-            (tx) => tx.type === 'deduct'
-          )
-          const grouped: Record<string, { activity: string; store_id: string | null; tickets: number; amount: number }> = {}
-          for (const tx of deductions) {
-            const key = `${tx.activity || 'unknown'}-${tx.store_id || 'all'}`
-            if (!grouped[key]) {
-              grouped[key] = {
-                activity: tx.activity || 'unknown',
-                store_id: tx.store_id || null,
-                tickets: 0,
-                amount: 0,
-              }
+        // Build consumption breakdown from deductions
+        const deductions = (txData as CreditTransaction[]).filter(
+          (tx) => tx.type === 'deduct'
+        )
+        const grouped: Record<string, { activity: string; store_id: string | null; tickets: number; amount: number }> = {}
+        for (const tx of deductions) {
+          const key = `${tx.activity || 'unknown'}-${tx.store_id || 'all'}`
+          if (!grouped[key]) {
+            grouped[key] = {
+              activity: tx.activity || 'unknown',
+              store_id: tx.store_id || null,
+              tickets: 0,
+              amount: 0,
             }
-            grouped[key].tickets += 1
-            grouped[key].amount += Math.abs(tx.amount_usd)
           }
-          setConsumptionByActivity(Object.values(grouped))
+          grouped[key].tickets += 1
+          grouped[key].amount += Math.abs(tx.amount_usd)
         }
+        setConsumptionByActivity(Object.values(grouped))
+      }
+    } catch (err) {
+      console.error('[BillingPage] Failed to fetch billing data:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchBillingData()
+  }, [orgId])
+
+  // ── Payment success handlers ──────────────────────────────────────────
+
+  const handlePayPalSuccess = async (result: PayPalResult) => {
+    console.log('[BillingPage] PayPal success:', result)
+
+    if (supabase && orgId && selectedPackage) {
+      try {
+        // Record credit load via RPC or direct insert
+        const { error } = await supabase.from('credit_transactions').insert({
+          organization_id: orgId,
+          type: 'load',
+          amount_usd: selectedPackage.amountUSD,
+          description: `PayPal recharge - ${selectedPackage.id} (${result.orderId || result.subscriptionId || ''})`,
+          reference_id: result.orderId || result.subscriptionId,
+        })
+
+        if (error) console.error('[BillingPage] Failed to record transaction:', error)
+
+        // Update balance
+        const { error: balError } = await supabase.rpc('add_credit', {
+          p_organization_id: orgId,
+          p_amount_usd: selectedPackage.amountUSD,
+        })
+
+        if (balError) console.error('[BillingPage] Failed to update balance:', balError)
       } catch (err) {
-        console.error('[BillingPage] Failed to fetch billing data:', err)
-      } finally {
-        setLoading(false)
+        console.error('[BillingPage] Post-payment processing error:', err)
       }
     }
 
-    fetchBillingData()
-  }, [currentStore?.organization_id])
+    setRechargeSuccess(true)
+    setRechargeError('')
+
+    // Refresh billing data
+    setTimeout(() => {
+      fetchBillingData()
+    }, 1000)
+  }
+
+  const handleOrangeMoneySuccess = async (transactionId: string) => {
+    console.log('[BillingPage] Orange Money success:', transactionId)
+
+    // The Edge Function should have already credited the balance
+    // Just refresh the data
+    setRechargeSuccess(true)
+    setRechargeError('')
+
+    setTimeout(() => {
+      fetchBillingData()
+    }, 1000)
+  }
+
+  const handlePaymentError = (error: string) => {
+    console.error('[BillingPage] Payment error:', error)
+    setRechargeError(error)
+  }
+
+  // ── Open / close recharge modal ───────────────────────────────────────
+
+  const openRechargeModal = () => {
+    setShowRechargeModal(true)
+    setSelectedPackage(null)
+    setRechargeSuccess(false)
+    setRechargeError('')
+  }
+
+  const closeRechargeModal = () => {
+    setShowRechargeModal(false)
+    setSelectedPackage(null)
+    setRechargeSuccess(false)
+    setRechargeError('')
+  }
 
   // ── Transaction type helpers ────────────────────────────────────────────
 
@@ -323,14 +399,16 @@ export default function BillingPage() {
 
   const ticketsRemaining = balance ? Math.floor(balance.balance_usd / TICKET_PRICE_USD) : 0
 
+  const billing = t.billing
+
   // ── Render ─────────────────────────────────────────────────────────────
 
   return (
     <div style={pageStyle}>
       {/* Header */}
       <div style={headerStyle}>
-        <h1 style={titleStyle}>{t.billing.title}</h1>
-        <p style={subtitleStyle}>{t.billing.subtitle}</p>
+        <h1 style={titleStyle}>{billing.title}</h1>
+        <p style={subtitleStyle}>{billing.subtitle}</p>
       </div>
 
       {/* Balance Card */}
@@ -352,7 +430,7 @@ export default function BillingPage() {
             </div>
             <div>
               <p style={{ fontSize: 13, color: C.textSecondary, margin: 0, fontWeight: 500 }}>
-                {t.billing.balance}
+                {billing.balance}
               </p>
               <p style={{ fontSize: 28, fontWeight: 700, color: C.text, margin: 0 }}>
                 ${balance?.balance_usd?.toFixed(2) ?? '0.00'}
@@ -360,36 +438,30 @@ export default function BillingPage() {
             </div>
           </div>
           <p style={{ fontSize: 14, color: C.textSecondary, margin: 0 }}>
-            {ticketsRemaining.toLocaleString()} {t.billing.ticketsRemaining}
+            {ticketsRemaining.toLocaleString()} {billing.ticketsRemaining}
           </p>
         </div>
-        <button
-          style={rechargeBtnStyle}
-          onClick={() => {
-            // Placeholder for future payment integration
-            console.log('[BillingPage] Recharge clicked - payment integration pending')
-          }}
-        >
+        <button style={rechargeBtnStyle} onClick={openRechargeModal}>
           <RefreshCw size={16} />
-          {t.billing.recharge}
+          {billing.recharge}
         </button>
       </div>
 
       {/* Consumption Breakdown */}
       <div style={tableCardStyle}>
         <div style={tableHeaderStyle}>
-          <h3 style={tableTitleStyle}>{t.billing.consumption}</h3>
+          <h3 style={tableTitleStyle}>{billing.consumption}</h3>
         </div>
         {consumptionByActivity.length === 0 ? (
-          <div style={emptyStyle}>{t.billing.noTransactions}</div>
+          <div style={emptyStyle}>{billing.noTransactions}</div>
         ) : (
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>{t.billing.activity}</th>
-                <th style={thStyle}>{t.billing.store}</th>
-                <th style={thStyle}>{t.billing.tickets}</th>
-                <th style={thStyle}>{t.billing.amount}</th>
+                <th style={thStyle}>{billing.activity}</th>
+                <th style={thStyle}>{billing.store}</th>
+                <th style={thStyle}>{billing.tickets}</th>
+                <th style={thStyle}>{billing.amount}</th>
               </tr>
             </thead>
             <tbody>
@@ -411,18 +483,18 @@ export default function BillingPage() {
       {/* Transaction History */}
       <div style={tableCardStyle}>
         <div style={tableHeaderStyle}>
-          <h3 style={tableTitleStyle}>{t.billing.transactions}</h3>
+          <h3 style={tableTitleStyle}>{billing.transactions}</h3>
         </div>
         {transactions.length === 0 ? (
-          <div style={emptyStyle}>{t.billing.noTransactions}</div>
+          <div style={emptyStyle}>{billing.noTransactions}</div>
         ) : (
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={thStyle}>{t.billing.date}</th>
-                <th style={thStyle}>{t.billing.type}</th>
-                <th style={thStyle}>{t.billing.amount}</th>
-                <th style={thStyle}>{t.billing.description}</th>
+                <th style={thStyle}>{billing.date}</th>
+                <th style={thStyle}>{billing.type}</th>
+                <th style={thStyle}>{billing.amount}</th>
+                <th style={thStyle}>{billing.description}</th>
               </tr>
             </thead>
             <tbody>
@@ -453,6 +525,178 @@ export default function BillingPage() {
           </table>
         )}
       </div>
+
+      {/* ── Recharge Modal ─────────────────────────────────────────────── */}
+      {showRechargeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeRechargeModal()
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              maxWidth: 520,
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              borderRadius: 16,
+              padding: 28,
+              position: 'relative',
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            }}
+          >
+            {/* Modal header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 20,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <RefreshCw size={20} color="#ffffff" />
+                </div>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>
+                  {billing.rechargeCredits}
+                </h2>
+              </div>
+              <button
+                onClick={closeRechargeModal}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  padding: 4, borderRadius: 8, display: 'flex',
+                  color: C.textSecondary,
+                }}
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div style={{ height: 1, backgroundColor: C.border, marginBottom: 20 }} />
+
+            {/* Success state */}
+            {rechargeSuccess ? (
+              <div style={{
+                textAlign: 'center', padding: '32px 16px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  backgroundColor: '#f0fdf4', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Check size={28} color={C.success} />
+                </div>
+                <p style={{ fontSize: 16, fontWeight: 600, color: C.success, margin: 0 }}>
+                  {billing.paymentSuccess}
+                </p>
+                <button
+                  onClick={closeRechargeModal}
+                  style={{
+                    marginTop: 12, padding: '10px 24px', borderRadius: 8,
+                    border: 'none', backgroundColor: C.primary, color: '#fff',
+                    fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  }}
+                >
+                  {t.common.close}
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Error message */}
+                {rechargeError && (
+                  <div style={{
+                    padding: '10px 14px', borderRadius: 8,
+                    backgroundColor: '#fef2f2', color: C.danger,
+                    fontSize: 13, marginBottom: 16, textAlign: 'center',
+                  }}>
+                    {rechargeError}
+                  </div>
+                )}
+
+                {/* Package selection */}
+                <div style={{ marginBottom: 20 }}>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: C.textSecondary, marginBottom: 10 }}>
+                    {billing.selectAmount}
+                  </p>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: 8,
+                  }}>
+                    {RECHARGE_PACKAGES.map((pkg) => {
+                      const isSelected = selectedPackage?.id === pkg.id
+                      return (
+                        <button
+                          key={pkg.id}
+                          onClick={() => {
+                            setSelectedPackage(pkg)
+                            setRechargeError('')
+                          }}
+                          style={{
+                            padding: '14px 12px',
+                            borderRadius: 10,
+                            border: `2px solid ${isSelected ? C.primary : C.border}`,
+                            backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          <p style={{
+                            margin: 0, fontSize: 13, fontWeight: 600,
+                            color: isSelected ? C.primary : C.textSecondary,
+                          }}>
+                            {(billing as Record<string, string>)[pkg.label] || pkg.id}
+                          </p>
+                          <p style={{
+                            margin: '4px 0 2px', fontSize: 18, fontWeight: 700,
+                            color: isSelected ? C.primary : C.text,
+                          }}>
+                            {pkg.amountXAF.toLocaleString()} XAF
+                          </p>
+                          <p style={{
+                            margin: 0, fontSize: 11,
+                            color: isSelected ? C.primary : C.textSecondary,
+                          }}>
+                            ~${pkg.amountUSD} · {pkg.tickets.toLocaleString()} tickets
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Payment method selector (only if package selected) */}
+                {selectedPackage && (
+                  <PaymentMethodSelector
+                    context="recharge"
+                    selectedPackage={selectedPackage}
+                    onPayPalSuccess={handlePayPalSuccess}
+                    onOrangeMoneySuccess={handleOrangeMoneySuccess}
+                    onError={handlePaymentError}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

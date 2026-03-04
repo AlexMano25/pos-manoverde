@@ -100,6 +100,7 @@ export default function DashboardPage() {
     orange_money: t.pos.orangeMoney,
     mtn_money: t.pos.mtnMoney,
     carte_bancaire: t.pos.carteBancaire,
+    paypal: 'PayPal',
   }
 
   const statusLabels: Record<string, string> = {

@@ -761,6 +761,33 @@ export type TranslationKeys = {
     payAsYouGrowDesc: string
     initialCredit: string
     noCommitment: string
+    // Payment integration keys
+    rechargeCredits: string
+    selectAmount: string
+    customAmount: string
+    payWithPaypal: string
+    payWithOrangeMoney: string
+    payWithMTN: string
+    waitingConfirmation: string
+    paymentSuccess: string
+    paymentFailed: string
+    getVirtualCard: string
+    maxItDescription: string
+    enterPhoneNumber: string
+    confirmPayment: string
+    or: string
+    microPack: string
+    standardPack: string
+    proPack: string
+    businessPack: string
+    custom: string
+    processingPayment: string
+    paypalNotConfigured: string
+    phoneFormat: string
+    chooseMethod: string
+    paypalVisa: string
+    orangeMoney: string
+    mtnMomo: string
   }
 
   // Legal documents

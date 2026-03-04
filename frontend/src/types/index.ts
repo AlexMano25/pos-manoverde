@@ -173,7 +173,39 @@ export type CartItem = {
 
 // -- Payment -----------------------------------------------------------------
 
-export type PaymentMethod = 'cash' | 'card' | 'momo' | 'transfer' | 'orange_money' | 'mtn_money' | 'carte_bancaire'
+export type PaymentMethod = 'cash' | 'card' | 'momo' | 'transfer' | 'orange_money' | 'mtn_money' | 'carte_bancaire' | 'paypal'
+
+// -- Payment integration types ------------------------------------------------
+
+export type PayPalResult = {
+  mode: 'subscription' | 'capture'
+  subscriptionId?: string
+  orderId?: string
+  payerId?: string
+  amount?: number
+  currency?: string
+  status: string
+}
+
+export type OrangeMoneyStatus = 'pending' | 'success' | 'failed' | 'expired'
+
+export type OrangeMoneyPaymentResult = {
+  transactionId: string
+  status: OrangeMoneyStatus
+  phoneNumber: string
+  amount: number
+  currency: string
+}
+
+export type RechargePackage = {
+  id: string
+  label: string
+  amountXAF: number
+  amountUSD: number
+  tickets: number
+}
+
+export type PaymentGateway = 'paypal' | 'orange_money' | 'mtn_momo'
 
 // -- Orders ------------------------------------------------------------------
 

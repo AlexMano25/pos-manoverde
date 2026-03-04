@@ -42,6 +42,7 @@ const paymentColors: Record<PaymentMethod, string> = {
   orange_money: '#f97316',
   mtn_money: '#eab308',
   carte_bancaire: '#6366f1',
+  paypal: '#003087',
 }
 
 const statusColors: Record<OrderStatus, string> = {
@@ -85,6 +86,7 @@ export default function OrdersPage() {
     orange_money: t.pos.orangeMoney,
     mtn_money: t.pos.mtnMoney,
     carte_bancaire: t.pos.carteBancaire,
+    paypal: 'PayPal',
   }
 
   const statusLabels: Record<OrderStatus, string> = {
