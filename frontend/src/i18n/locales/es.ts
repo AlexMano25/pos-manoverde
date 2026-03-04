@@ -673,4 +673,15 @@ export const es: TranslationKeys = {
     termsLabel: 'Condiciones de Uso',
     andThe: 'y las',
   },
+  stores: {
+    selectStore: 'Seleccione un punto de venta',
+    switchStore: 'Cambiar de punto de venta',
+    addStore: 'Agregar un punto de venta',
+    storeName: 'Nombre del punto de venta',
+    storeActivity: 'Tipo de actividad',
+    myStores: 'Mis puntos de venta',
+    createStore: 'Crear',
+    switchingStore: 'Cambiando...',
+    storeCreated: 'Punto de venta creado!',
+  },
 }

@@ -721,4 +721,16 @@ export type TranslationKeys = {
     termsLabel: string
     andThe: string
   }
+
+  stores: {
+    selectStore: string
+    switchStore: string
+    addStore: string
+    storeName: string
+    storeActivity: string
+    myStores: string
+    createStore: string
+    switchingStore: string
+    storeCreated: string
+  }
 }

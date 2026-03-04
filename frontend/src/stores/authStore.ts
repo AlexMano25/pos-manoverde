@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User, RegistrationData } from '../types'
+import type { User, RegistrationData, Store } from '../types'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import { useAppStore } from './appStore'
 import { db } from '../db/dexie'
@@ -218,6 +218,21 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
             }
             appStore.setCurrentStore(store)
 
+            // Fetch all stores for the user's organization
+            const orgId = store?.organization_id
+            if (orgId) {
+              const { data: orgStores } = await supabase
+                .from('stores')
+                .select('*')
+                .eq('organization_id', orgId)
+              if (orgStores && orgStores.length > 0) {
+                appStore.setAvailableStores(orgStores as Store[])
+                if (orgStores.length > 1) {
+                  appStore.setNeedsStoreSelection(true)
+                }
+              }
+            }
+
             // Set auth state
             set({
               user: {
@@ -315,6 +330,21 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                 appStore.setActivity((store.activity || 'restaurant') as Activity)
               }
               appStore.setCurrentStore(store)
+
+              // Fetch all stores for the user's organization
+              const orgId = store?.organization_id
+              if (orgId) {
+                const { data: orgStores } = await supabase
+                  .from('stores')
+                  .select('*')
+                  .eq('organization_id', orgId)
+                if (orgStores && orgStores.length > 0) {
+                  appStore.setAvailableStores(orgStores as Store[])
+                  if (orgStores.length > 1) {
+                    appStore.setNeedsStoreSelection(true)
+                  }
+                }
+              }
             }
 
             set({
@@ -446,6 +476,8 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
         appStore.setActivity(data.activity)
         if (store) {
           appStore.setCurrentStore(store)
+          // After registration there is only the one newly created store
+          appStore.setAvailableStores([store as Store])
         }
 
         // 6b. Seed activity-specific sample products for the new store

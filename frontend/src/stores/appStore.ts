@@ -14,6 +14,8 @@ interface AppState {
   selectedPlan: SubscriptionPlan | null
   registrationMode: boolean
   showLogin: boolean
+  availableStores: Store[]
+  needsStoreSelection: boolean
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -28,6 +30,8 @@ interface AppActions {
   setSelectedPlan: (plan: SubscriptionPlan | null) => void
   setRegistrationMode: (mode: boolean) => void
   setShowLogin: (show: boolean) => void
+  setAvailableStores: (stores: Store[]) => void
+  setNeedsStoreSelection: (v: boolean) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -45,6 +49,8 @@ export const useAppStore = create<AppState & AppActions>()(
       selectedPlan: null,
       registrationMode: false,
       showLogin: false,
+      availableStores: [],
+      needsStoreSelection: false,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -56,6 +62,8 @@ export const useAppStore = create<AppState & AppActions>()(
       setSelectedPlan: (plan) => set({ selectedPlan: plan }),
       setRegistrationMode: (mode) => set({ registrationMode: mode }),
       setShowLogin: (show) => set({ showLogin: show }),
+      setAvailableStores: (stores) => set({ availableStores: stores }),
+      setNeedsStoreSelection: (v) => set({ needsStoreSelection: v }),
     }),
     {
       name: 'pos-app-store',

@@ -673,4 +673,15 @@ export const zh: TranslationKeys = {
     termsLabel: '使用条款',
     andThe: '和',
   },
+  stores: {
+    selectStore: '选择门店',
+    switchStore: '切换门店',
+    addStore: '添加门店',
+    storeName: '门店名称',
+    storeActivity: '业务类型',
+    myStores: '我的门店',
+    createStore: '创建',
+    switchingStore: '切换中...',
+    storeCreated: '门店创建成功！',
+  },
 }

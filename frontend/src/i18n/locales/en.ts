@@ -710,4 +710,15 @@ export const en: TranslationKeys = {
     termsLabel: 'Terms of Use',
     andThe: 'and the',
   },
+  stores: {
+    selectStore: 'Select a store',
+    switchStore: 'Switch store',
+    addStore: 'Add a store',
+    storeName: 'Store name',
+    storeActivity: 'Business type',
+    myStores: 'My stores',
+    createStore: 'Create',
+    switchingStore: 'Switching...',
+    storeCreated: 'Store created!',
+  },
 }

@@ -21,6 +21,7 @@ import EmployeesPage from './pages/EmployeesPage'
 import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
 import BillingPage from './pages/BillingPage'
+import StoreSelectPage from './pages/StoreSelectPage'
 
 function AppContent() {
   const { section, setSection, mode, activity, currentStore } = useAppStore()
@@ -101,7 +102,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity, registrationMode, showLogin } = useAppStore()
+  const { activity, registrationMode, showLogin, needsStoreSelection } = useAppStore()
   const { user, token } = useAuthStore()
 
   useEffect(() => {
@@ -138,6 +139,11 @@ export default function App() {
   // Has activity but not logged in
   if (!user || !token) {
     return <LoginPage />
+  }
+
+  // Multiple stores available → let user pick
+  if (needsStoreSelection) {
+    return <StoreSelectPage />
   }
 
   return <AppContent />

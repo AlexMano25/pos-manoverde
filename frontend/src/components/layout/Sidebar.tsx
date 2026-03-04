@@ -20,6 +20,7 @@ import { useSyncStore } from '../../stores/syncStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { goToLanding } from '../../utils/navigation'
 import LanguageSelector from '../common/LanguageSelector'
+import StoreSwitcher from './StoreSwitcher'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -278,6 +279,11 @@ const Sidebar: React.FC = () => {
         >
           Mano Verde
         </div>
+      </div>
+
+      {/* ── Store switcher ──────────────────────────────────────────────── */}
+      <div style={{ padding: '12px 12px 0' }}>
+        <StoreSwitcher />
       </div>
 
       {/* ── Navigation ──────────────────────────────────────────────────── */}

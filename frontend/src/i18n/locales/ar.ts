@@ -673,4 +673,15 @@ export const ar: TranslationKeys = {
     termsLabel: 'شروط الاستخدام',
     andThe: 'و',
   },
+  stores: {
+    selectStore: 'اختر نقطة بيع',
+    switchStore: 'تغيير نقطة البيع',
+    addStore: 'إضافة نقطة بيع',
+    storeName: 'اسم نقطة البيع',
+    storeActivity: 'نوع النشاط',
+    myStores: 'نقاط البيع الخاصة بي',
+    createStore: 'إنشاء',
+    switchingStore: 'جاري التغيير...',
+    storeCreated: 'تم إنشاء نقطة البيع!',
+  },
 }
