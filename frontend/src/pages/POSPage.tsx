@@ -11,11 +11,13 @@ import {
   ArrowRightLeft,
   Package,
   Trash2,
+  ChevronLeft,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useResponsive } from '../hooks/useLayoutMode'
 import PaymentModal from '../components/pos/PaymentModal'
 import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, Product } from '../types'
@@ -41,6 +43,9 @@ export default function POSPage() {
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()
   const { t } = useLanguageStore()
+
+  const { isMobile, rv } = useResponsive()
+  const [showMobileCart, setShowMobileCart] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -90,24 +95,26 @@ export default function POSPage() {
 
   // ── Styles ───────────────────────────────────────────────────────────────
 
-  const pageStyle: React.CSSProperties = { display: 'flex', height: '100%', backgroundColor: C.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', overflow: 'hidden' }
-  const leftPanelStyle: React.CSSProperties = { flex: '0 0 60%', display: 'flex', flexDirection: 'column', padding: 20, overflow: 'hidden' }
+  const pageStyle: React.CSSProperties = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', height: '100%', backgroundColor: C.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', overflow: 'hidden', position: 'relative' }
+  const leftPanelStyle: React.CSSProperties = { flex: isMobile ? '1 1 auto' : rv('1 1 auto', '0 0 55%', '0 0 60%'), display: 'flex', flexDirection: 'column', padding: rv(12, 16, 20), overflow: 'hidden' }
   const searchBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, backgroundColor: C.card, borderRadius: 10, padding: '0 16px', border: `1px solid ${C.border}`, marginBottom: 16 }
   const searchInputStyle: React.CSSProperties = { flex: 1, border: 'none', outline: 'none', padding: '12px 0', fontSize: 14, color: C.text, backgroundColor: 'transparent' }
   const pillsContainerStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, flexShrink: 0 }
   const pillStyle = (isActive: boolean): React.CSSProperties => ({ padding: '7px 16px', borderRadius: 20, border: `1px solid ${isActive ? C.primary : C.border}`, backgroundColor: isActive ? C.primary : C.card, color: isActive ? '#ffffff' : C.textSecondary, fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 })
-  const gridContainerStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', paddingRight: 4 }
-  const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 }
-  const productCardStyle = (inStock: boolean): React.CSSProperties => ({ backgroundColor: C.card, borderRadius: 10, padding: 14, border: `1px solid ${C.border}`, cursor: inStock ? 'pointer' : 'not-allowed', opacity: inStock ? 1 : 0.4, transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 6 })
+  const gridContainerStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', paddingRight: 4, paddingBottom: isMobile ? 70 : 0 }
+  const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${rv('100px', '150px', '150px')}, 1fr))`, gap: rv(8, 12, 12) }
+  const productCardStyle = (inStock: boolean): React.CSSProperties => ({ backgroundColor: C.card, borderRadius: rv(8, 10, 10), padding: rv(10, 14, 14), border: `1px solid ${C.border}`, cursor: inStock ? 'pointer' : 'not-allowed', opacity: inStock ? 1 : 0.4, transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: rv(4, 6, 6) })
   const productNameStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: C.text, margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
   const productPriceStyle: React.CSSProperties = { fontSize: 15, fontWeight: 700, color: C.primary, margin: 0 }
   const productStockStyle = (count: number): React.CSSProperties => ({ fontSize: 12, color: count <= 5 ? C.danger : C.textSecondary, margin: 0, fontWeight: count <= 5 ? 600 : 400 })
-  const rightPanelStyle: React.CSSProperties = { flex: '0 0 40%', display: 'flex', flexDirection: 'column', backgroundColor: C.card, borderLeft: `1px solid ${C.border}`, overflow: 'hidden' }
-  const cartHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }
+  const rightPanelStyle: React.CSSProperties = isMobile
+    ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', backgroundColor: C.card, zIndex: 50, transform: showMobileCart ? 'translateY(0)' : 'translateY(100%)', transition: 'transform 0.3s ease', overflow: 'hidden' }
+    : { flex: rv('0 0 40%', '0 0 45%', '0 0 40%'), display: 'flex', flexDirection: 'column', backgroundColor: C.card, borderLeft: `1px solid ${C.border}`, overflow: 'hidden' }
+  const cartHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: rv('12px 12px', '16px 20px', '16px 20px'), borderBottom: `1px solid ${C.border}`, flexShrink: 0 }
   const cartTitleStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: C.text, margin: 0 }
   const cartCountBadge: React.CSSProperties = { backgroundColor: C.primary, color: '#ffffff', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 12 }
   const clearBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: C.danger, display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, padding: '4px 8px', borderRadius: 6 }
-  const cartListStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: '12px 20px' }
+  const cartListStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: rv('8px 12px', '12px 20px', '12px 20px') }
   const cartItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${C.border}` }
   const cartItemInfoStyle: React.CSSProperties = { flex: 1, minWidth: 0 }
   const cartItemNameStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: C.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }
@@ -117,12 +124,12 @@ export default function POSPage() {
   const qtyInputStyle: React.CSSProperties = { width: 36, height: 30, textAlign: 'center', border: 'none', borderLeft: `1px solid ${C.border}`, borderRight: `1px solid ${C.border}`, outline: 'none', fontSize: 13, fontWeight: 600, color: C.text, backgroundColor: 'transparent' }
   const cartItemTotalStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: C.text, whiteSpace: 'nowrap', minWidth: 80, textAlign: 'right' }
   const removeItemBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary, padding: 4, borderRadius: 4, display: 'flex' }
-  const cartFooterStyle: React.CSSProperties = { padding: '16px 20px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }
+  const cartFooterStyle: React.CSSProperties = { padding: rv('12px 12px', '16px 20px', '16px 20px'), borderTop: `1px solid ${C.border}`, flexShrink: 0 }
   const summaryRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: 14, color: C.textSecondary }
   const discountInputRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 }
   const discountInputStyle: React.CSSProperties = { width: 50, padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 13, textAlign: 'center', outline: 'none', color: C.text }
-  const totalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', fontSize: 22, fontWeight: 800, color: C.text }
-  const paymentButtonsStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, marginTop: 12 }
+  const totalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', fontSize: rv(18, 20, 22), fontWeight: 800, color: C.text }
+  const paymentButtonsStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: rv('1fr 1fr', '1fr 1fr 1fr', '1fr 1fr 1fr 1fr'), gap: 8, marginTop: 12 }
   const payBtnBase: React.CSSProperties = { padding: '12px 8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: items.length > 0 ? 'pointer' : 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: items.length > 0 ? 1 : 0.5, transition: 'all 0.15s' }
   const payBtnPrimary: React.CSSProperties = { ...payBtnBase, backgroundColor: C.primary, color: '#ffffff', border: 'none' }
   const payBtnOutline: React.CSSProperties = { ...payBtnBase, backgroundColor: '#ffffff', color: C.text, border: `1px solid ${C.border}` }
@@ -225,11 +232,21 @@ export default function POSPage() {
       {/* ── Right Panel: Cart ───────────────────────────────────────── */}
       <div style={rightPanelStyle}>
         <div style={cartHeaderStyle}>
-          <h2 style={cartTitleStyle}>
-            <ShoppingCart size={18} />
-            {t.pos.cart}
-            {items.length > 0 && <span style={cartCountBadge}>{items.length}</span>}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isMobile && (
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.text, padding: 4, display: 'flex', alignItems: 'center' }}
+                onClick={() => setShowMobileCart(false)}
+              >
+                <ChevronLeft size={22} />
+              </button>
+            )}
+            <h2 style={cartTitleStyle}>
+              <ShoppingCart size={18} />
+              {t.pos.cart}
+              {items.length > 0 && <span style={cartCountBadge}>{items.length}</span>}
+            </h2>
+          </div>
           {items.length > 0 && (
             <button style={clearBtnStyle} onClick={clear}>
               <Trash2 size={14} /> {t.pos.clearCart}
@@ -353,6 +370,41 @@ export default function POSPage() {
           </>
         )}
       </div>
+
+      {/* ── Mobile: Floating Cart Button ───────────────────────────── */}
+      {isMobile && !showMobileCart && (
+        <button
+          onClick={() => setShowMobileCart(true)}
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
+            right: 16,
+            zIndex: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            padding: '14px 20px',
+            borderRadius: 12,
+            border: 'none',
+            backgroundColor: C.primary,
+            color: '#ffffff',
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(37,99,235,0.35)',
+          }}
+        >
+          <ShoppingCart size={20} />
+          {t.pos.cart} ({items.reduce((sum, i) => sum + i.qty, 0)} {items.length === 1 ? 'article' : 'articles'})
+          {items.length > 0 && (
+            <span style={{ marginLeft: 'auto', fontWeight: 800 }}>
+              {formatCurrency(total, currentStore?.currency)}
+            </span>
+          )}
+        </button>
+      )}
 
       <PaymentModal
         isOpen={showPaymentModal}

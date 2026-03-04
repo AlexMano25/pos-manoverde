@@ -20,6 +20,7 @@ import { exportInventoryReport } from '../utils/pdfExport'
 import { db, getDeviceId } from '../db/dexie'
 import type { Product, StockMove, StockMoveType } from '../types'
 import { generateUUID } from '../utils/uuid'
+import { useResponsive } from '../hooks/useLayoutMode'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export default function StockPage() {
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
   const { t, language } = useLanguageStore()
+  const { isMobile, rv } = useResponsive()
 
   const [showAdjustModal, setShowAdjustModal] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState('')
@@ -197,7 +199,7 @@ export default function StockPage() {
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -233,7 +235,7 @@ export default function StockPage() {
 
   const summaryGridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: rv('1fr', 'repeat(2, 1fr)', 'repeat(3, 1fr)'),
     gap: 16,
     marginBottom: 24,
   }
@@ -354,7 +356,7 @@ export default function StockPage() {
 
   const moveTypeTilesStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr',
     gap: 8,
     marginBottom: 0,
   }
@@ -444,6 +446,7 @@ export default function StockPage() {
               <p style={{ fontSize: 14, margin: 0 }}>{t.products.noProducts}</p>
             </div>
           ) : (
+            <div style={{ overflowX: 'auto' }}>
             <table style={tableStyle}>
               <thead>
                 <tr>
@@ -479,6 +482,7 @@ export default function StockPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
@@ -497,6 +501,7 @@ export default function StockPage() {
               <p style={{ fontSize: 14, margin: 0 }}>{t.common.noData}</p>
             </div>
           ) : (
+            <div style={{ overflowX: 'auto' }}>
             <table style={tableStyle}>
               <thead>
                 <tr>
@@ -530,6 +535,7 @@ export default function StockPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>

@@ -23,3 +23,20 @@ export function useLayoutMode(): LayoutMode {
 
   return mode
 }
+
+/** Responsive value helper — pick value based on current layout mode */
+export function useResponsive() {
+  const mode = useLayoutMode()
+  const isMobile = mode === 'mobile'
+  const isTablet = mode === 'tablet'
+  const isDesktop = mode === 'desktop'
+
+  /** Pick a value based on breakpoint: rv(mobileVal, tabletVal, desktopVal) */
+  function rv<T>(mobile: T, tablet: T, desktop: T): T {
+    if (isMobile) return mobile
+    if (isTablet) return tablet
+    return desktop
+  }
+
+  return { mode, isMobile, isTablet, isDesktop, rv }
+}

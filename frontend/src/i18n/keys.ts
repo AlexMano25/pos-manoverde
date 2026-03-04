@@ -732,6 +732,31 @@ export type TranslationKeys = {
     changePlan: string
     invoiceHistory: string
     noInvoices: string
+    // Plan management
+    upgradePlan: string
+    downgradePlan: string
+    cancelPlan: string
+    confirmChange: string
+    planActive: string
+    planPastDue: string
+    planCancelled: string
+    planTrial: string
+    perMonth: string
+    perYear: string
+    free: string
+    starter: string
+    pro: string
+    enterprise: string
+    payAsYouGrow: string
+    currentLabel: string
+    recommended: string
+    selectPlan: string
+    payNow: string
+    renewSubscription: string
+    expiresOn: string
+    monthlyBilling: string
+    yearlyBilling: string
+    yearlyDiscount: string
   }
 
   // Billing (pay-as-you-grow)

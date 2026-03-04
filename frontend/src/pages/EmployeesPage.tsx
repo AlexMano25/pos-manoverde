@@ -15,6 +15,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import { db } from '../db/dexie'
 import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
+import { useResponsive } from '../hooks/useLayoutMode'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -61,6 +62,7 @@ export default function EmployeesPage() {
   const { user: currentUser } = useAuthStore()
   const { currentStore, mode } = useAppStore()
   const { t } = useLanguageStore()
+  const { isMobile, rv } = useResponsive()
 
   const [employees, setEmployees] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -243,7 +245,7 @@ export default function EmployeesPage() {
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -336,7 +338,7 @@ export default function EmployeesPage() {
   const formLabelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 6 }
   const formInputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, outline: 'none', boxSizing: 'border-box' }
   const formSelectStyle: React.CSSProperties = { ...formInputStyle, cursor: 'pointer', backgroundColor: C.card }
-  const formRowStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }
+  const formRowStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }
   const formErrorStyle: React.CSSProperties = { backgroundColor: '#fef2f2', color: C.danger, padding: '8px 12px', borderRadius: 6, fontSize: 13, marginBottom: 12 }
   const formBtnRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }
   const cancelBtnStyle: React.CSSProperties = { padding: '10px 20px', borderRadius: 8, border: `1px solid ${C.border}`, backgroundColor: '#ffffff', color: C.textSecondary, fontSize: 14, fontWeight: 500, cursor: 'pointer' }
@@ -369,6 +371,7 @@ export default function EmployeesPage() {
             <p style={{ fontSize: 14, margin: 0 }}>{t.employees.noEmployees}</p>
           </div>
         ) : (
+          <div style={{ overflowX: 'auto' }}>
           <table style={tableStyle}>
             <thead>
               <tr>
@@ -429,6 +432,7 @@ export default function EmployeesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

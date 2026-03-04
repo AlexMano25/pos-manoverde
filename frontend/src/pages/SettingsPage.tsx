@@ -16,6 +16,7 @@ import {
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useResponsive } from '../hooks/useLayoutMode'
 import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
@@ -57,6 +58,7 @@ export default function SettingsPage() {
   } = useSyncStore()
 
   const { t, language } = useLanguageStore()
+  const { isMobile, rv } = useResponsive()
 
   // Store info form
   const [storeName, setStoreName] = useState(currentStore?.name || '')
@@ -150,14 +152,14 @@ export default function SettingsPage() {
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   }
 
   const titleStyle: React.CSSProperties = {
-    fontSize: 24,
+    fontSize: rv(20, 22, 24),
     fontWeight: 700,
     color: C.text,
     margin: '0 0 24px',
@@ -167,8 +169,8 @@ export default function SettingsPage() {
     backgroundColor: C.card,
     borderRadius: 12,
     border: `1px solid ${C.border}`,
-    padding: 24,
-    marginBottom: 20,
+    padding: rv(16, 20, 24),
+    marginBottom: rv(14, 18, 20),
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   }
 
@@ -229,8 +231,9 @@ export default function SettingsPage() {
 
   const inputRowStyle: React.CSSProperties = {
     display: 'flex',
+    flexDirection: isMobile ? 'column' : 'row',
     gap: 8,
-    alignItems: 'flex-end',
+    alignItems: isMobile ? 'stretch' : 'flex-end',
   }
 
   const primaryBtnStyle: React.CSSProperties = {
@@ -283,7 +286,9 @@ export default function SettingsPage() {
   const infoRowStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: isMobile ? 'flex-start' : 'center',
+    flexDirection: isMobile ? 'column' : 'row',
+    gap: isMobile ? 4 : 8,
     padding: '10px 0',
     borderBottom: `1px solid ${C.border}`,
   }
@@ -535,7 +540,7 @@ export default function SettingsPage() {
           </span>
         </div>
 
-        <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+        <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button style={outlineBtnStyle} onClick={() => alert(t.printer.notSupported)}>
             <Bluetooth size={16} /> {t.settings.searchPrinter}
           </button>

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react'
 import { CreditCard, RefreshCw, ArrowUpCircle, ArrowDownCircle, Gift, RotateCcw, X, Check } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useResponsive } from '../hooks/useLayoutMode'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import PaymentMethodSelector, { RECHARGE_PACKAGES } from '../components/billing/PaymentMethodSelector'
+import SubscriptionManager from '../components/billing/SubscriptionManager'
 import type { CreditBalance, CreditTransaction, RechargePackage, PayPalResult } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -29,6 +31,7 @@ const TICKET_PRICE_USD = 0.02
 export default function BillingPage() {
   const { currentStore } = useAppStore()
   const { t, language } = useLanguageStore()
+  const { isMobile, rv } = useResponsive()
 
   const [balance, setBalance] = useState<CreditBalance | null>(null)
   const [transactions, setTransactions] = useState<CreditTransaction[]>([])
@@ -251,7 +254,7 @@ export default function BillingPage() {
   // ── Styles ─────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -262,7 +265,7 @@ export default function BillingPage() {
   }
 
   const titleStyle: React.CSSProperties = {
-    fontSize: 24,
+    fontSize: rv(20, 22, 24),
     fontWeight: 700,
     color: C.text,
     margin: 0,
@@ -277,13 +280,14 @@ export default function BillingPage() {
   const balanceCardStyle: React.CSSProperties = {
     backgroundColor: C.card,
     borderRadius: 12,
-    padding: 24,
+    padding: rv(16, 20, 24),
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
     border: `1px solid ${C.border}`,
-    marginBottom: 24,
+    marginBottom: rv(16, 20, 24),
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: isMobile ? 'stretch' : 'center',
+    flexDirection: isMobile ? 'column' : 'row',
     flexWrap: 'wrap',
     gap: 16,
   }
@@ -294,7 +298,12 @@ export default function BillingPage() {
     boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
     border: `1px solid ${C.border}`,
     overflow: 'hidden',
-    marginBottom: 24,
+    marginBottom: rv(16, 20, 24),
+  }
+
+  const tableScrollStyle: React.CSSProperties = {
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
   }
 
   const tableHeaderStyle: React.CSSProperties = {
@@ -411,6 +420,9 @@ export default function BillingPage() {
         <p style={subtitleStyle}>{billing.subtitle}</p>
       </div>
 
+      {/* Subscription Manager */}
+      <SubscriptionManager />
+
       {/* Balance Card */}
       <div style={balanceCardStyle}>
         <div>
@@ -455,28 +467,30 @@ export default function BillingPage() {
         {consumptionByActivity.length === 0 ? (
           <div style={emptyStyle}>{billing.noTransactions}</div>
         ) : (
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>{billing.activity}</th>
-                <th style={thStyle}>{billing.store}</th>
-                <th style={thStyle}>{billing.tickets}</th>
-                <th style={thStyle}>{billing.amount}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {consumptionByActivity.map((row, idx) => (
-                <tr key={idx}>
-                  <td style={{ ...tdStyle, fontWeight: 600, textTransform: 'capitalize' }}>
-                    {row.activity}
-                  </td>
-                  <td style={tdStyle}>{row.store_id || '—'}</td>
-                  <td style={tdStyle}>{row.tickets}</td>
-                  <td style={{ ...tdStyle, fontWeight: 600 }}>${row.amount.toFixed(2)}</td>
+          <div style={tableScrollStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>{billing.activity}</th>
+                  <th style={thStyle}>{billing.store}</th>
+                  <th style={thStyle}>{billing.tickets}</th>
+                  <th style={thStyle}>{billing.amount}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {consumptionByActivity.map((row, idx) => (
+                  <tr key={idx}>
+                    <td style={{ ...tdStyle, fontWeight: 600, textTransform: 'capitalize' }}>
+                      {row.activity}
+                    </td>
+                    <td style={tdStyle}>{row.store_id || '—'}</td>
+                    <td style={tdStyle}>{row.tickets}</td>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>${row.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -488,41 +502,44 @@ export default function BillingPage() {
         {transactions.length === 0 ? (
           <div style={emptyStyle}>{billing.noTransactions}</div>
         ) : (
-          <table style={tableStyle}>
-            <thead>
-              <tr>
-                <th style={thStyle}>{billing.date}</th>
-                <th style={thStyle}>{billing.type}</th>
-                <th style={thStyle}>{billing.amount}</th>
-                <th style={thStyle}>{billing.description}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx) => (
-                <tr key={tx.id}>
-                  <td style={tdStyle}>{formatDateTime(tx.created_at)}</td>
-                  <td style={tdStyle}>
-                    <span style={badgeStyle(txTypeColor(tx.type))}>
-                      {txTypeIcon(tx.type)}
-                      {txTypeLabel(tx.type)}
-                    </span>
-                  </td>
-                  <td
-                    style={{
-                      ...tdStyle,
-                      fontWeight: 600,
-                      color: tx.type === 'deduct' ? C.danger : C.success,
-                    }}
-                  >
-                    {tx.type === 'deduct' ? '-' : '+'}${Math.abs(tx.amount_usd).toFixed(2)}
-                  </td>
-                  <td style={{ ...tdStyle, color: C.textSecondary }}>
-                    {tx.description || '—'}
-                  </td>
+          <div style={tableScrollStyle}>
+            <table style={tableStyle}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>{billing.date}</th>
+                  <th style={thStyle}>{billing.type}</th>
+                  <th style={thStyle}>{billing.amount}</th>
+                  <th style={thStyle}>{billing.description}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{formatDateTime(tx.created_at)}</td>
+                    <td style={tdStyle}>
+                      <span style={badgeStyle(txTypeColor(tx.type))}>
+                        {txTypeIcon(tx.type)}
+                        {txTypeLabel(tx.type)}
+                      </span>
+                    </td>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        color: tx.type === 'deduct' ? C.danger : C.success,
+                      }}
+                    >
+                      {tx.type === 'deduct' ? '-' : '+'}${Math.abs(tx.amount_usd).toFixed(2)}
+                    </td>
+                    <td style={{ ...tdStyle, color: C.textSecondary }}>
+                      {tx.description || '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -550,8 +567,8 @@ export default function BillingPage() {
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
-              borderRadius: 16,
-              padding: 28,
+              borderRadius: isMobile ? 12 : 16,
+              padding: rv(16, 24, 28),
               position: 'relative',
               boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
             }}

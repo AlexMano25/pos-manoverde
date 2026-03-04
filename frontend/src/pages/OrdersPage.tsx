@@ -18,6 +18,7 @@ import ExportMenu from '../components/common/ExportMenu'
 import { exportSalesReport, exportInvoice, exportReceipt } from '../utils/pdfExport'
 import { shareViaWhatsApp, shareViaEmail, formatOrderForSharing } from '../utils/sharing'
 import { formatCurrency } from '../utils/currency'
+import { useResponsive } from '../hooks/useLayoutMode'
 import type { Order, PaymentMethod, OrderStatus } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ export default function OrdersPage() {
   const { currentStore } = useAppStore()
   const { t, language } = useLanguageStore()
 
+  const { isMobile, rv } = useResponsive()
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [dateFilter, setDateFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -166,7 +168,7 @@ export default function OrdersPage() {
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -204,8 +206,9 @@ export default function OrdersPage() {
     display: 'flex',
     gap: 12,
     marginBottom: 16,
-    alignItems: 'center',
+    alignItems: isMobile ? 'stretch' : 'center',
     flexWrap: 'wrap',
+    flexDirection: isMobile ? 'column' : 'row',
   }
 
   const searchBarStyle: React.CSSProperties = {
@@ -217,7 +220,7 @@ export default function OrdersPage() {
     padding: '0 12px',
     border: `1px solid ${C.border}`,
     flex: 1,
-    maxWidth: 320,
+    maxWidth: isMobile ? '100%' : 320,
   }
 
   const searchInputStyle: React.CSSProperties = {
@@ -421,6 +424,7 @@ export default function OrdersPage() {
             <p style={{ fontSize: 14, margin: 0 }}>{t.orders.noOrders}</p>
           </div>
         ) : (
+          <div style={{ overflowX: 'auto' }}>
           <table style={tableStyle}>
             <thead>
               <tr>
@@ -577,6 +581,7 @@ export default function OrdersPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

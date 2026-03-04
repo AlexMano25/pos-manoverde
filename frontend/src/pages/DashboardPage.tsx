@@ -39,6 +39,7 @@ import StatCard from '../components/dashboard/StatCard'
 import QuickActions from '../components/dashboard/QuickActions'
 import WidgetRenderer from '../components/dashboard/WidgetRenderer'
 import ContractModal from '../components/dashboard/ContractModal'
+import { useResponsive } from '../hooks/useLayoutMode'
 import type { PaymentMethod, CreditBalance, Activity as ActivityType, ContractTemplate } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -87,6 +88,7 @@ export default function DashboardPage() {
   const { products, loading: productsLoading, loadProducts } = useProductStore()
   const { currentStore, setSection, activity } = useAppStore()
   const { t, language } = useLanguageStore()
+  const { isMobile, rv } = useResponsive()
 
   // ── Locale-aware helpers ────────────────────────────────────────────────
 
@@ -233,19 +235,19 @@ export default function DashboardPage() {
   // ── Styles ─────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(16, 24, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   }
 
-  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }
+  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12, flexDirection: isMobile ? 'column' : 'row' }
   const titleStyle: React.CSSProperties = { fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }
   const subtitleStyle: React.CSSProperties = { fontSize: 14, color: C.textSecondary, margin: '4px 0 0' }
   const actionsStyle: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
   const primaryBtnStyle: React.CSSProperties = { padding: '10px 20px', borderRadius: 8, border: 'none', backgroundColor: C.primary, color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }
   const outlineBtnStyle: React.CSSProperties = { ...primaryBtnStyle, backgroundColor: '#ffffff', color: C.primary, border: `1px solid ${C.primary}` }
-  const emptyStyle: React.CSSProperties = { textAlign: 'center', padding: '60px 24px', backgroundColor: C.card, borderRadius: 12, border: `1px solid ${C.border}` }
+  const emptyStyle: React.CSSProperties = { textAlign: 'center', padding: rv('32px 16px', '60px 24px', '60px 24px'), backgroundColor: C.card, borderRadius: 12, border: `1px solid ${C.border}` }
   const emptyIconStyle: React.CSSProperties = { width: 64, height: 64, borderRadius: 16, backgroundColor: C.primary + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }
 
   if (ordersLoading || productsLoading) {
@@ -319,8 +321,8 @@ export default function DashboardPage() {
           {/* ── Activity-specific Stat Cards ──────────────────────────── */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: `repeat(${Math.min(statCards.length, 5)}, 1fr)`,
-            gap: 16,
+            gridTemplateColumns: rv('repeat(2, 1fr)', 'repeat(3, 1fr)', `repeat(${Math.min(statCards.length, 5)}, 1fr)`),
+            gap: rv(12, 16, 16),
             marginBottom: 24,
           }}>
             {statCards.map((card) => {

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useResponsive } from '../../hooks/useLayoutMode'
 import type { Order, Product, ActivityDashboardConfig } from '../../types'
 import type { CategoryBreakdownItem, PeakHourItem, AlertItem } from '../../utils/dashboardComputations'
 import {
@@ -60,6 +61,8 @@ const WidgetRenderer = ({
   contractTemplates,
   onSelectContract,
 }: WidgetRendererProps) => {
+  const { rv } = useResponsive()
+
   // Compute derived data
   const categoryData: CategoryBreakdownItem[] = useMemo(
     () => computeCategoryBreakdown(todayOrders, products),
@@ -139,12 +142,12 @@ const WidgetRenderer = ({
 
   return (
     <div>
-      {/* Widget grid: 2 columns on desktop */}
+      {/* Widget grid: 1 column on mobile, 2 columns on tablet/desktop */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 20,
+          gridTemplateColumns: rv('1fr', 'repeat(2, 1fr)', 'repeat(2, 1fr)'),
+          gap: rv(16, 20, 20),
         }}
       >
         {gridWidgets.map((widget, idx) => renderWidget(widget, idx))}

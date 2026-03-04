@@ -23,6 +23,7 @@ import type { Product } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { formatCurrency, getCurrencySymbol } from '../utils/currency'
 import { ACTIVITY_PRODUCT_FIELDS } from '../data/activityFields'
+import { useResponsive } from '../hooks/useLayoutMode'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ export default function ProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
 
+  const { isMobile, rv } = useResponsive()
   const activity = currentStore?.activity
   const activityFields = activity ? (ACTIVITY_PRODUCT_FIELDS[activity] || []) : []
 
@@ -336,7 +338,7 @@ export default function ProductsPage() {
   // ── Styles ───────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    padding: 24,
+    padding: rv(12, 20, 24),
     backgroundColor: C.bg,
     minHeight: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -380,7 +382,9 @@ export default function ProductsPage() {
     display: 'flex',
     gap: 12,
     marginBottom: 16,
-    alignItems: 'center',
+    alignItems: isMobile ? 'stretch' : 'center',
+    flexWrap: 'wrap',
+    flexDirection: isMobile ? 'column' : 'row',
   }
 
   const searchBarStyle: React.CSSProperties = {
@@ -392,7 +396,7 @@ export default function ProductsPage() {
     padding: '0 12px',
     border: `1px solid ${C.border}`,
     flex: 1,
-    maxWidth: 400,
+    maxWidth: isMobile ? '100%' : 400,
   }
 
   const searchInputStyle: React.CSSProperties = {
@@ -523,7 +527,7 @@ export default function ProductsPage() {
 
   const formRowStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
     gap: 12,
   }
 
@@ -680,6 +684,7 @@ export default function ProductsPage() {
             <p style={{ fontSize: 14, margin: 0 }}>{t.products.noProducts}</p>
           </div>
         ) : (
+          <div style={{ overflowX: 'auto' }}>
           <table style={tableStyle}>
             <thead>
               <tr>
@@ -763,6 +768,7 @@ export default function ProductsPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

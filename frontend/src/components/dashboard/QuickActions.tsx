@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useResponsive } from '../../hooks/useLayoutMode'
 import {
   ShoppingCart,
   Plus,
@@ -54,6 +55,7 @@ const iconMap: Record<string, LucideIcon> = {
 
 const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const { isMobile, rv } = useResponsive()
 
   return (
     <div
@@ -62,15 +64,15 @@ const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
         borderRadius: 12,
         border: `1px solid ${colors.border}`,
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-        padding: 20,
+        padding: rv(14, 20, 20),
         display: 'flex',
         flexDirection: 'column',
-        gap: 14,
+        gap: rv(10, 14, 14),
       }}
     >
       <span
         style={{
-          fontSize: 14,
+          fontSize: rv(13, 14, 14),
           fontWeight: 600,
           color: colors.text,
         }}
@@ -78,7 +80,7 @@ const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
         {title || 'Actions rapides'}
       </span>
 
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: rv(8, 12, 12), flexWrap: 'wrap' }}>
         {actions.map((action, idx) => {
           const IconComponent = iconMap[action.icon]
           const isHovered = hoveredIdx === idx
@@ -92,8 +94,8 @@ const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '8px 14px',
+                gap: isMobile ? 6 : 8,
+                padding: rv('6px 10px', '8px 14px', '8px 14px'),
                 borderRadius: 8,
                 border: `1px solid ${colors.border}`,
                 backgroundColor: isHovered ? '#f8fafc' : colors.card,
@@ -102,11 +104,11 @@ const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
               }}
             >
               {IconComponent && (
-                <IconComponent size={16} color={colors.primary} />
+                <IconComponent size={isMobile ? 14 : 16} color={colors.primary} />
               )}
               <span
                 style={{
-                  fontSize: 13,
+                  fontSize: rv(12, 13, 13),
                   fontWeight: 500,
                   color: colors.text,
                   whiteSpace: 'nowrap',
