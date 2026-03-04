@@ -5,19 +5,8 @@
 }
 
 html, body, #root {
-  min-height: 100%;
+  height: 100%;
   width: 100%;
-}
-
-/* POS app mode: fixed viewport, no scroll */
-body.app-mode,
-body.app-mode html {
-  height: 100%;
-  overflow: hidden;
-}
-
-body.app-mode #root {
-  height: 100%;
   overflow: hidden;
 }
 
@@ -40,19 +29,25 @@ input:focus, select:focus, textarea:focus {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #94a3b8;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
+}
+
+/* Ensure Firefox also shows scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }

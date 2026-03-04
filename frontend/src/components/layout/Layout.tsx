@@ -40,7 +40,8 @@ const Layout: React.FC<LayoutProps> = ({
       style={{
         display: 'flex',
         flexDirection: layoutMode === 'mobile' ? 'column' : 'row',
-        minHeight: '100vh',
+        height: '100vh',
+        overflow: 'hidden',
         backgroundColor: colors.background,
       }}
     >
@@ -53,8 +54,9 @@ const Layout: React.FC<LayoutProps> = ({
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
-          minWidth: 0, // prevent flex overflow
+          minWidth: 0,    // prevent flex overflow on x-axis
+          minHeight: 0,   // allow flex child to shrink for scroll
+          overflow: 'hidden',
           ...(layoutMode === 'tablet' ? { marginLeft: 64 } : {}),
           ...(layoutMode === 'mobile' ? { paddingBottom: 72 } : {}),
         }}
@@ -64,12 +66,14 @@ const Layout: React.FC<LayoutProps> = ({
           {actions}
         </Topbar>
 
-        {/* Scrollable content */}
+        {/* Scrollable content — vertical & horizontal */}
         <main
           style={{
             flex: 1,
+            minHeight: 0,  // critical: allow flex child to scroll
             padding: layoutMode === 'mobile' ? '16px 12px 80px' : '24px',
             overflowY: 'auto',
+            overflowX: 'auto',
             backgroundColor: colors.background,
           }}
         >
