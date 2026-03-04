@@ -28,6 +28,22 @@ function applyLanguageToDocument(lang: Language): void {
   document.documentElement.dir = info.dir
 }
 
+function detectBrowserLanguage(): Language {
+  try {
+    const browserLangs = navigator.languages?.length
+      ? navigator.languages
+      : [navigator.language]
+    for (const browserLang of browserLangs) {
+      const base = browserLang.split('-')[0].toLowerCase()
+      const match = languages.find(l => l.code === base)
+      if (match) return match.code as Language
+    }
+  } catch {
+    // SSR or no navigator
+  }
+  return 'fr'
+}
+
 // ── Store ────────────────────────────────────────────────────────────────────
 
 export const useLanguageStore = create<LanguageState & LanguageActions>()(
@@ -50,10 +66,20 @@ export const useLanguageStore = create<LanguageState & LanguageActions>()(
       }),
       onRehydrateStorage: () => {
         return (state) => {
-          if (state?.language) {
-            applyLanguageToDocument(state.language)
-            // Restore t from the persisted language
+          if (state) {
+            // First visit: no persisted language -> detect from browser
+            const stored = localStorage.getItem('pos-language-store')
+            if (!stored) {
+              const detected = detectBrowserLanguage()
+              state.language = detected
+            }
             state.t = translations[state.language]
+            // Apply to document
+            const langInfo = languages.find(l => l.code === state.language)
+            if (langInfo) {
+              document.documentElement.lang = state.language
+              document.documentElement.dir = langInfo.dir
+            }
           }
         }
       },

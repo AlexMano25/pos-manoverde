@@ -39,6 +39,56 @@ export type Activity =
   | 'real_estate'
   | 'travel_agency'
 
+// -- Sidebar section identifiers ----------------------------------------------
+
+/** All possible sidebar sections across all activities */
+export type SidebarSection =
+  | 'dashboard'
+  | 'pos'
+  | 'products'
+  | 'orders'
+  | 'stock'
+  | 'employees'
+  | 'settings'
+  | 'billing'
+  // Activity-specific sections (reuse existing page components)
+  | 'reservations'  // hotel, travel_agency
+  | 'rooms'         // hotel
+  | 'properties'    // real_estate
+  | 'contracts'     // real_estate
+  | 'clients'       // real_estate, travel_agency
+  | 'enrollments'   // school, daycare
+  | 'services'      // gym, spa, pool, laundry, etc.
+  | 'members'       // gym, spa, pool
+  | 'schedule'      // gym, spa
+  | 'workshop'      // auto_repair
+  | 'parts'         // auto_repair
+  | 'invoices'      // auto_repair
+  | 'appointments'  // hair_salon
+  | 'bookings'      // travel_agency
+  | 'packages'      // travel_agency
+
+/** Which existing page component to render for a sidebar section */
+export type PageComponent =
+  | 'dashboard'
+  | 'pos'
+  | 'products'
+  | 'orders'
+  | 'stock'
+  | 'employees'
+  | 'settings'
+  | 'billing'
+
+/** Sidebar item configuration */
+export type SidebarItemConfig = {
+  section: SidebarSection
+  icon: string             // Lucide icon component name
+  i18nKey: string          // dot-path key e.g. 'nav.reservations'
+  pageComponent: PageComponent
+  allowedRoles?: UserRole[] // undefined = all roles
+  serverOnly?: boolean      // only visible in server/all_in_one mode
+}
+
 // -- Store / Boutique --------------------------------------------------------
 
 export type Store = {
@@ -446,3 +496,4 @@ export type RegistrationData = {
   password: string
   termsAcceptedAt?: string
 }
+

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
+import { useLayoutMode } from '../../hooks/useLayoutMode'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,20 +33,13 @@ const Layout: React.FC<LayoutProps> = ({
   subtitle,
   actions,
 }) => {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
+  const layoutMode = useLayoutMode()
 
   return (
     <div
       style={{
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
+        flexDirection: layoutMode === 'mobile' ? 'column' : 'row',
         minHeight: '100vh',
         backgroundColor: colors.background,
       }}
@@ -61,6 +55,8 @@ const Layout: React.FC<LayoutProps> = ({
           flexDirection: 'column',
           minHeight: '100vh',
           minWidth: 0, // prevent flex overflow
+          ...(layoutMode === 'tablet' ? { marginLeft: 64 } : {}),
+          ...(layoutMode === 'mobile' ? { paddingBottom: 72 } : {}),
         }}
       >
         {/* Topbar */}
@@ -72,7 +68,7 @@ const Layout: React.FC<LayoutProps> = ({
         <main
           style={{
             flex: 1,
-            padding: isMobile ? '16px 12px 80px' : '24px',
+            padding: layoutMode === 'mobile' ? '16px 12px 80px' : '24px',
             overflowY: 'auto',
             backgroundColor: colors.background,
           }}

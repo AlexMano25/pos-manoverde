@@ -183,6 +183,25 @@ export type TranslationKeys = {
     employees: string
     settings: string
     billing: string
+    // Activity-specific nav labels
+    reservations: string
+    rooms: string
+    properties: string
+    contracts: string
+    clients: string
+    enrollments: string
+    services: string
+    members: string
+    schedule: string
+    workshop: string
+    parts: string
+    invoices: string
+    appointments: string
+    bookings: string
+    packages: string
+    menu: string
+    caisse: string
+    more: string
   }
 
   // Dashboard

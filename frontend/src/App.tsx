@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useAppStore } from './stores/appStore'
 import { useAuthStore } from './stores/authStore'
 import { useProductStore } from './stores/productStore'
@@ -22,6 +22,8 @@ import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
 import BillingPage from './pages/BillingPage'
 import StoreSelectPage from './pages/StoreSelectPage'
+import { getSidebarItems } from './data/sidebarConfig'
+import { resolveI18nKey } from './utils/i18nResolve'
 
 function AppContent() {
   const { section, setSection, mode, activity, currentStore } = useAppStore()
@@ -54,49 +56,46 @@ function AppContent() {
     countPending()
   }, [storeId, loadProducts, loadOrders, countPending])
 
-  const pageTitles: Record<string, { title: string; subtitle?: string; helpKey: string }> = {
-    dashboard: { title: t.nav.dashboard, subtitle: activity ? ((t.setup as Record<string, string>)[activity] || activity) : undefined, helpKey: 'dashboard' },
-    pos: { title: t.nav.pos, subtitle: t.pos.title, helpKey: 'pos' },
-    products: { title: t.nav.products, subtitle: t.products.subtitle, helpKey: 'products' },
-    orders: { title: t.nav.orders, subtitle: t.orders.subtitle, helpKey: 'orders' },
-    stock: { title: t.nav.stock, subtitle: t.stock.subtitle, helpKey: 'stock' },
-    employees: { title: t.nav.employees, subtitle: t.employees.subtitle, helpKey: 'employees' },
-    settings: { title: t.nav.settings, subtitle: t.settings.subtitle, helpKey: 'settings' },
-    billing: { title: t.nav.billing, subtitle: t.billing.subtitle, helpKey: 'billing' },
-  }
+  const currentActivity = (activity || currentStore?.activity || 'restaurant')
+  const sidebarItems = useMemo(() => getSidebarItems(currentActivity), [currentActivity])
+  const currentItem = sidebarItems.find(item => item.section === section)
+  const pageKey = currentItem?.pageComponent || 'dashboard'
 
-  const current = pageTitles[section] || pageTitles.dashboard
+  const currentTitle = currentItem
+    ? resolveI18nKey(t as unknown as Record<string, unknown>, currentItem.i18nKey)
+    : t.nav.dashboard
+  const currentSubtitle = currentActivity
+    ? ((t.setup as Record<string, string>)[currentActivity] || currentActivity)
+    : undefined
+
+  // Validate current section when activity changes
+  useEffect(() => {
+    const items = getSidebarItems(activity || currentStore?.activity)
+    const validSections = items.map(i => i.section)
+    if (section && !validSections.includes(section as any)) {
+      setSection('dashboard')
+    }
+  }, [activity, currentStore?.activity])
 
   const renderPage = () => {
-    // Client mode: always show POS
-    if (mode === 'client') {
-      return <POSPage />
-    }
+    if (mode === 'client') return <POSPage />
 
-    switch (section) {
-      case 'pos':
-        return <POSPage />
-      case 'products':
-        return <ProductsPage />
-      case 'orders':
-        return <OrdersPage />
-      case 'stock':
-        return <StockPage />
-      case 'employees':
-        return <EmployeesPage />
-      case 'settings':
-        return <SettingsPage />
-      case 'billing':
-        return <BillingPage />
-      default:
-        return <DashboardPage />
+    switch (pageKey) {
+      case 'pos':       return <POSPage />
+      case 'products':  return <ProductsPage />
+      case 'orders':    return <OrdersPage />
+      case 'stock':     return <StockPage />
+      case 'employees': return <EmployeesPage />
+      case 'settings':  return <SettingsPage />
+      case 'billing':   return <BillingPage />
+      default:          return <DashboardPage />
     }
   }
 
   return (
-    <Layout title={current.title} subtitle={current.subtitle}>
+    <Layout title={currentTitle} subtitle={currentSubtitle}>
       {renderPage()}
-      <HelpButton pageKey={current.helpKey} userRole={user?.role} />
+      <HelpButton pageKey={pageKey} userRole={user?.role} />
     </Layout>
   )
 }
