@@ -362,6 +362,74 @@ export type CreditTransaction = {
   created_at: string
 }
 
+// -- Dashboard Widgets --------------------------------------------------------
+
+export type StatCardVariant =
+  | 'revenue' | 'orders' | 'products' | 'low_stock' | 'credit'
+  | 'avg_check' | 'avg_order' | 'gross_margin' | 'food_cost' | 'beverage_cost'
+  | 'expiring_items' | 'occupancy' | 'appointments_today' | 'services_today'
+  | 'active_members' | 'vehicles_today' | 'pending_bookings' | 'pending_jobs'
+  | 'enrollment' | 'active_listings' | 'conversions' | 'capacity_rate'
+
+export type WidgetType =
+  | 'stat_card'
+  | 'quick_actions'
+  | 'recent_items'
+  | 'category_breakdown'
+  | 'alerts_panel'
+  | 'contract_shortcuts'
+  | 'peak_hours'
+
+export type AlertVariant =
+  | 'low_stock'
+  | 'expiring_soon'
+  | 'pending_bookings'
+  | 'pending_repairs'
+  | 'overdue_payments'
+  | 'contract_expiring'
+
+export type QuickActionDef = {
+  i18nKey: string
+  icon: string
+  targetSection: string
+}
+
+export type DashboardWidgetConfig = {
+  type: WidgetType
+  variant?: StatCardVariant
+  actions?: QuickActionDef[]
+  itemType?: 'orders' | 'bookings' | 'appointments' | 'repairs' | 'jobs'
+  alertTypes?: AlertVariant[]
+  templates?: string[]
+  colSpan?: number
+}
+
+export type ActivityDashboardConfig = {
+  statCards: StatCardVariant[]
+  quickActions: QuickActionDef[]
+  widgets: DashboardWidgetConfig[]
+}
+
+// -- Contract Templates -------------------------------------------------------
+
+export type ContractFieldType = 'text' | 'date' | 'number' | 'textarea' | 'select'
+
+export type ContractField = {
+  key: string
+  i18nKey: string
+  type: ContractFieldType
+  required: boolean
+  options?: string[]
+}
+
+export type ContractTemplate = {
+  key: string
+  i18nKey: string
+  activities: Activity[]
+  icon: string
+  fields: ContractField[]
+}
+
 // -- Registration Data --------------------------------------------------------
 
 export type RegistrationData = {

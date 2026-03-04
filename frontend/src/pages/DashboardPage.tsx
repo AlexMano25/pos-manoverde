@@ -4,11 +4,25 @@ import {
   ShoppingCart,
   Package,
   AlertTriangle,
-  ArrowRight,
   Plus,
   TrendingUp,
   Download,
   CreditCard,
+  Receipt,
+  ShoppingBag,
+  TrendingUp as TrendingUpIcon,
+  Clock,
+  Calendar,
+  Activity,
+  Users,
+  Car,
+  Home,
+  Target,
+  GraduationCap,
+  Loader,
+  BedDouble,
+  Wine,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { useOrderStore } from '../stores/orderStore'
 import { useProductStore } from '../stores/productStore'
@@ -17,8 +31,14 @@ import { useLanguageStore } from '../stores/languageStore'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportDailySummary } from '../utils/pdfExport'
-import { formatCurrency } from '../utils/currency'
-import type { Order, PaymentMethod, CreditBalance } from '../types'
+import { DASHBOARD_CONFIG } from '../data/dashboardConfig'
+import { getTemplatesForActivity } from '../data/contractTemplates'
+import { computeStatValue, getStatCardMeta } from '../utils/dashboardComputations'
+import StatCard from '../components/dashboard/StatCard'
+import QuickActions from '../components/dashboard/QuickActions'
+import WidgetRenderer from '../components/dashboard/WidgetRenderer'
+import ContractModal from '../components/dashboard/ContractModal'
+import type { PaymentMethod, CreditBalance, Activity as ActivityType, ContractTemplate } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -34,39 +54,42 @@ const C = {
   danger: '#dc2626',
 } as const
 
-const paymentColors: Record<PaymentMethod, string> = {
-  cash: '#16a34a',
-  card: '#2563eb',
-  momo: '#f59e0b',
-  transfer: '#8b5cf6',
-  orange_money: '#f97316',
-  mtn_money: '#eab308',
-  carte_bancaire: '#6366f1',
-}
+// ── Lucide icon map for dynamic stat cards ───────────────────────────────
 
-const statusColors: Record<string, string> = {
-  paid: '#16a34a',
-  pending: '#f59e0b',
-  refunded: '#dc2626',
-  cancelled: '#64748b',
+const LUCIDE_ICONS: Record<string, React.ElementType> = {
+  DollarSign,
+  ShoppingCart,
+  Package,
+  AlertTriangle,
+  CreditCard,
+  Receipt,
+  ShoppingBag,
+  TrendingUp: TrendingUpIcon,
+  UtensilsCrossed,
+  Wine,
+  Clock,
+  BedDouble,
+  Calendar,
+  Activity,
+  Users,
+  Car,
+  Home,
+  Target,
+  GraduationCap,
+  Loader,
 }
 
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { orders, loading: ordersLoading, loadOrders, getTodayRevenue } = useOrderStore()
+  const { orders, loading: ordersLoading, loadOrders } = useOrderStore()
   const { products, loading: productsLoading, loadProducts } = useProductStore()
-  const { currentStore, setSection } = useAppStore()
+  const { currentStore, setSection, activity } = useAppStore()
   const { t, language } = useLanguageStore()
 
   // ── Locale-aware helpers ────────────────────────────────────────────────
 
   const intlLocale = language === 'fr' ? 'fr-FR' : language === 'de' ? 'de-DE' : language === 'es' ? 'es-ES' : language === 'it' ? 'it-IT' : language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : 'en-US'
-
-  function formatDateTime(iso: string): string {
-    const d = new Date(iso)
-    return d.toLocaleDateString(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString(intlLocale, { hour: '2-digit', minute: '2-digit' })
-  }
 
   const paymentLabels: Record<PaymentMethod, string> = {
     cash: t.pos.cash,
@@ -88,6 +111,8 @@ export default function DashboardPage() {
   // ── Credit balance for pay-as-you-grow ────────────────────────────────
 
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
+  const [contractModalOpen, setContractModalOpen] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null)
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -112,6 +137,8 @@ export default function DashboardPage() {
       })
   }, [currentStore?.organization_id])
 
+  // ── Derived data ──────────────────────────────────────────────────────
+
   const todayStr = new Date().toISOString().slice(0, 10)
 
   const todayOrders = useMemo(
@@ -119,18 +146,72 @@ export default function DashboardPage() {
     [orders, todayStr]
   )
 
-  const todayRevenue = getTodayRevenue()
-
-  const lowStockProducts = useMemo(
-    () => products.filter((p) => p.stock <= (p.min_stock ?? 5)),
-    [products]
-  )
-
-  const recentOrders = useMemo(() => orders.slice(0, 10), [orders])
-
   const hasData = orders.length > 0 || products.length > 0
 
-  // ── Styles ───────────────────────────────────────────────────────────────
+  // ── Activity-specific config ──────────────────────────────────────────
+
+  const currentActivity = (activity || currentStore?.activity || 'restaurant') as ActivityType
+  const dashConfig = DASHBOARD_CONFIG[currentActivity] || DASHBOARD_CONFIG.restaurant
+
+  // ── Contract templates for this activity ──────────────────────────────
+
+  const activityTemplates = useMemo(
+    () => getTemplatesForActivity(currentActivity),
+    [currentActivity]
+  )
+
+  const contractTemplateLabels = useMemo(
+    () => activityTemplates.map(tmpl => ({
+      key: tmpl.key,
+      label: (t.contracts as Record<string, string>)[tmpl.i18nKey.replace('contracts.', '')] || tmpl.key,
+      icon: tmpl.icon,
+    })),
+    [activityTemplates, t.contracts]
+  )
+
+  // ── Quick action labels (resolve i18n keys) ───────────────────────────
+
+  const resolvedQuickActions = useMemo(
+    () => dashConfig.quickActions.map(qa => ({
+      label: (t.dashboard as Record<string, string>)[qa.i18nKey.replace('dashboard.', '')] || qa.i18nKey,
+      icon: qa.icon,
+      targetSection: qa.targetSection,
+    })),
+    [dashConfig.quickActions, t.dashboard]
+  )
+
+  // ── Stat card rendering ───────────────────────────────────────────────
+
+  const statCards = useMemo(() => {
+    return dashConfig.statCards.map(variant => {
+      // Special handling for credit balance
+      if (variant === 'credit' && creditBalance) {
+        return {
+          variant,
+          value: creditBalance.balance_usd,
+          meta: getStatCardMeta('credit'),
+          extraLabel: `${Math.floor(creditBalance.balance_usd / 0.02).toLocaleString()} ${t.billing.ticketsLabel}`,
+        }
+      }
+      if (variant === 'credit' && !creditBalance) return null
+
+      const value = computeStatValue(variant, todayOrders, orders, products)
+      const meta = getStatCardMeta(variant)
+      return { variant, value, meta, extraLabel: undefined }
+    }).filter(Boolean)
+  }, [dashConfig.statCards, todayOrders, orders, products, creditBalance, t.billing.ticketsLabel])
+
+  // ── Handle contract selection ─────────────────────────────────────────
+
+  const handleSelectContract = (templateKey: string) => {
+    const tmpl = activityTemplates.find(t => t.key === templateKey)
+    if (tmpl) {
+      setSelectedTemplate(tmpl)
+      setContractModalOpen(true)
+    }
+  }
+
+  // ── Styles ─────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
     padding: 24,
@@ -139,25 +220,12 @@ export default function DashboardPage() {
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   }
 
-  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }
+  const headerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }
   const titleStyle: React.CSSProperties = { fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }
   const subtitleStyle: React.CSSProperties = { fontSize: 14, color: C.textSecondary, margin: '4px 0 0' }
-  const actionsStyle: React.CSSProperties = { display: 'flex', gap: 10 }
+  const actionsStyle: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' }
   const primaryBtnStyle: React.CSSProperties = { padding: '10px 20px', borderRadius: 8, border: 'none', backgroundColor: C.primary, color: '#ffffff', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }
   const outlineBtnStyle: React.CSSProperties = { ...primaryBtnStyle, backgroundColor: '#ffffff', color: C.primary, border: `1px solid ${C.primary}` }
-  const statsGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: creditBalance ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }
-  const statCardStyle: React.CSSProperties = { backgroundColor: C.card, borderRadius: 12, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${C.border}` }
-  const statHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }
-  const statLabelStyle: React.CSSProperties = { fontSize: 13, color: C.textSecondary, fontWeight: 500, margin: 0 }
-  const statValueStyle: React.CSSProperties = { fontSize: 24, fontWeight: 700, color: C.text, margin: 0 }
-  const iconBoxStyle = (bg: string): React.CSSProperties => ({ width: 40, height: 40, borderRadius: 10, backgroundColor: bg + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' })
-  const tableCardStyle: React.CSSProperties = { backgroundColor: C.card, borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: `1px solid ${C.border}`, overflow: 'hidden' }
-  const tableHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${C.border}` }
-  const tableTitleStyle: React.CSSProperties = { fontSize: 16, fontWeight: 600, color: C.text, margin: 0 }
-  const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' }
-  const thStyle: React.CSSProperties = { padding: '10px 16px', textAlign: 'left', fontSize: 12, fontWeight: 600, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: `1px solid ${C.border}`, backgroundColor: '#f8fafc' }
-  const tdStyle: React.CSSProperties = { padding: '12px 16px', fontSize: 14, color: C.text, borderBottom: `1px solid ${C.border}` }
-  const badgeStyle = (bgColor: string): React.CSSProperties => ({ display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 500, color: bgColor, backgroundColor: bgColor + '15' })
   const emptyStyle: React.CSSProperties = { textAlign: 'center', padding: '60px 24px', backgroundColor: C.card, borderRadius: 12, border: `1px solid ${C.border}` }
   const emptyIconStyle: React.CSSProperties = { width: 64, height: 64, borderRadius: 16, backgroundColor: C.primary + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }
 
@@ -222,113 +290,83 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Stats Cards */}
-          <div style={statsGridStyle}>
-            <div style={statCardStyle}>
-              <div style={statHeaderStyle}>
-                <p style={statLabelStyle}>{t.dashboard.todayRevenue}</p>
-                <div style={iconBoxStyle(C.success)}><DollarSign size={20} color={C.success} /></div>
-              </div>
-              <p style={statValueStyle}>{formatCurrency(todayRevenue, currentStore?.currency)}</p>
-            </div>
-
-            <div style={statCardStyle}>
-              <div style={statHeaderStyle}>
-                <p style={statLabelStyle}>{t.dashboard.todayOrders}</p>
-                <div style={iconBoxStyle(C.primary)}><ShoppingCart size={20} color={C.primary} /></div>
-              </div>
-              <p style={statValueStyle}>{todayOrders.length}</p>
-            </div>
-
-            <div style={statCardStyle}>
-              <div style={statHeaderStyle}>
-                <p style={statLabelStyle}>{t.dashboard.totalProducts}</p>
-                <div style={iconBoxStyle('#8b5cf6')}><Package size={20} color="#8b5cf6" /></div>
-              </div>
-              <p style={statValueStyle}>{products.length}</p>
-            </div>
-
-            <div style={statCardStyle}>
-              <div style={statHeaderStyle}>
-                <p style={statLabelStyle}>{t.dashboard.lowStock}</p>
-                <div style={iconBoxStyle(lowStockProducts.length > 0 ? C.warning : C.success)}>
-                  <AlertTriangle size={20} color={lowStockProducts.length > 0 ? C.warning : C.success} />
-                </div>
-              </div>
-              <p style={{ ...statValueStyle, color: lowStockProducts.length > 0 ? C.warning : C.text }}>
-                {lowStockProducts.length}
-              </p>
-            </div>
-
-            {creditBalance && (
-              <div style={statCardStyle}>
-                <div style={statHeaderStyle}>
-                  <p style={statLabelStyle}>{t.billing.creditLabel}</p>
-                  <div style={iconBoxStyle(C.primary)}><CreditCard size={20} color={C.primary} /></div>
-                </div>
-                <p style={statValueStyle}>${creditBalance.balance_usd.toFixed(2)}</p>
-                <p style={{ fontSize: 12, color: C.textSecondary, margin: '4px 0 0' }}>
-                  {Math.floor(creditBalance.balance_usd / 0.02).toLocaleString()} {t.billing.ticketsLabel}
-                </p>
-              </div>
-            )}
+          {/* ── Activity-specific Stat Cards ──────────────────────────── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${Math.min(statCards.length, 5)}, 1fr)`,
+            gap: 16,
+            marginBottom: 24,
+          }}>
+            {statCards.map((card) => {
+              if (!card) return null
+              const { variant, value, meta } = card
+              const IconComponent = LUCIDE_ICONS[meta.icon] || DollarSign
+              const label = (t.dashboard as Record<string, string>)[meta.labelKey.replace('dashboard.', '')] || meta.labelKey
+              return (
+                <StatCard
+                  key={variant}
+                  label={label}
+                  value={value}
+                  icon={<IconComponent size={20} />}
+                  color={meta.color}
+                  isCurrency={meta.isCurrency}
+                  isPercentage={meta.isPercentage}
+                  currencyCode={currentStore?.currency}
+                />
+              )
+            })}
           </div>
 
-          {/* Recent Orders Table */}
-          <div style={tableCardStyle}>
-            <div style={tableHeaderStyle}>
-              <h3 style={tableTitleStyle}>{t.dashboard.recentOrders}</h3>
-              <button
-                style={{ background: 'none', border: 'none', color: C.primary, cursor: 'pointer', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
-                onClick={() => setSection('orders')}
-              >
-                {t.dashboard.viewAll} <ArrowRight size={14} />
-              </button>
-            </div>
-
-            {recentOrders.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: C.textSecondary, fontSize: 14 }}>
-                {t.dashboard.noOrdersYet}
-              </div>
-            ) : (
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={thStyle}>{t.orders.orderId}</th>
-                    <th style={thStyle}>{t.orders.dateTime}</th>
-                    <th style={thStyle}>{t.common.articles}</th>
-                    <th style={thStyle}>{t.common.total}</th>
-                    <th style={thStyle}>{t.orders.paymentMethod}</th>
-                    <th style={thStyle}>{t.common.status}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order: Order) => (
-                    <tr key={order.id}>
-                      <td style={{ ...tdStyle, fontWeight: 600, fontFamily: 'monospace' }}>
-                        #{order.id.slice(0, 8).toUpperCase()}
-                      </td>
-                      <td style={tdStyle}>{formatDateTime(order.created_at)}</td>
-                      <td style={tdStyle}>{order.items.length} {t.common.articles}</td>
-                      <td style={{ ...tdStyle, fontWeight: 600 }}>{formatCurrency(order.total, currentStore?.currency)}</td>
-                      <td style={tdStyle}>
-                        <span style={badgeStyle(paymentColors[order.payment_method])}>
-                          {paymentLabels[order.payment_method]}
-                        </span>
-                      </td>
-                      <td style={tdStyle}>
-                        <span style={badgeStyle(statusColors[order.status] || C.textSecondary)}>
-                          {statusLabels[order.status] || order.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+          {/* ── Quick Actions ─────────────────────────────────────────── */}
+          <div style={{ marginBottom: 24 }}>
+            <QuickActions
+              actions={resolvedQuickActions}
+              onNavigate={setSection}
+            />
           </div>
+
+          {/* ── Activity-specific Widgets + Recent Orders ─────────────── */}
+          <WidgetRenderer
+            config={dashConfig}
+            todayOrders={todayOrders}
+            allOrders={orders}
+            products={products}
+            currencyCode={currentStore?.currency}
+            labels={{
+              categoryBreakdown: t.dashboard.categoryBreakdown,
+              peakHours: t.dashboard.peakHours,
+              alerts: t.dashboard.alerts,
+              contracts: t.dashboard.contracts,
+              recentOrders: t.dashboard.recentOrders,
+              viewAll: t.dashboard.viewAll,
+              orderId: t.orders.orderId,
+              dateTime: t.orders.dateTime,
+              articles: t.common.articles,
+              total: t.common.total,
+              paymentMethod: t.orders.paymentMethod,
+              status: t.common.status,
+            }}
+            paymentLabels={paymentLabels}
+            statusLabels={statusLabels}
+            onNavigate={setSection}
+            contractTemplates={contractTemplateLabels}
+            onSelectContract={handleSelectContract}
+          />
         </>
       )}
+
+      {/* ── Contract Modal ──────────────────────────────────────────── */}
+      <ContractModal
+        isOpen={contractModalOpen}
+        onClose={() => {
+          setContractModalOpen(false)
+          setSelectedTemplate(null)
+        }}
+        template={selectedTemplate}
+        storeName={currentStore?.name || 'POS Mano Verde'}
+        storeAddress={currentStore?.address}
+        storePhone={currentStore?.phone}
+      />
     </div>
   )
 }

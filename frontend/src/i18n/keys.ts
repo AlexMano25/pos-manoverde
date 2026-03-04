@@ -205,6 +205,41 @@ export type TranslationKeys = {
     units: string
     viewAll: string
     noOrdersYet: string
+    // Activity-specific stat cards
+    avgCheck: string
+    avgBasket: string
+    grossMarginPct: string
+    foodCostPct: string
+    beverageCostPct: string
+    expiringItems: string
+    occupancyRate: string
+    appointmentsToday: string
+    servicesToday: string
+    activeMembers: string
+    vehiclesToday: string
+    pendingBookings: string
+    pendingJobs: string
+    enrollmentCount: string
+    activeListings: string
+    conversions: string
+    capacityRate: string
+    creditBalance: string
+    // Widget titles
+    categoryBreakdown: string
+    peakHours: string
+    alerts: string
+    contracts: string
+    noAlerts: string
+    noData: string
+    // Activity-specific quick actions
+    checkExpiry: string
+    newService: string
+    newBooking: string
+    generateQuote: string
+    searchISBN: string
+    newListing: string
+    markAttendance: string
+    generatePdf: string
   }
 
   // POS
@@ -732,5 +767,92 @@ export type TranslationKeys = {
     createStore: string
     switchingStore: string
     storeCreated: string
+  }
+
+  // Contracts / Documents
+  contracts: {
+    title: string
+    generatePdf: string
+    // Template names
+    etatDesLieux: string
+    bail: string
+    compromisVente: string
+    devisReparation: string
+    factureTravaux: string
+    ficheClient: string
+    factureSejour: string
+    contratVoyage: string
+    assuranceVoyage: string
+    ficheInscription: string
+    autorisationParentale: string
+    devisPrestation: string
+    bonCommande: string
+    // Field labels
+    clientName: string
+    clientPhone: string
+    clientEmail: string
+    clientAddress: string
+    propertyAddress: string
+    propertyCondition: string
+    inspectionDate: string
+    tenantName: string
+    tenantAddress: string
+    tenantPhone: string
+    startDate: string
+    endDate: string
+    monthlyRent: string
+    deposit: string
+    depositAmount: string
+    buyerName: string
+    buyerAddress: string
+    sellerName: string
+    salePrice: string
+    completionDate: string
+    vehicleMake: string
+    vehicleModel: string
+    vehiclePlate: string
+    repairDescription: string
+    workDescription: string
+    partsEstimate: string
+    laborEstimate: string
+    partsCost: string
+    laborCost: string
+    estimatedDate: string
+    guestName: string
+    nationality: string
+    passportNumber: string
+    checkInDate: string
+    checkOutDate: string
+    roomNumber: string
+    numberOfGuests: string
+    nightlyRate: string
+    numberOfNights: string
+    additionalServices: string
+    destination: string
+    departureDate: string
+    returnDate: string
+    numberOfPassengers: string
+    totalPrice: string
+    services: string
+    coverageAmount: string
+    premiumAmount: string
+    childName: string
+    childBirthDate: string
+    parentName: string
+    parentPhone: string
+    parentEmail: string
+    emergencyContact: string
+    medicalNotes: string
+    enrollmentDate: string
+    activityDescription: string
+    activityDate: string
+    serviceDescription: string
+    estimatedPrice: string
+    estimatedDuration: string
+    validUntil: string
+    items: string
+    quantity: string
+    deliveryDate: string
+    notes: string
   }
 }
