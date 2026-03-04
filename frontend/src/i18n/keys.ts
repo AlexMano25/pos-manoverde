@@ -240,6 +240,7 @@ export type TranslationKeys = {
     newListing: string
     markAttendance: string
     generatePdf: string
+    loadExamples: string
   }
 
   // POS

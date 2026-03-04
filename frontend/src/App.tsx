@@ -55,7 +55,7 @@ function AppContent() {
   }, [storeId, loadProducts, loadOrders, countPending])
 
   const pageTitles: Record<string, { title: string; subtitle?: string; helpKey: string }> = {
-    dashboard: { title: t.nav.dashboard, subtitle: activity ? `${activity.charAt(0).toUpperCase() + activity.slice(1)}` : undefined, helpKey: 'dashboard' },
+    dashboard: { title: t.nav.dashboard, subtitle: activity ? ((t.setup as Record<string, string>)[activity] || activity) : undefined, helpKey: 'dashboard' },
     pos: { title: t.nav.pos, subtitle: t.pos.title, helpKey: 'pos' },
     products: { title: t.nav.products, subtitle: t.products.subtitle, helpKey: 'products' },
     orders: { title: t.nav.orders, subtitle: t.orders.subtitle, helpKey: 'orders' },

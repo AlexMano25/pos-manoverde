@@ -227,6 +227,7 @@ export const fr: TranslationKeys = {
     newListing: 'Nouveau bien',
     markAttendance: 'Marquer présence',
     generatePdf: 'Générer PDF',
+    loadExamples: 'Charger les exemples',
   },
   pos: {
     title: 'Point de vente',

@@ -34,6 +34,7 @@ import { exportDailySummary } from '../utils/pdfExport'
 import { DASHBOARD_CONFIG } from '../data/dashboardConfig'
 import { getTemplatesForActivity } from '../data/contractTemplates'
 import { computeStatValue, getStatCardMeta } from '../utils/dashboardComputations'
+import { seedSampleProducts } from '../utils/seedProducts'
 import StatCard from '../components/dashboard/StatCard'
 import QuickActions from '../components/dashboard/QuickActions'
 import WidgetRenderer from '../components/dashboard/WidgetRenderer'
@@ -113,6 +114,7 @@ export default function DashboardPage() {
   const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null)
   const [contractModalOpen, setContractModalOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null)
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -201,6 +203,22 @@ export default function DashboardPage() {
     }).filter(Boolean)
   }, [dashConfig.statCards, todayOrders, orders, products, creditBalance, t.billing.ticketsLabel])
 
+  // ── Seed sample products for stores that don't have them ──────────────
+
+  const handleSeedProducts = async () => {
+    if (!currentStore?.id || seeding) return
+    setSeeding(true)
+    try {
+      await seedSampleProducts(currentStore.id, currentActivity)
+      // Reload products after seeding
+      loadProducts(currentStore.id)
+    } catch (err) {
+      console.error('[DashboardPage] Seeding failed:', err)
+    } finally {
+      setSeeding(false)
+    }
+  }
+
   // ── Handle contract selection ─────────────────────────────────────────
 
   const handleSelectContract = (templateKey: string) => {
@@ -279,8 +297,15 @@ export default function DashboardPage() {
           <p style={{ color: C.textSecondary, fontSize: 14, margin: '0 0 24px', maxWidth: 400, marginLeft: 'auto', marginRight: 'auto' }}>
             {t.dashboard.welcomeMessage}
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <button style={primaryBtnStyle} onClick={() => setSection('products')}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              style={{ ...primaryBtnStyle, backgroundColor: seeding ? '#93c5fd' : C.primary }}
+              onClick={handleSeedProducts}
+              disabled={seeding}
+            >
+              <Package size={16} /> {seeding ? t.common.loading : (t.dashboard.loadExamples || 'Charger les exemples')}
+            </button>
+            <button style={outlineBtnStyle} onClick={() => setSection('products')}>
               <Plus size={16} /> {t.dashboard.addProduct}
             </button>
             <button style={outlineBtnStyle} onClick={() => setSection('pos')}>
@@ -322,6 +347,7 @@ export default function DashboardPage() {
             <QuickActions
               actions={resolvedQuickActions}
               onNavigate={setSection}
+              title={t.dashboard.quickActions}
             />
           </div>
 

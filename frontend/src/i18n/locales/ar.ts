@@ -224,6 +224,7 @@ export const ar: TranslationKeys = {
     newListing: 'عقار جديد',
     markAttendance: 'تسجيل الحضور',
     generatePdf: 'إنشاء PDF',
+    loadExamples: 'تحميل الأمثلة',
   },
   pos: {
     title: 'نقطة البيع',

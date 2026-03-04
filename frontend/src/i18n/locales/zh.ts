@@ -224,6 +224,7 @@ export const zh: TranslationKeys = {
     newListing: '新房源',
     markAttendance: '考勤打卡',
     generatePdf: '生成PDF',
+    loadExamples: '加载示例产品',
   },
   pos: {
     title: '收银台',

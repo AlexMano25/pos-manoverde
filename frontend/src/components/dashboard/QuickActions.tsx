@@ -18,6 +18,7 @@ import type { LucideIcon } from 'lucide-react'
 type QuickActionsProps = {
   actions: Array<{ label: string; icon: string; targetSection: string }>
   onNavigate: (section: string) => void
+  title?: string
 }
 
 // ---------------------------------------------------------------------------
@@ -51,7 +52,7 @@ const iconMap: Record<string, LucideIcon> = {
 // Component
 // ---------------------------------------------------------------------------
 
-const QuickActions = ({ actions, onNavigate }: QuickActionsProps) => {
+const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
   return (
@@ -74,7 +75,7 @@ const QuickActions = ({ actions, onNavigate }: QuickActionsProps) => {
           color: colors.text,
         }}
       >
-        Actions rapides
+        {title || 'Actions rapides'}
       </span>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>

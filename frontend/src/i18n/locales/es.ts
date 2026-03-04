@@ -224,6 +224,7 @@ export const es: TranslationKeys = {
     newListing: 'Nueva propiedad',
     markAttendance: 'Marcar asistencia',
     generatePdf: 'Generar PDF',
+    loadExamples: 'Cargar ejemplos',
   },
   pos: {
     title: 'Punto de venta',

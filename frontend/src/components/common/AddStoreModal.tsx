@@ -4,6 +4,7 @@ import { useAppStore } from '../../stores/appStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { supabase } from '../../services/supabase'
 import { WORLD_CURRENCIES } from '../../utils/currency'
+import { seedSampleProducts } from '../../utils/seedProducts'
 import type { Activity } from '../../types'
 
 // ── All 26 supported activities ──────────────────────────────────────────────
@@ -88,6 +89,11 @@ export default function AddStoreModal({ isOpen, onClose }: AddStoreModalProps) {
       if (rpcError) throw new Error(rpcError.message)
 
       const newStoreId = (data as { store_id: string }).store_id
+
+      // Seed activity-specific sample products for the new store
+      seedSampleProducts(newStoreId, activity).catch((err) =>
+        console.error('[AddStoreModal] Sample product seeding failed:', err),
+      )
 
       // Switch to the new store
       const { error: switchError } = await supabase.rpc('switch_store', {

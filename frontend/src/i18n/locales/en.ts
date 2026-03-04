@@ -235,6 +235,7 @@ export const en: TranslationKeys = {
     newListing: 'New listing',
     markAttendance: 'Mark attendance',
     generatePdf: 'Generate PDF',
+    loadExamples: 'Load sample products',
   },
 
   // POS
