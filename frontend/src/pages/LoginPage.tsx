@@ -265,14 +265,6 @@ export default function LoginPage() {
     opacity: loading ? 0.7 : 1,
   }
 
-  const hintStyle: React.CSSProperties = {
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 16,
-    padding: '0 24px',
-  }
-
   const settingsToggleStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -374,7 +366,7 @@ export default function LoginPage() {
                 <input
                   style={inputStyle}
                   type="email"
-                  placeholder="admin@manoverde.com"
+                  placeholder="email@exemple.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onFocus={(e) => (e.target.style.borderColor = '#2563eb')}
@@ -411,9 +403,6 @@ export default function LoginPage() {
                 {loading && <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />}
                 {loading ? t.auth.loggingIn : t.auth.loginButton}
               </button>
-              <div style={hintStyle}>
-                {t.auth.defaultCredentials}
-              </div>
             </form>
           )}
 

@@ -3268,7 +3268,7 @@ export default function LandingPage() {
               {infoPage === 'api' && 'endpoints' in page && (
                 <div>
                   <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.6 }}>
-                    Base URL: <code style={{ backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace', fontSize: 13, color: '#0f172a' }}>https://api.manoverde.com/v1</code>
+                    REST API — Endpoints disponibles apres authentification.
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {(page as any).endpoints.map((ep: any, ei: number) => (
@@ -3283,9 +3283,6 @@ export default function LandingPage() {
                       </div>
                     ))}
                   </div>
-                  <p style={{ fontSize: 12, color: '#94a3b8', margin: '20px 0 0', textAlign: 'center' }}>
-                    Authentication: Bearer token required for all endpoints except /auth/*
-                  </p>
                 </div>
               )}
 
