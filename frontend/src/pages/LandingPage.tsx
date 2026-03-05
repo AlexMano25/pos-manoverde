@@ -430,7 +430,7 @@ export default function LandingPage() {
   const handleGoToLogin = () => {
     const appStore = useAppStore.getState()
     appStore.setShowLogin(true)
-    document.body.classList.remove('app-mode')
+    document.documentElement.classList.remove('app-mode')
     localStorage.setItem('pos-app-store', JSON.stringify({
       state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: null, registrationMode: false, showLogin: true },
       version: 0,
@@ -442,7 +442,7 @@ export default function LandingPage() {
     const appStore = useAppStore.getState()
     appStore.setSelectedPlan('free')
     appStore.setRegistrationMode(true)
-    document.body.classList.remove('app-mode')
+    document.documentElement.classList.remove('app-mode')
     localStorage.setItem('pos-app-store', JSON.stringify({
       state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: 'free', registrationMode: true },
       version: 0,
@@ -459,7 +459,7 @@ export default function LandingPage() {
     appStore.setSelectedPlan(plan)
     appStore.setRegistrationMode(true)
     // Remove body app-mode if present
-    document.body.classList.remove('app-mode')
+    document.documentElement.classList.remove('app-mode')
     // Trigger the app flow
     localStorage.setItem('pos-app-store', JSON.stringify({
       state: { mode: 'all_in_one', activity: null, serverUrl: '', selectedPlan: plan, registrationMode: true },

@@ -4,10 +4,28 @@
   padding: 0;
 }
 
-html, body, #root {
+/* ── App mode (Layout active) ─────────────────────────────────────────────
+   Lock html/body/root to viewport height so Layout handles its own scroll */
+html.app-mode,
+html.app-mode body,
+html.app-mode #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+/* ── Normal mode (landing, login, registration) ───────────────────────────
+   Allow natural page scrolling */
+html:not(.app-mode) {
+  width: 100%;
+}
+html:not(.app-mode) body {
+  width: 100%;
+  min-height: 100vh;
+}
+html:not(.app-mode) #root {
+  width: 100%;
+  min-height: 100vh;
 }
 
 body {

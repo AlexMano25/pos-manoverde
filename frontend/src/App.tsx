@@ -46,8 +46,8 @@ function AppContent() {
   const storeId = currentStore?.id || user?.store_id || 'default-store'
 
   useEffect(() => {
-    document.body.classList.add('app-mode')
-    return () => { document.body.classList.remove('app-mode') }
+    document.documentElement.classList.add('app-mode')
+    return () => { document.documentElement.classList.remove('app-mode') }
   }, [])
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export default function App() {
 
   useEffect(() => {
     if (!activity && !registrationMode && !showLogin) {
-      document.body.classList.remove('app-mode')
+      document.documentElement.classList.remove('app-mode')
     }
   }, [activity, registrationMode, showLogin])
 
@@ -116,7 +116,8 @@ export default function App() {
   }
 
   // Explicit login mode (user clicked "Already have an account?" or "Sign in")
-  if (showLogin) {
+  // Skip if user is already authenticated with an activity (login succeeded)
+  if (showLogin && !(user && token && activity)) {
     return <LoginPage />
   }
 
