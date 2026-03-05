@@ -402,6 +402,8 @@ export default function LandingPage() {
   const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
   const [infoPage, setInfoPage] = useState<'docs' | 'api' | 'changelog' | null>(null)
   const [showcaseTab, setShowcaseTab] = useState(0)
+  const [sectorModal, setSectorModal] = useState<number | null>(null)
+  const [sectorTab, setSectorTab] = useState(0)
   const { t } = useLanguageStore()
 
   // Animated counters for hero stats
@@ -683,6 +685,39 @@ export default function LandingPage() {
     { question: t.landing.faqQ8, answer: t.landing.faqA8 },
   ]
 
+  const SECTORS = [
+    { emoji: '\uD83C\uDF7D\uFE0F', title: t.landing.sector1Title, desc: t.landing.sector1Desc, color: '#ef4444',
+      stats: [{ v: '185,000', c: '#ef4444' }, { v: '42', c: '#16a34a' }, { v: '4,400', c: '#f59e0b' }], stat3Label: 'Ticket moyen',
+      bars: [30,50,70,45,85,60,95,50,80,65,90,75],
+      products: [{ n:'Ndole', p:'3,000', bg:'#fef2f2' },{ n:'Jollof Rice', p:'2,500', bg:'#dcfce7' },{ n:'Pizza', p:'4,000', bg:'#fef3c7' },{ n:'Pad Thai', p:'3,500', bg:'#fce7f3' },{ n:'Burger', p:'3,500', bg:'#e0e7ff' },{ n:'Crepe', p:'1,500', bg:'#f1f5f9' }],
+      badge: '30 min', cart: ['Ndole x2','Jollof Rice x1','Jus frais x3'], total: '9,500' },
+    { emoji: '\uD83D\uDC8A', title: t.landing.sector2Title, desc: t.landing.sector2Desc, color: '#2563eb',
+      stats: [{ v: '320,000', c: '#2563eb' }, { v: '86', c: '#16a34a' }, { v: '5', c: '#ef4444' }], stat3Label: 'Peremptions',
+      bars: [60,45,80,55,70,90,65,85,50,75,88,92],
+      products: [{ n:'Paracetamol', p:'500', bg:'#dbeafe' },{ n:'Amoxicilline', p:'1,500', bg:'#dcfce7' },{ n:'Ibuprofene', p:'800', bg:'#fef3c7' },{ n:'Vitamine C', p:'2,500', bg:'#fce7f3' },{ n:'Pansement', p:'750', bg:'#e0e7ff' },{ n:'Sirop toux', p:'2,000', bg:'#f1f5f9' }],
+      badge: 'Exp: 09/27', cart: ['Paracetamol x4','Vitamine C x1','Pansement x2'], total: '6,250' },
+    { emoji: '\uD83D\uDED2', title: t.landing.sector3Title, desc: t.landing.sector3Desc, color: '#16a34a',
+      stats: [{ v: '540,000', c: '#16a34a' }, { v: '215', c: '#2563eb' }, { v: '12', c: '#ef4444' }], stat3Label: 'Stock faible',
+      bars: [80,70,90,85,60,95,75,88,65,92,78,86],
+      products: [{ n:'Riz 5kg', p:'4,500', bg:'#dcfce7' },{ n:'Huile 1L', p:'1,800', bg:'#fef3c7' },{ n:'Lait', p:'900', bg:'#dbeafe' },{ n:'Sucre 1kg', p:'800', bg:'#fef2f2' },{ n:'Eau 1.5L', p:'500', bg:'#f1f5f9' },{ n:'Savon', p:'650', bg:'#e0e7ff' }],
+      badge: '5 kg', cart: ['Riz 5kg x2','Huile 1L x3','Lait x6'], total: '19,800' },
+    { emoji: '\uD83E\uDD56', title: t.landing.sector4Title, desc: t.landing.sector4Desc, color: '#f59e0b',
+      stats: [{ v: '95,000', c: '#f59e0b' }, { v: '180', c: '#16a34a' }, { v: '24', c: '#2563eb' }], stat3Label: 'Production',
+      bars: [90,85,70,95,80,60,88,75,92,65,85,78],
+      products: [{ n:'Baguette', p:'200', bg:'#fef3c7' },{ n:'Croissant', p:'350', bg:'#fef2f2' },{ n:'Pain choco', p:'400', bg:'#e0e7ff' },{ n:'Gateau', p:'5,000', bg:'#fce7f3' },{ n:'Tarte', p:'3,500', bg:'#dcfce7' },{ n:'Macaron', p:'500', bg:'#dbeafe' }],
+      badge: 'Frais', cart: ['Baguette x10','Croissant x5','Pain choco x3'], total: '4,950' },
+    { emoji: '\uD83C\uDFE8', title: t.landing.sector5Title, desc: t.landing.sector5Desc, color: '#9333ea',
+      stats: [{ v: '1,200,000', c: '#9333ea' }, { v: '28', c: '#16a34a' }, { v: '78%', c: '#2563eb' }], stat3Label: 'Occupation',
+      bars: [70,75,80,85,90,88,92,85,80,78,82,88],
+      products: [{ n:'Ch. Double', p:'35,000', bg:'#f3e8ff' },{ n:'Ch. Simple', p:'25,000', bg:'#dbeafe' },{ n:'Suite', p:'65,000', bg:'#fef3c7' },{ n:'Petit-dej', p:'5,000', bg:'#dcfce7' },{ n:'Spa', p:'15,000', bg:'#fce7f3' },{ n:'Parking', p:'2,000', bg:'#f1f5f9' }],
+      badge: 'Double', cart: ['Ch. Double x1','Petit-dej x2','Parking x1'], total: '47,000' },
+    { emoji: '\uD83D\uDC57', title: t.landing.sector6Title, desc: t.landing.sector6Desc, color: '#e11d48',
+      stats: [{ v: '280,000', c: '#e11d48' }, { v: '65', c: '#16a34a' }, { v: '12', c: '#9333ea' }], stat3Label: 'Collections',
+      bars: [50,65,80,70,90,75,85,60,78,88,72,95],
+      products: [{ n:'Robe', p:'15,000', bg:'#fce7f3' },{ n:'Pantalon', p:'8,000', bg:'#dbeafe' },{ n:'Polo', p:'5,000', bg:'#dcfce7' },{ n:'Sac', p:'12,000', bg:'#fef3c7' },{ n:'Chaussures', p:'18,000', bg:'#f3e8ff' },{ n:'Ceinture', p:'3,500', bg:'#f1f5f9' }],
+      badge: 'M / Bleu', cart: ['Robe x1','Polo x2','Ceinture x1'], total: '28,500' },
+  ]
+
   const NAV_SECTIONS = [
     { id: 'features', label: t.landing.navFeatures },
     { id: 'sectors', label: t.landing.navSectors },
@@ -883,6 +918,8 @@ export default function LandingPage() {
         .landing-pricing-grid { grid-template-columns: 1fr !important; }
         .landing-testimonials-grid { grid-template-columns: 1fr !important; }
         .landing-sectors-grid { grid-template-columns: 1fr !important; }
+        .landing-sector-stats { grid-template-columns: 1fr !important; }
+        .landing-sector-products { grid-template-columns: repeat(2, 1fr) !important; }
         .landing-trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .landing-footer-grid { grid-template-columns: 1fr !important; text-align: center; }
         .landing-footer-bottom { flex-direction: column !important; gap: 12px !important; text-align: center !important; }
@@ -2076,49 +2113,42 @@ export default function LandingPage() {
           <h2 style={sectionTitleStyle}>{t.landing.sectorsTitle}</h2>
           <p style={sectionSubtitleStyle}>{t.landing.sectorsSubtitle}</p>
 
-          <div className="landing-sectors-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-          }}>
-            {[
-              { emoji: '\uD83C\uDF7D\uFE0F', title: t.landing.sector1Title, desc: t.landing.sector1Desc, color: '#ef4444' },
-              { emoji: '\uD83D\uDC8A', title: t.landing.sector2Title, desc: t.landing.sector2Desc, color: '#2563eb' },
-              { emoji: '\uD83D\uDED2', title: t.landing.sector3Title, desc: t.landing.sector3Desc, color: '#16a34a' },
-              { emoji: '\uD83E\uDD56', title: t.landing.sector4Title, desc: t.landing.sector4Desc, color: '#f59e0b' },
-              { emoji: '\uD83C\uDFE8', title: t.landing.sector5Title, desc: t.landing.sector5Desc, color: '#9333ea' },
-              { emoji: '\uD83D\uDC57', title: t.landing.sector6Title, desc: t.landing.sector6Desc, color: '#e11d48' },
-            ].map((sector, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: 16,
-                  padding: 28,
-                  border: '1px solid #e2e8f0',
-                  transition: 'all 0.3s ease',
-                  cursor: 'default',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-                  e.currentTarget.style.borderColor = sector.color
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.borderColor = '#e2e8f0'
-                }}
-              >
-                <div style={{ fontSize: 36, marginBottom: 12 }}>{sector.emoji}</div>
-                <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: '0 0 8px', fontFamily: pageFont }}>
-                  {sector.title}
-                </h3>
-                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: 0, fontFamily: pageFont }}>
-                  {sector.desc}
-                </p>
-              </div>
-            ))}
+          <div className="landing-sectors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+            {SECTORS.map((sector, i) => (
+                  <div
+                    key={i}
+                    onClick={() => { setSectorTab(0); setSectorModal(i) }}
+                    style={{
+                      backgroundColor: '#ffffff',
+                      borderRadius: 16,
+                      padding: 28,
+                      border: '1px solid #e2e8f0',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)'
+                      e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
+                      e.currentTarget.style.borderColor = sector.color
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = 'none'
+                      e.currentTarget.style.borderColor = '#e2e8f0'
+                    }}
+                  >
+                    <div style={{ fontSize: 36, marginBottom: 12 }}>{sector.emoji}</div>
+                    <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: '0 0 8px', fontFamily: pageFont }}>
+                      {sector.title}
+                    </h3>
+                    <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: '0 0 12px', fontFamily: pageFont }}>
+                      {sector.desc}
+                    </p>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: sector.color, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      Voir l'apercu <span style={{ fontSize: 16 }}>&rarr;</span>
+                    </span>
+                  </div>
+                ))}
           </div>
         </div>
       </section>
@@ -3315,6 +3345,142 @@ export default function LandingPage() {
                 >
                   {t.common.close}
                 </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ================================================================
+          SECTOR PREVIEW MODAL
+          ================================================================ */}
+      {sectorModal !== null && (() => {
+        const s = SECTORS[sectorModal]
+        const accent = s.color
+        const statLabels = ['CA mensuel', 'Commandes', s.stat3Label]
+        return (
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+            onClick={(e) => { if (e.target === e.currentTarget) setSectorModal(null) }}
+          >
+            <div style={{ backgroundColor: '#fff', maxWidth: 850, width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: 16, position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+              {/* Header */}
+              <div style={{ padding: '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 32 }}>{s.emoji}</span>
+                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{s.title}</h2>
+                </div>
+                <button onClick={() => setSectorModal(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 8, display: 'flex', color: '#64748b' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#0f172a' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#64748b' }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div style={{ display: 'flex', gap: 0, padding: '16px 28px 0', borderBottom: '1px solid #e2e8f0' }}>
+                {[t.landing.showcaseTab1, t.landing.showcaseTab2].map((tab, ti) => (
+                  <button key={ti} onClick={() => setSectorTab(ti)} style={{
+                    padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', background: 'none', border: 'none',
+                    color: sectorTab === ti ? accent : '#64748b',
+                    borderBottom: sectorTab === ti ? `2px solid ${accent}` : '2px solid transparent',
+                    marginBottom: -1, transition: 'all 0.2s',
+                  }}>{tab}</button>
+                ))}
+              </div>
+
+              {/* Mockup area */}
+              <div style={{ margin: '20px 28px', backgroundColor: '#0f172a', borderRadius: 12, overflow: 'hidden' }}>
+                {/* Browser chrome */}
+                <div style={{ padding: '10px 14px', backgroundColor: '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                  <div style={{ flex: 1, marginLeft: 10, backgroundColor: '#334155', borderRadius: 4, height: 20, display: 'flex', alignItems: 'center', paddingLeft: 10 }}>
+                    <span style={{ fontSize: 11, color: '#64748b' }}>pos.manoverde.com</span>
+                  </div>
+                </div>
+
+                <div style={{ padding: 20 }}>
+                  {sectorTab === 0 ? (
+                    /* ---- Dashboard Tab ---- */
+                    <div>
+                      {/* Stat cards */}
+                      <div className="landing-sector-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+                        {s.stats.map((st, si) => (
+                          <div key={si} style={{ backgroundColor: '#1e293b', borderRadius: 10, padding: 14, borderLeft: `3px solid ${st.c}` }}>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{statLabels[si]}</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: '#f1f5f9' }}>{st.v}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Bar chart */}
+                      <div style={{ backgroundColor: '#1e293b', borderRadius: 10, padding: 16 }}>
+                        <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>Ventes mensuelles</div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                          {s.bars.map((h, bi) => (
+                            <div key={bi} style={{ flex: 1, height: `${h}%`, backgroundColor: accent, borderRadius: 3, opacity: 0.7 + (h / 300), transition: 'height 0.5s ease' }} />
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                          {['J','F','M','A','M','J','J','A','S','O','N','D'].map((m, mi) => (
+                            <span key={mi} style={{ fontSize: 9, color: '#64748b', flex: 1, textAlign: 'center' }}>{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ---- POS Tab ---- */
+                    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                      {/* Product grid */}
+                      <div style={{ flex: '1 1 340px' }}>
+                        <div className="landing-sector-products" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                          {s.products.map((p, pi) => (
+                            <div key={pi} style={{ backgroundColor: p.bg, borderRadius: 8, padding: 10, textAlign: 'center', cursor: 'pointer', transition: 'transform 0.2s', position: 'relative' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.04)' }}
+                              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
+                            >
+                              <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', marginBottom: 4 }}>{p.n}</div>
+                              <div style={{ fontSize: 12, color: '#475569' }}>{p.p}</div>
+                              {pi === 0 && (
+                                <span style={{ position: 'absolute', top: 4, right: 4, fontSize: 9, backgroundColor: accent, color: '#fff', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>{s.badge}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Cart */}
+                      <div style={{ flex: '0 0 180px', backgroundColor: '#1e293b', borderRadius: 10, padding: 14 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9', marginBottom: 10, borderBottom: '1px solid #334155', paddingBottom: 8 }}>Panier</div>
+                        {s.cart.map((item, ci) => (
+                          <div key={ci} style={{ fontSize: 12, color: '#cbd5e1', padding: '5px 0', borderBottom: ci < s.cart.length - 1 ? '1px solid #334155' : 'none' }}>{item}</div>
+                        ))}
+                        <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid #475569', display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: 12, color: '#94a3b8' }}>Total</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>{s.total}</span>
+                        </div>
+                        <button style={{ width: '100%', marginTop: 10, padding: '8px 0', borderRadius: 6, border: 'none', backgroundColor: accent, color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          Payer
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: '0 28px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <button
+                  onClick={() => setSectorModal(null)}
+                  style={{ padding: '10px 24px', borderRadius: 8, border: '1px solid #e2e8f0', backgroundColor: '#fff', color: '#475569', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >{t.common.close}</button>
+                <button
+                  onClick={() => { setSectorModal(null); const el = document.getElementById('pricing'); if (el) el.scrollIntoView({ behavior: 'smooth' }) }}
+                  style={{ padding: '10px 24px', borderRadius: 8, border: 'none', backgroundColor: '#16a34a', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#15803d' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#16a34a' }}
+                >{t.landing.planFreeCTA}</button>
               </div>
             </div>
           </div>
