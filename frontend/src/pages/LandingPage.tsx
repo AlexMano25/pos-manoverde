@@ -1902,7 +1902,12 @@ export default function LandingPage() {
         }} />
         <div style={{ ...containerStyle, textAlign: 'center', position: 'relative', zIndex: 1 }}>
           {/* Play icon */}
-          <div style={{
+          <div
+          onClick={() => {
+            const el = document.getElementById('pricing')
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
+          style={{
             width: 80,
             height: 80,
             borderRadius: '50%',
@@ -3109,19 +3114,6 @@ export default function LandingPage() {
             }}>
               <p style={{ fontSize: 13, margin: 0, color: '#64748b' }}>
                 {t.landing.footerCopyright}
-              </p>
-              <p style={{
-                fontSize: 13,
-                margin: 0,
-                color: '#64748b',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}>
-                {t.landing.footerMadeIn}
-                <span role="img" aria-label="Cameroon flag" style={{ fontSize: 16 }}>
-                  &#x1F1E8;&#x1F1F2;
-                </span>
               </p>
             </div>
           </div>
