@@ -539,6 +539,7 @@ export type TranslationKeys = {
     navFaq: string
     navLogin: string
     navStart: string
+    navSectors: string
     // Hero
     heroTitle1: string
     heroTitle2: string
@@ -568,6 +569,22 @@ export type TranslationKeys = {
     feature5Desc: string
     feature6Title: string
     feature6Desc: string
+    // Product Showcase
+    showcaseTitle: string
+    showcaseSubtitle: string
+    showcaseTab1: string
+    showcaseTab2: string
+    showcaseTab3: string
+    showcaseTab1Desc: string
+    showcaseTab2Desc: string
+    showcaseTab3Desc: string
+    showcaseCTA: string
+    showcaseBadge: string
+    // Video Demo
+    demoTitle: string
+    demoSubtitle: string
+    demoCTA: string
+    demoDuration: string
     // How it works
     howBadge: string
     howTitle: string
@@ -578,6 +595,32 @@ export type TranslationKeys = {
     howStep2Desc: string
     howStep3Title: string
     howStep3Desc: string
+    // Sectors
+    sectorsTitle: string
+    sectorsSubtitle: string
+    sector1Title: string
+    sector1Desc: string
+    sector2Title: string
+    sector2Desc: string
+    sector3Title: string
+    sector3Desc: string
+    sector4Title: string
+    sector4Desc: string
+    sector5Title: string
+    sector5Desc: string
+    sector6Title: string
+    sector6Desc: string
+    // Technical Trust
+    trustTitle: string
+    trustSubtitle: string
+    trust1Title: string
+    trust1Desc: string
+    trust2Title: string
+    trust2Desc: string
+    trust3Title: string
+    trust3Desc: string
+    trust4Title: string
+    trust4Desc: string
     // Pricing
     pricingTitle: string
     pricingSubtitle: string
@@ -641,6 +684,12 @@ export type TranslationKeys = {
     testimonial3Text: string
     testimonial3Name: string
     testimonial3Role: string
+    testimonial4Text: string
+    testimonial4Name: string
+    testimonial4Role: string
+    testimonial5Text: string
+    testimonial5Name: string
+    testimonial5Role: string
     // FAQ
     faqTitle: string
     faqSubtitle: string

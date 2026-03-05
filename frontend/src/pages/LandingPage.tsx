@@ -400,11 +400,12 @@ export default function LandingPage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
+  const [showcaseTab, setShowcaseTab] = useState(0)
   const { t } = useLanguageStore()
 
   // Animated counters for hero stats
-  const stat1 = useCountUp(500, 2000)
-  const stat2 = useCountUp(12, 1500)
+  const stat1 = useCountUp(2500, 2000)
+  const stat2 = useCountUp(26, 1500)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -651,6 +652,22 @@ export default function LandingPage() {
       text: t.landing.testimonial3Text,
       rating: 5,
     },
+    {
+      name: t.landing.testimonial4Name,
+      role: t.landing.testimonial4Role,
+      avatar: 'GM',
+      avatarBg: '#e11d48',
+      text: t.landing.testimonial4Text,
+      rating: 4,
+    },
+    {
+      name: t.landing.testimonial5Name,
+      role: t.landing.testimonial5Role,
+      avatar: 'KA',
+      avatarBg: '#0891b2',
+      text: t.landing.testimonial5Text,
+      rating: 4,
+    },
   ]
 
   const FAQ_ITEMS = [
@@ -666,7 +683,7 @@ export default function LandingPage() {
 
   const NAV_SECTIONS = [
     { id: 'features', label: t.landing.navFeatures },
-    { id: 'how-it-works', label: t.landing.navHow },
+    { id: 'sectors', label: t.landing.navSectors },
     { id: 'pricing', label: t.landing.navPricing },
     { id: 'testimonials', label: t.landing.navTestimonials },
     { id: 'faq', label: t.landing.navFaq },
@@ -863,6 +880,8 @@ export default function LandingPage() {
         .landing-step-connector { display: none !important; }
         .landing-pricing-grid { grid-template-columns: 1fr !important; }
         .landing-testimonials-grid { grid-template-columns: 1fr !important; }
+        .landing-sectors-grid { grid-template-columns: 1fr !important; }
+        .landing-trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .landing-footer-grid { grid-template-columns: 1fr !important; text-align: center; }
         .landing-footer-bottom { flex-direction: column !important; gap: 12px !important; text-align: center !important; }
         .landing-social-links { justify-content: center !important; }
@@ -874,7 +893,9 @@ export default function LandingPage() {
         @media (min-width: 600px) {
           .landing-features-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-testimonials-grid { grid-template-columns: 1fr !important; }
+          .landing-testimonials-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-sectors-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-section-padding { padding: 80px 24px !important; }
           .landing-billing-toggle-container { flex-direction: row !important; }
@@ -900,6 +921,8 @@ export default function LandingPage() {
           .landing-step-connector { display: block !important; }
           .landing-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; }
           .landing-testimonials-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-sectors-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-trust-grid { grid-template-columns: repeat(4, 1fr) !important; }
           .landing-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr !important; text-align: left; }
           .landing-footer-bottom { flex-direction: row !important; text-align: left !important; }
           .landing-social-links { justify-content: flex-start !important; }
@@ -1671,6 +1694,272 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
+          PRODUCT SHOWCASE
+          ================================================================ */}
+      <section id="showcase" className="landing-section-padding" style={{
+        ...sectionStyle('#f8fafc'),
+        background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+      }}>
+        <div style={containerStyle}>
+          <p style={{
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#2563eb',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: 12,
+          }}>
+            {t.landing.showcaseBadge}
+          </p>
+          <h2 style={sectionTitleStyle}>{t.landing.showcaseTitle}</h2>
+          <p style={sectionSubtitleStyle}>{t.landing.showcaseSubtitle}</p>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 32 }}>
+            {[t.landing.showcaseTab1, t.landing.showcaseTab2, t.landing.showcaseTab3].map((tab, i) => (
+              <button
+                key={i}
+                onClick={() => setShowcaseTab(i)}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: 50,
+                  border: showcaseTab === i ? '2px solid #2563eb' : '2px solid #e2e8f0',
+                  backgroundColor: showcaseTab === i ? '#2563eb' : '#ffffff',
+                  color: showcaseTab === i ? '#ffffff' : '#334155',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: pageFont,
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Mockup area */}
+          <div style={{
+            backgroundColor: '#0f172a',
+            borderRadius: 16,
+            padding: '24px 24px 0',
+            maxWidth: 900,
+            margin: '0 auto',
+            overflow: 'hidden',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.15)',
+          }}>
+            {/* Browser chrome */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#ef4444' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+              <div style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#22c55e' }} />
+              <div style={{ flex: 1, height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.1)', marginLeft: 8 }} />
+            </div>
+
+            {/* Dashboard mockup */}
+            {showcaseTab === 0 && (
+              <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px 12px 0 0', padding: 24, minHeight: 320 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+                  {['#2563eb', '#16a34a', '#f59e0b'].map((color, i) => (
+                    <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 20, borderLeft: `4px solid ${color}` }}>
+                      <div style={{ width: 60, height: 10, backgroundColor: '#cbd5e1', borderRadius: 4, marginBottom: 8 }} />
+                      <div style={{ fontSize: 28, fontWeight: 800, color, fontFamily: pageFont }}>{['247,500', '38', '12'][i]}</div>
+                      <div style={{ width: 80, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, marginTop: 6 }} />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 20, height: 120 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: '100%' }}>
+                    {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
+                      <div key={i} style={{ flex: 1, height: `${h}%`, backgroundColor: '#2563eb', borderRadius: '4px 4px 0 0', opacity: 0.7 + (i * 0.025) }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* POS mockup */}
+            {showcaseTab === 1 && (
+              <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px 12px 0 0', padding: 24, minHeight: 320 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 16, textAlign: 'center', border: i === 1 ? '2px solid #2563eb' : '1px solid #e2e8f0' }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 8, backgroundColor: ['#dbeafe', '#dcfce7', '#fef3c7', '#fce7f3', '#e0e7ff', '#f1f5f9'][i], margin: '0 auto 8px' }} />
+                          <div style={{ width: '70%', height: 8, backgroundColor: '#cbd5e1', borderRadius: 4, margin: '0 auto 4px' }} />
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a', fontFamily: pageFont }}>
+                            {['1,200', '850', '2,500', '600', '3,200', '450'][i]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 12, fontFamily: pageFont }}>Panier</div>
+                    {[1, 2, 3].map((_, i) => (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                        <div style={{ width: 80, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4 }} />
+                        <div style={{ width: 40, height: 8, backgroundColor: '#cbd5e1', borderRadius: 4 }} />
+                      </div>
+                    ))}
+                    <div style={{ marginTop: 16, padding: '12px 0', borderTop: '2px solid #0f172a', display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ fontWeight: 700, fontSize: 14, fontFamily: pageFont }}>Total</span>
+                      <span style={{ fontWeight: 800, fontSize: 16, color: '#2563eb', fontFamily: pageFont }}>4,550</span>
+                    </div>
+                    <div style={{ backgroundColor: '#2563eb', color: '#fff', borderRadius: 8, padding: '10px 0', textAlign: 'center', marginTop: 12, fontSize: 13, fontWeight: 700, fontFamily: pageFont }}>
+                      Payer
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reports mockup */}
+            {showcaseTab === 2 && (
+              <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px 12px 0 0', padding: 24, minHeight: 320 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 20 }}>
+                    <div style={{ width: 100, height: 8, backgroundColor: '#cbd5e1', borderRadius: 4, marginBottom: 16 }} />
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 100 }}>
+                      {[30, 50, 40, 70, 60, 85, 75].map((h, i) => (
+                        <div key={i} style={{ flex: 1, height: `${h}%`, backgroundColor: i === 6 ? '#2563eb' : '#dbeafe', borderRadius: '3px 3px 0 0' }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: 100, height: 100, borderRadius: '50%', border: '10px solid #2563eb', borderRightColor: '#dbeafe', borderBottomColor: '#93c5fd', position: 'relative' }}>
+                      <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: 16, fontWeight: 800, color: '#0f172a', fontFamily: pageFont }}>72%</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 16 }}>
+                  {[1, 2, 3, 4].map((_, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < 3 ? '1px solid #f1f5f9' : 'none' }}>
+                      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: ['#2563eb', '#16a34a', '#f59e0b', '#9333ea'][i] }} />
+                        <div style={{ width: 100 + i * 20, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4 }} />
+                      </div>
+                      <div style={{ width: 50, height: 8, backgroundColor: '#cbd5e1', borderRadius: 4 }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tab descriptions */}
+          <p style={{ textAlign: 'center', fontSize: 15, color: '#64748b', lineHeight: 1.7, marginTop: 24, maxWidth: 600, marginLeft: 'auto', marginRight: 'auto' }}>
+            {[t.landing.showcaseTab1Desc, t.landing.showcaseTab2Desc, t.landing.showcaseTab3Desc][showcaseTab]}
+          </p>
+
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <button
+              onClick={() => {
+                const el = document.getElementById('pricing')
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }}
+              style={{
+                padding: '14px 32px',
+                borderRadius: 50,
+                border: 'none',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: pageFont,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {t.landing.showcaseCTA} &rarr;
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          VIDEO DEMO CTA
+          ================================================================ */}
+      <section style={{
+        padding: '80px 24px',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Decorative glow */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          height: 400,
+          background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)',
+          borderRadius: '50%',
+        }} />
+        <div style={{ ...containerStyle, textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          {/* Play icon */}
+          <div style={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(37,99,235,0.2)',
+            border: '2px solid rgba(37,99,235,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(37,99,235,0.3)'
+            e.currentTarget.style.transform = 'scale(1.1)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'rgba(37,99,235,0.2)'
+            e.currentTarget.style.transform = 'scale(1)'
+          }}
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#ffffff">
+              <polygon points="8,5 19,12 8,19" />
+            </svg>
+          </div>
+          <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: '#ffffff', margin: '0 0 12px', fontFamily: pageFont }}>
+            {t.landing.demoTitle}
+          </h2>
+          <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.6, maxWidth: 500, margin: '0 auto 8px', fontFamily: pageFont }}>
+            {t.landing.demoSubtitle}
+          </p>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px', fontFamily: pageFont }}>
+            {t.landing.demoDuration}
+          </p>
+          <button
+            onClick={() => {
+              const el = document.getElementById('pricing')
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+            style={{
+              padding: '14px 32px',
+              borderRadius: 50,
+              border: '2px solid rgba(255,255,255,0.2)',
+              backgroundColor: 'transparent',
+              color: '#ffffff',
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: pageFont,
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {t.landing.demoCTA} &rarr;
+          </button>
+        </div>
+      </section>
+
+      {/* ================================================================
           HOW IT WORKS
           ================================================================ */}
       <section id="how-it-works" className="landing-section-padding" style={{
@@ -1754,6 +2043,136 @@ export default function LandingPage() {
                   marginRight: 'auto',
                 }}>
                   {step.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          SECTORS / USE CASES
+          ================================================================ */}
+      <section id="sectors" className="landing-section-padding" style={sectionStyle('#ffffff')}>
+        <div style={containerStyle}>
+          <p style={{
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#16a34a',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: 12,
+          }}>
+            {t.landing.navSectors}
+          </p>
+          <h2 style={sectionTitleStyle}>{t.landing.sectorsTitle}</h2>
+          <p style={sectionSubtitleStyle}>{t.landing.sectorsSubtitle}</p>
+
+          <div className="landing-sectors-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 20,
+          }}>
+            {[
+              { emoji: '\uD83C\uDF7D\uFE0F', title: t.landing.sector1Title, desc: t.landing.sector1Desc, color: '#ef4444' },
+              { emoji: '\uD83D\uDC8A', title: t.landing.sector2Title, desc: t.landing.sector2Desc, color: '#2563eb' },
+              { emoji: '\uD83D\uDED2', title: t.landing.sector3Title, desc: t.landing.sector3Desc, color: '#16a34a' },
+              { emoji: '\uD83E\uDD56', title: t.landing.sector4Title, desc: t.landing.sector4Desc, color: '#f59e0b' },
+              { emoji: '\uD83C\uDFE8', title: t.landing.sector5Title, desc: t.landing.sector5Desc, color: '#9333ea' },
+              { emoji: '\uD83D\uDC57', title: t.landing.sector6Title, desc: t.landing.sector6Desc, color: '#e11d48' },
+            ].map((sector, i) => (
+              <div
+                key={i}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: 16,
+                  padding: 28,
+                  border: '1px solid #e2e8f0',
+                  transition: 'all 0.3s ease',
+                  cursor: 'default',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)'
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
+                  e.currentTarget.style.borderColor = sector.color
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.borderColor = '#e2e8f0'
+                }}
+              >
+                <div style={{ fontSize: 36, marginBottom: 12 }}>{sector.emoji}</div>
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: '0 0 8px', fontFamily: pageFont }}>
+                  {sector.title}
+                </h3>
+                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: 0, fontFamily: pageFont }}>
+                  {sector.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          TECHNICAL TRUST / SECURITY
+          ================================================================ */}
+      <section className="landing-section-padding" style={{
+        ...sectionStyle('#f8fafc'),
+        background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+      }}>
+        <div style={containerStyle}>
+          <h2 style={{ ...sectionTitleStyle, fontSize: 'clamp(24px, 3vw, 32px)' }}>{t.landing.trustTitle}</h2>
+          <p style={sectionSubtitleStyle}>{t.landing.trustSubtitle}</p>
+
+          <div className="landing-trust-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 20,
+          }}>
+            {[
+              { icon: (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              ), title: t.landing.trust1Title, desc: t.landing.trust1Desc },
+              { icon: (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                </svg>
+              ), title: t.landing.trust2Title, desc: t.landing.trust2Desc },
+              { icon: (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
+                </svg>
+              ), title: t.landing.trust3Title, desc: t.landing.trust3Desc },
+              { icon: (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+                  <polyline points="8 14 12 10 16 14" />
+                </svg>
+              ), title: t.landing.trust4Title, desc: t.landing.trust4Desc },
+            ].map((item, i) => (
+              <div key={i} style={{ textAlign: 'center', padding: 24 }}>
+                <div style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  backgroundColor: ['rgba(37,99,235,0.1)', 'rgba(22,163,74,0.1)', 'rgba(147,51,234,0.1)', 'rgba(245,158,11,0.1)'][i],
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                }}>
+                  {item.icon}
+                </div>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
+                  {item.title}
+                </h3>
+                <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, margin: 0, fontFamily: pageFont }}>
+                  {item.desc}
                 </p>
               </div>
             ))}
@@ -2203,6 +2622,7 @@ export default function LandingPage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 24,
+            justifyItems: 'center',
           }}>
             {TESTIMONIALS.map((testimonial, index) => (
               <div
