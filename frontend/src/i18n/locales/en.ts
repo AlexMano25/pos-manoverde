@@ -411,6 +411,16 @@ export const en: TranslationKeys = {
     noEmployees: 'No employees found',
     serverModeOnly: 'Server mode required',
     serverModeMessage: 'Employee management requires server mode.',
+    password: 'Password',
+    confirmPassword: 'Confirm password',
+    passwordHint: 'Minimum 6 characters',
+    passwordEditHint: 'Leave blank to keep current password',
+    passwordMismatch: 'Passwords do not match',
+    passwordRequired: 'Password is required for new employees',
+    emailInUse: 'This email is already in use',
+    createSuccess: 'Employee created successfully',
+    updateSuccess: 'Employee updated successfully',
+    connectionRequired: 'Internet connection required to manage employees',
   },
 
   // Settings

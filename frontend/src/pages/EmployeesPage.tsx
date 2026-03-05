@@ -13,6 +13,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { db } from '../db/dexie'
+import { supabase, isSupabaseConfigured } from '../services/supabase'
 import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { useResponsive } from '../hooks/useLayoutMode'
@@ -43,6 +44,8 @@ const roleColors: Record<UserRole, string> = {
 interface EmployeeForm {
   name: string
   email: string
+  password: string
+  confirmPassword: string
   role: UserRole
   phone: string
   pin: string
@@ -51,6 +54,8 @@ interface EmployeeForm {
 const emptyForm: EmployeeForm = {
   name: '',
   email: '',
+  password: '',
+  confirmPassword: '',
   role: 'cashier',
   phone: '',
   pin: '',
@@ -119,6 +124,8 @@ export default function EmployeesPage() {
     setForm({
       name: emp.name,
       email: emp.email,
+      password: '',
+      confirmPassword: '',
       role: emp.role,
       phone: emp.phone || '',
       pin: emp.pin || '',
@@ -143,42 +150,117 @@ export default function EmployeesPage() {
     }
     if (!currentStore) return
 
+    // Password validation for cloud mode
+    if (isSupabaseConfigured && supabase) {
+      if (!editingEmployee && !form.password) {
+        setFormError(t.employees.passwordRequired)
+        return
+      }
+      if (form.password && form.password.length < 6) {
+        setFormError(t.employees.passwordHint)
+        return
+      }
+      if (form.password && form.password !== form.confirmPassword) {
+        setFormError(t.employees.passwordMismatch)
+        return
+      }
+    }
+
     setSaving(true)
     setFormError('')
 
     try {
-      const now = new Date().toISOString()
+      // Cloud mode: use Edge Functions
+      if (isSupabaseConfigured && supabase) {
+        if (editingEmployee) {
+          // Update via Edge Function
+          const updates: Record<string, unknown> = {
+            name: form.name.trim(),
+            role: form.role,
+            phone: form.phone.trim() || null,
+            pin: form.pin.trim() || null,
+          }
+          if (form.email.trim() !== editingEmployee.email) {
+            updates.email = form.email.trim()
+          }
+          if (form.password) {
+            updates.password = form.password
+          }
 
-      if (editingEmployee) {
-        await db.users.update(editingEmployee.id, {
-          name: form.name.trim(),
-          email: form.email.trim(),
-          role: form.role,
-          phone: form.phone.trim() || undefined,
-          pin: form.pin.trim() || undefined,
-          updated_at: now,
-        })
-      } else {
-        const newUser: User = {
-          id: generateUUID(),
-          store_id: currentStore.id,
-          name: form.name.trim(),
-          email: form.email.trim(),
-          role: form.role,
-          phone: form.phone.trim() || undefined,
-          pin: form.pin.trim() || undefined,
-          is_active: true,
-          created_at: now,
-          updated_at: now,
+          const { data, error } = await supabase.functions.invoke('update-employee', {
+            body: { employee_id: editingEmployee.id, updates },
+          })
+
+          if (error) throw new Error(error.message)
+          if (data?.error) throw new Error(data.error)
+
+          // Update local IndexedDB
+          if (data?.user) {
+            await db.users.update(editingEmployee.id, data.user)
+          }
+        } else {
+          // Create via Edge Function
+          const { data, error } = await supabase.functions.invoke('create-employee', {
+            body: {
+              name: form.name.trim(),
+              email: form.email.trim(),
+              password: form.password,
+              role: form.role,
+              phone: form.phone.trim() || null,
+              pin: form.pin.trim() || null,
+              store_id: currentStore.id,
+            },
+          })
+
+          if (error) throw new Error(error.message)
+          if (data?.error) throw new Error(data.error)
+
+          // Add to local IndexedDB
+          if (data?.user) {
+            await db.users.add(data.user as User)
+          }
         }
-        await db.users.add(newUser)
+      } else {
+        // Offline / local mode: direct IndexedDB (no auth account)
+        const now = new Date().toISOString()
+
+        if (editingEmployee) {
+          await db.users.update(editingEmployee.id, {
+            name: form.name.trim(),
+            email: form.email.trim(),
+            role: form.role,
+            phone: form.phone.trim() || undefined,
+            pin: form.pin.trim() || undefined,
+            updated_at: now,
+          })
+        } else {
+          const newUser: User = {
+            id: generateUUID(),
+            store_id: currentStore.id,
+            name: form.name.trim(),
+            email: form.email.trim(),
+            role: form.role,
+            phone: form.phone.trim() || undefined,
+            pin: form.pin.trim() || undefined,
+            is_active: true,
+            created_at: now,
+            updated_at: now,
+          }
+          await db.users.add(newUser)
+        }
       }
 
       setShowModal(false)
       setForm(emptyForm)
       await loadEmployees()
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : t.common.error)
+      const msg = err instanceof Error ? err.message : t.common.error
+      // Translate common Supabase errors
+      if (msg.includes('already been registered') || msg.includes('already in use')) {
+        setFormError(t.employees.emailInUse)
+      } else {
+        setFormError(msg)
+      }
     } finally {
       setSaving(false)
     }
@@ -187,11 +269,19 @@ export default function EmployeesPage() {
   const handleDelete = async () => {
     if (!deletingEmployee) return
     try {
-      // Soft delete: mark as inactive
-      await db.users.update(deletingEmployee.id, {
-        is_active: false,
-        updated_at: new Date().toISOString(),
-      })
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.functions.invoke('update-employee', {
+          body: { employee_id: deletingEmployee.id, updates: { is_active: false } },
+        })
+        if (error) throw error
+        if (data?.error) throw new Error(data.error)
+        if (data?.user) await db.users.update(deletingEmployee.id, data.user)
+      } else {
+        await db.users.update(deletingEmployee.id, {
+          is_active: false,
+          updated_at: new Date().toISOString(),
+        })
+      }
       setShowDeleteModal(false)
       setDeletingEmployee(null)
       await loadEmployees()
@@ -202,10 +292,19 @@ export default function EmployeesPage() {
 
   const toggleActive = async (emp: User) => {
     try {
-      await db.users.update(emp.id, {
-        is_active: !emp.is_active,
-        updated_at: new Date().toISOString(),
-      })
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.functions.invoke('update-employee', {
+          body: { employee_id: emp.id, updates: { is_active: !emp.is_active } },
+        })
+        if (error) throw error
+        if (data?.error) throw new Error(data.error)
+        if (data?.user) await db.users.update(emp.id, data.user)
+      } else {
+        await db.users.update(emp.id, {
+          is_active: !emp.is_active,
+          updated_at: new Date().toISOString(),
+        })
+      }
       await loadEmployees()
     } catch (err) {
       console.error('Toggle active error:', err)
@@ -471,6 +570,40 @@ export default function EmployeesPage() {
             onBlur={(e) => (e.target.style.borderColor = C.border)}
           />
         </div>
+
+        {/* Password fields (cloud mode only) */}
+        {isSupabaseConfigured && (
+          <div style={formRowStyle}>
+            <div style={formFieldStyle}>
+              <label style={formLabelStyle}>
+                {t.employees.password} {!editingEmployee ? '*' : ''}
+              </label>
+              <input
+                style={formInputStyle}
+                type="password"
+                placeholder={editingEmployee ? t.employees.passwordEditHint : t.employees.passwordHint}
+                value={form.password}
+                onChange={(e) => updateField('password', e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                onBlur={(e) => (e.target.style.borderColor = C.border)}
+              />
+            </div>
+            <div style={formFieldStyle}>
+              <label style={formLabelStyle}>
+                {t.employees.confirmPassword} {!editingEmployee ? '*' : ''}
+              </label>
+              <input
+                style={formInputStyle}
+                type="password"
+                placeholder={t.employees.confirmPassword}
+                value={form.confirmPassword}
+                onChange={(e) => updateField('confirmPassword', e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                onBlur={(e) => (e.target.style.borderColor = C.border)}
+              />
+            </div>
+          </div>
+        )}
 
         <div style={formRowStyle}>
           <div style={formFieldStyle}>

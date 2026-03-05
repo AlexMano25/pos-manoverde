@@ -417,6 +417,16 @@ export type TranslationKeys = {
     noEmployees: string
     serverModeOnly: string
     serverModeMessage: string
+    password: string
+    confirmPassword: string
+    passwordHint: string
+    passwordEditHint: string
+    passwordMismatch: string
+    passwordRequired: string
+    emailInUse: string
+    createSuccess: string
+    updateSuccess: string
+    connectionRequired: string
   }
 
   // Settings

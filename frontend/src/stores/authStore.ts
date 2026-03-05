@@ -287,35 +287,32 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           const localAvailable = appMode === 'all_in_one' ? false : await isLocalServerReachable()
 
           if (!localAvailable) {
-            // Look up user by PIN in the users table
-            const { data: profile, error: profileError } = await supabase
-              .from('users')
-              .select(
-                'id, store_id, name, email, role, pin, phone, is_active, created_at, updated_at',
-              )
-              .eq('pin', pin)
-              .eq('is_active', true)
-              .single()
+            // Use pin-login Edge Function for secure PIN authentication
+            const { data: pinData, error: pinError } = await supabase.functions.invoke(
+              'pin-login',
+              { body: { pin } },
+            )
 
-            if (profileError || !profile) {
+            if (pinError) {
               throw new Error('PIN invalide')
             }
 
-            // Sign in via Supabase Auth using the user's email
-            // We use a known default password for PIN users
-            // For proper security, this should use an Edge Function with service_role
-            // For MVP, we try the default password
-            const { data: authData, error: authError } =
-              await supabase.auth.signInWithPassword({
-                email: profile.email,
-                password: 'admin123', // Default password for PIN-based login in MVP
-              })
-
-            if (authError) {
-              // If auth fails, we still proceed with an anonymous session
-              // The RLS policies allow anon access for basic operations
-              console.warn('[authStore] Supabase Auth failed for PIN user, using anon session')
+            // Check for error in response body
+            if (pinData?.error) {
+              throw new Error(pinData.error)
             }
+
+            if (!pinData?.session || !pinData?.user) {
+              throw new Error('PIN invalide')
+            }
+
+            // Set the Supabase session from the Edge Function response
+            await supabase.auth.setSession({
+              access_token: pinData.session.access_token,
+              refresh_token: pinData.session.refresh_token,
+            })
+
+            const profile = pinData.user
 
             // Fetch store data
             const { data: store } = await supabase
@@ -349,7 +346,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
 
             set({
               user: profile as User,
-              token: authData?.session?.access_token ?? 'pin-session',
+              token: pinData.session.access_token,
             })
 
             // Load cloud data into IndexedDB
