@@ -400,6 +400,7 @@ export default function LandingPage() {
   const [headerScrolled, setHeaderScrolled] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
+  const [infoPage, setInfoPage] = useState<'docs' | 'api' | 'changelog' | null>(null)
   const [showcaseTab, setShowcaseTab] = useState(0)
   const { t } = useLanguageStore()
 
@@ -2989,9 +2990,9 @@ export default function LandingPage() {
                 {[
                   { label: t.landing.navFeatures, action: () => scrollToSection('features') },
                   { label: t.landing.navPricing, action: () => scrollToSection('pricing') },
-                  { label: 'Documentation', action: undefined },
-                  { label: 'API', action: undefined },
-                  { label: 'Changelog', action: undefined },
+                  { label: 'Documentation', action: () => setInfoPage('docs') },
+                  { label: 'API', action: () => setInfoPage('api') },
+                  { label: 'Changelog', action: () => setInfoPage('changelog') },
                 ].map((link, i) => (
                   <li key={i} style={{ marginBottom: 12 }}>
                     <button
@@ -3137,6 +3138,191 @@ export default function LandingPage() {
       {legalModal && (
         <LegalModal documentType={legalModal} onClose={() => setLegalModal(null)} />
       )}
+
+      {/* Info page modal (Documentation, API, Changelog) */}
+      {infoPage && (() => {
+        const pages = {
+          docs: {
+            title: 'Documentation',
+            icon: (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+            ),
+            sections: [
+              {
+                title: t.landing.navFeatures,
+                items: [
+                  { label: t.landing.feature1Title, desc: t.landing.feature1Desc },
+                  { label: t.landing.feature2Title, desc: t.landing.feature2Desc },
+                  { label: t.landing.feature3Title, desc: t.landing.feature3Desc },
+                  { label: t.landing.feature4Title, desc: t.landing.feature4Desc },
+                  { label: t.landing.feature5Title, desc: t.landing.feature5Desc },
+                  { label: t.landing.feature6Title, desc: t.landing.feature6Desc },
+                ],
+              },
+              {
+                title: t.landing.howStep1Title,
+                items: [
+                  { label: '1. ' + t.landing.howStep1Title, desc: t.landing.howStep1Desc },
+                  { label: '2. ' + t.landing.howStep2Title, desc: t.landing.howStep2Desc },
+                  { label: '3. ' + t.landing.howStep3Title, desc: t.landing.howStep3Desc },
+                ],
+              },
+            ],
+          },
+          api: {
+            title: 'API Reference',
+            icon: (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+              </svg>
+            ),
+            endpoints: [
+              { method: 'POST', path: '/auth/register', desc: 'Create a new account' },
+              { method: 'POST', path: '/auth/login', desc: 'Authenticate user' },
+              { method: 'GET', path: '/products', desc: 'List all products' },
+              { method: 'POST', path: '/products', desc: 'Create a product' },
+              { method: 'PUT', path: '/products/:id', desc: 'Update a product' },
+              { method: 'DELETE', path: '/products/:id', desc: 'Delete a product' },
+              { method: 'GET', path: '/orders', desc: 'List all orders' },
+              { method: 'POST', path: '/orders', desc: 'Create an order' },
+              { method: 'GET', path: '/stats/dashboard', desc: 'Get dashboard stats' },
+              { method: 'GET', path: '/sync/pull', desc: 'Pull sync data' },
+              { method: 'POST', path: '/sync/push', desc: 'Push sync data' },
+            ],
+          },
+          changelog: {
+            title: 'Changelog',
+            icon: (
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+            ),
+            releases: [
+              { version: 'v1.5.0', date: 'Mars 2026', tag: 'latest', items: [
+                'Landing page: Product showcase, Video demo, Sectors, Trust badges',
+                'Employee authentication with PIN login',
+                'Multi-currency support (25+ currencies)',
+                'Activity-specific products (26 business types)',
+              ]},
+              { version: 'v1.4.0', date: 'Fevrier 2026', tag: null, items: [
+                'Responsive 3-tier layout',
+                'PayPal & Orange Money payment integration',
+                'Subscription management',
+                'Browser language detection',
+              ]},
+              { version: 'v1.3.0', date: 'Janvier 2026', tag: null, items: [
+                'Offline-first with IndexedDB',
+                'Bluetooth receipt printing',
+                'Cloud synchronization',
+                'Multi-store management',
+              ]},
+              { version: 'v1.0.0', date: 'Decembre 2025', tag: null, items: [
+                'Initial release',
+                'POS interface with product grid',
+                'Order management',
+                'Basic dashboard & reports',
+              ]},
+            ],
+          },
+        }
+        const page = pages[infoPage]
+        return (
+          <div
+            style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+            onClick={(e) => { if (e.target === e.currentTarget) setInfoPage(null) }}
+          >
+            <div style={{ backgroundColor: '#ffffff', maxWidth: 750, width: '100%', maxHeight: '90vh', overflowY: 'auto', borderRadius: 16, padding: 32, position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {page.icon}
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{page.title}</h2>
+                </div>
+                <button
+                  onClick={() => setInfoPage(null)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', color: '#64748b' }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              </div>
+              <div style={{ height: 1, backgroundColor: '#e2e8f0', marginBottom: 24 }} />
+
+              {/* Documentation content */}
+              {infoPage === 'docs' && 'sections' in page && (page as any).sections.map((section: any, si: number) => (
+                <div key={si} style={{ marginBottom: 32 }}>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: '#2563eb', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section.title}</h3>
+                  {section.items.map((item: any, ii: number) => (
+                    <div key={ii} style={{ marginBottom: 16, padding: '12px 16px', backgroundColor: '#f8fafc', borderRadius: 10, borderLeft: '3px solid #2563eb' }}>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{item.label}</p>
+                      <p style={{ margin: '4px 0 0', fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+              {/* API content */}
+              {infoPage === 'api' && 'endpoints' in page && (
+                <div>
+                  <p style={{ fontSize: 14, color: '#64748b', margin: '0 0 20px', lineHeight: 1.6 }}>
+                    Base URL: <code style={{ backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace', fontSize: 13, color: '#0f172a' }}>https://api.manoverde.com/v1</code>
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {(page as any).endpoints.map((ep: any, ei: number) => (
+                      <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', backgroundColor: '#f8fafc', borderRadius: 8 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 700, fontFamily: 'monospace', padding: '3px 8px', borderRadius: 4, minWidth: 56, textAlign: 'center',
+                          backgroundColor: ep.method === 'GET' ? '#dcfce7' : ep.method === 'POST' ? '#dbeafe' : ep.method === 'PUT' ? '#fef3c7' : '#fecaca',
+                          color: ep.method === 'GET' ? '#16a34a' : ep.method === 'POST' ? '#2563eb' : ep.method === 'PUT' ? '#d97706' : '#dc2626',
+                        }}>{ep.method}</span>
+                        <code style={{ fontSize: 13, fontFamily: 'monospace', color: '#0f172a', fontWeight: 500 }}>{ep.path}</code>
+                        <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>{ep.desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 12, color: '#94a3b8', margin: '20px 0 0', textAlign: 'center' }}>
+                    Authentication: Bearer token required for all endpoints except /auth/*
+                  </p>
+                </div>
+              )}
+
+              {/* Changelog content */}
+              {infoPage === 'changelog' && 'releases' in page && (
+                <div>
+                  {(page as any).releases.map((release: any, ri: number) => (
+                    <div key={ri} style={{ marginBottom: 28, position: 'relative', paddingLeft: 24, borderLeft: ri === 0 ? '2px solid #2563eb' : '2px solid #e2e8f0' }}>
+                      <div style={{ position: 'absolute', left: -6, top: 0, width: 10, height: 10, borderRadius: '50%', backgroundColor: ri === 0 ? '#2563eb' : '#cbd5e1' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{release.version}</span>
+                        <span style={{ fontSize: 12, color: '#64748b' }}>{release.date}</span>
+                        {release.tag && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100, backgroundColor: '#dcfce7', color: '#16a34a', textTransform: 'uppercase' }}>{release.tag}</span>}
+                      </div>
+                      <ul style={{ margin: 0, padding: '0 0 0 16px' }}>
+                        {release.items.map((item: string, ii: number) => (
+                          <li key={ii} style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Footer */}
+              <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setInfoPage(null)}
+                  style={{ padding: '10px 24px', borderRadius: 8, border: '1px solid #e2e8f0', backgroundColor: '#ffffff', color: '#475569', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  {t.common.close}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
