@@ -486,7 +486,8 @@ export default function LandingPage() {
   const formatPrice = (price: number) => {
     if (price === -1) return t.landing.pricingCustom
     if (price === 0) return '0'
-    return price.toLocaleString('fr-FR')
+    if (Number.isInteger(price)) return price.toString()
+    return price.toFixed(2)
   }
 
   // ── Translated data arrays ─────────────────────────────────────────────────
@@ -504,10 +505,10 @@ export default function LandingPage() {
     {
       id: 'free',
       name: t.landing.planFreeName,
-      tagline: 'GRATUIT',
+      tagline: 'FREE',
       price: 0,
       priceYearly: 0,
-      currency: 'FCFA',
+      currency: 'USD',
       description: t.landing.planFreeDesc,
       badge: null,
       badgeColor: null,
@@ -527,12 +528,36 @@ export default function LandingPage() {
       highlight: false,
     },
     {
+      id: 'pay_as_you_grow',
+      name: 'Flexible',
+      tagline: 'FLEXIBLE',
+      price: -2,
+      priceYearly: -2,
+      currency: 'USD',
+      description: t.billing.payAsYouGrowDesc || 'Payez uniquement ce que vous utilisez. Toutes les fonctions incluses.',
+      badge: t.billing.initialCredit || '10 $ offerts',
+      badgeColor: '#f59e0b',
+      features: [
+        { text: '$0.02 USD / ticket', included: true },
+        { text: t.landing.planFeature13, included: true },
+        { text: t.landing.planFeature8, included: true },
+        { text: t.landing.planFeature14, included: true },
+        { text: t.landing.planFeature9, included: true },
+        { text: t.landing.planFeature10, included: true },
+        { text: t.landing.planFeature15, included: false },
+        { text: t.landing.planFeature16, included: false },
+      ],
+      cta: t.landing.planFreeCTA,
+      ctaVariant: 'outline' as const,
+      highlight: false,
+    },
+    {
       id: 'starter',
       name: t.landing.planStarterName,
-      tagline: 'STARTER',
-      price: 9900,
-      priceYearly: 8250,
-      currency: 'FCFA',
+      tagline: 'ESSENTIEL',
+      price: 2,
+      priceYearly: 1.5,
+      currency: 'USD',
       description: t.landing.planStarterDesc,
       badge: null,
       badgeColor: null,
@@ -555,9 +580,9 @@ export default function LandingPage() {
       id: 'pro',
       name: t.landing.planProName,
       tagline: 'PRO',
-      price: 29900,
-      priceYearly: 24917,
-      currency: 'FCFA',
+      price: 5,
+      priceYearly: 4,
+      currency: 'USD',
       description: t.landing.planProDesc,
       badge: t.landing.planBadgePopular,
       badgeColor: '#16a34a',
@@ -575,30 +600,6 @@ export default function LandingPage() {
       cta: t.landing.planProCTA,
       ctaVariant: 'solid' as const,
       highlight: true,
-    },
-    {
-      id: 'pay_as_you_grow',
-      name: 'Pay as you grow',
-      tagline: 'FLEXIBLE',
-      price: -2,
-      priceYearly: -2,
-      currency: 'USD',
-      description: t.billing.payAsYouGrowDesc || 'Payez uniquement ce que vous utilisez. Toutes les fonctions incluses.',
-      badge: t.billing.initialCredit || '10 $ offerts',
-      badgeColor: '#f59e0b',
-      features: [
-        { text: '$0.02 USD / ticket', included: true },
-        { text: t.landing.planFeature13 || 'Produits illimites', included: true },
-        { text: t.landing.planFeature8 || 'Commandes illimitees', included: true },
-        { text: t.landing.planFeature14 || 'Synchronisation cloud', included: true },
-        { text: t.landing.planFeature15 || 'Multi-utilisateurs', included: true },
-        { text: t.landing.planFeature16 || 'Rapports avances', included: true },
-        { text: t.landing.planFeature10 || 'Impression Bluetooth', included: true },
-        { text: t.landing.planFeature17 || 'API personnalisee', included: true },
-      ],
-      cta: t.landing.planFreeCTA || 'Commencer',
-      ctaVariant: 'solid' as const,
-      highlight: false,
     },
     {
       id: 'enterprise',
@@ -1467,7 +1468,7 @@ export default function LandingPage() {
                         alignItems: 'center',
                       }}>
                         <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>TOTAL</span>
-                        <span style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>14 550 FCFA</span>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: '#16a34a' }}>$24.50 USD</span>
                       </div>
 
                       {/* Action buttons */}
@@ -2400,20 +2401,20 @@ export default function LandingPage() {
                     ) : plan.price === 0 ? (
                       <div>
                         <span style={{
+                          fontSize: 24,
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          letterSpacing: '-0.02em',
+                        }}>
+                          $
+                        </span>
+                        <span style={{
                           fontSize: 40,
                           fontWeight: 800,
                           color: '#0f172a',
                           letterSpacing: '-0.02em',
                         }}>
                           0
-                        </span>
-                        <span style={{
-                          fontSize: 16,
-                          fontWeight: 500,
-                          color: '#64748b',
-                          marginLeft: 4,
-                        }}>
-                          {plan.currency}
                         </span>
                         <p style={{
                           fontSize: 13,
@@ -2426,6 +2427,14 @@ export default function LandingPage() {
                       </div>
                     ) : (
                       <div>
+                        <span style={{
+                          fontSize: 20,
+                          fontWeight: 800,
+                          color: '#0f172a',
+                          letterSpacing: '-0.02em',
+                        }}>
+                          $
+                        </span>
                         <span style={{
                           fontSize: 36,
                           fontWeight: 800,
@@ -2449,7 +2458,7 @@ export default function LandingPage() {
                             fontWeight: 600,
                             margin: '4px 0 0',
                           }}>
-                            {formatPrice(plan.priceYearly * 12)} {plan.currency}{t.landing.pricingPerYear}
+                            ${formatPrice(plan.priceYearly * 12)} {plan.currency}{t.landing.pricingPerYear}
                           </p>
                         )}
                       </div>
