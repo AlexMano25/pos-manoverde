@@ -18,6 +18,22 @@ import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { useResponsive } from '../hooks/useLayoutMode'
 
+// ── Edge Function helpers ────────────────────────────────────────────────
+
+/** Extract actual error message from supabase.functions.invoke() response */
+function extractEdgeError(error: unknown): string {
+  if (!error || typeof error !== 'object') return String(error)
+  const err = error as Record<string, unknown>
+  // FunctionsHttpError stores the response body in .context
+  if (err.context && typeof err.context === 'object') {
+    const ctx = err.context as Record<string, unknown>
+    if (typeof ctx.error === 'string') return ctx.error
+  }
+  // Fallback to .message
+  if (typeof err.message === 'string') return err.message
+  return String(error)
+}
+
 // ── Error translation ────────────────────────────────────────────────────
 // Maps raw English Edge Function / Supabase errors to user-friendly i18n keys
 
@@ -27,6 +43,10 @@ function translateError(msg: string, t: Record<string, any>): string {
   // Network / CORS errors
   if (low.includes('failed to send a request') || low.includes('failed to fetch') || low.includes('networkerror'))
     return t.employees?.networkError ?? 'Erreur de connexion au serveur. Vérifiez votre connexion internet et réessayez.'
+
+  // Generic Edge Function wrapper (when actual error couldn't be extracted)
+  if (low.includes('non-2xx status code') || low.includes('edge function'))
+    return t.employees?.serverError ?? 'Erreur serveur. Veuillez réessayer dans quelques instants.'
 
   // Email already used
   if (low.includes('already been registered') || low.includes('already in use') || low.includes('email already'))
@@ -249,7 +269,7 @@ export default function EmployeesPage() {
             body: { employee_id: editingEmployee.id, updates },
           })
 
-          if (error) throw new Error(error.message)
+          if (error) throw new Error(extractEdgeError(error))
           if (data?.error) throw new Error(data.error)
 
           // Update local IndexedDB
@@ -270,7 +290,7 @@ export default function EmployeesPage() {
             },
           })
 
-          if (error) throw new Error(error.message)
+          if (error) throw new Error(extractEdgeError(error))
           if (data?.error) throw new Error(data.error)
 
           // Add to local IndexedDB
@@ -326,7 +346,7 @@ export default function EmployeesPage() {
         const { data, error } = await supabase.functions.invoke('update-employee', {
           body: { employee_id: deletingEmployee.id, updates: { is_active: false } },
         })
-        if (error) throw error
+        if (error) throw new Error(extractEdgeError(error))
         if (data?.error) throw new Error(data.error)
         if (data?.user) await db.users.update(deletingEmployee.id, data.user)
       } else {
@@ -349,7 +369,7 @@ export default function EmployeesPage() {
         const { data, error } = await supabase.functions.invoke('update-employee', {
           body: { employee_id: emp.id, updates: { is_active: !emp.is_active } },
         })
-        if (error) throw error
+        if (error) throw new Error(extractEdgeError(error))
         if (data?.error) throw new Error(data.error)
         if (data?.user) await db.users.update(emp.id, data.user)
       } else {
