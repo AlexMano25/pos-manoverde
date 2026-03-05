@@ -18,6 +18,64 @@ import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { useResponsive } from '../hooks/useLayoutMode'
 
+// ── Error translation ────────────────────────────────────────────────────
+// Maps raw English Edge Function / Supabase errors to user-friendly i18n keys
+
+function translateError(msg: string, t: Record<string, any>): string {
+  const low = msg.toLowerCase()
+
+  // Network / CORS errors
+  if (low.includes('failed to send a request') || low.includes('failed to fetch') || low.includes('networkerror'))
+    return t.employees?.networkError ?? 'Erreur de connexion au serveur. Vérifiez votre connexion internet et réessayez.'
+
+  // Email already used
+  if (low.includes('already been registered') || low.includes('already in use') || low.includes('email already'))
+    return t.employees?.emailInUse ?? 'Cette adresse e-mail est déjà utilisée par un autre compte.'
+
+  // PIN already used
+  if (low.includes('pin already'))
+    return t.employees?.pinInUse ?? 'Ce code PIN est déjà utilisé par un autre employé.'
+
+  // Permission denied
+  if (low.includes('permission denied') || low.includes('only admin'))
+    return t.employees?.permissionDenied ?? 'Vous n\'avez pas les droits pour effectuer cette action.'
+
+  // Unauthorized / session expired
+  if (low.includes('unauthorized') || low.includes('missing authorization') || low.includes('jwt'))
+    return t.employees?.sessionExpired ?? 'Votre session a expiré. Veuillez vous reconnecter.'
+
+  // Password too short
+  if (low.includes('password must be at least') || low.includes('password_too_short'))
+    return t.employees?.passwordHint ?? 'Le mot de passe doit contenir au moins 6 caractères.'
+
+  // Invalid role
+  if (low.includes('invalid role'))
+    return t.employees?.invalidRole ?? 'Rôle invalide sélectionné.'
+
+  // Missing required fields
+  if (low.includes('missing required'))
+    return t.employees?.missingFields ?? 'Veuillez remplir tous les champs obligatoires.'
+
+  // Employee not found
+  if (low.includes('employee not found') || low.includes('not found'))
+    return t.employees?.employeeNotFound ?? 'Employé introuvable.'
+
+  // Different store
+  if (low.includes('different store'))
+    return t.employees?.differentStore ?? 'Impossible de modifier un employé d\'une autre boutique.'
+
+  // Profile creation failed
+  if (low.includes('failed to create user profile'))
+    return t.employees?.profileCreateFailed ?? 'Erreur lors de la création du profil. Veuillez réessayer.'
+
+  // Generic server error
+  if (low.includes('internal server error') || low.includes('500'))
+    return t.employees?.serverError ?? 'Erreur serveur. Veuillez réessayer dans quelques instants.'
+
+  // Return as-is if no match (shouldn't happen in practice)
+  return msg
+}
+
 // ── Color palette ────────────────────────────────────────────────────────
 
 const C = {
@@ -255,12 +313,7 @@ export default function EmployeesPage() {
       await loadEmployees()
     } catch (err) {
       const msg = err instanceof Error ? err.message : t.common.error
-      // Translate common Supabase errors
-      if (msg.includes('already been registered') || msg.includes('already in use')) {
-        setFormError(t.employees.emailInUse)
-      } else {
-        setFormError(msg)
-      }
+      setFormError(translateError(msg, t))
     } finally {
       setSaving(false)
     }

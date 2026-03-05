@@ -424,9 +424,19 @@ export type TranslationKeys = {
     passwordMismatch: string
     passwordRequired: string
     emailInUse: string
+    pinInUse: string
     createSuccess: string
     updateSuccess: string
     connectionRequired: string
+    networkError: string
+    permissionDenied: string
+    sessionExpired: string
+    invalidRole: string
+    missingFields: string
+    employeeNotFound: string
+    differentStore: string
+    profileCreateFailed: string
+    serverError: string
   }
 
   // Settings
