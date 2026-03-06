@@ -1960,13 +1960,17 @@ export default function LandingPage() {
             {t.landing.demoSubtitle}
           </p>
 
-          {/* Video player */}
+          {/* Responsive video player — optimized for low bandwidth */}
           <div style={{
+            position: 'relative',
+            width: '100%',
             maxWidth: 720,
             margin: '0 auto 28px',
-            borderRadius: 16,
+            borderRadius: 'clamp(8px, 2vw, 16px)',
             overflow: 'hidden',
             boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+            aspectRatio: '640 / 356',
+            backgroundColor: '#0f172a',
           }}>
             <video
               controls
@@ -1975,14 +1979,18 @@ export default function LandingPage() {
               loop
               playsInline
               preload="metadata"
-              poster=""
+              poster="/demo-poster.jpg"
               style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
                 width: '100%',
-                height: 'auto',
+                height: '100%',
+                objectFit: 'cover',
                 display: 'block',
-                backgroundColor: '#0f172a',
               }}
             >
+              <source src="/demo-pos-manoverde.webm" type="video/webm" />
               <source src="/demo-pos-manoverde.mp4" type="video/mp4" />
             </video>
           </div>
