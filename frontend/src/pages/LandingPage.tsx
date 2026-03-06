@@ -1933,7 +1933,7 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          VIDEO DEMO CTA
+          VIDEO DEMO
           ================================================================ */}
       <section style={{
         padding: '80px 24px',
@@ -1947,50 +1947,46 @@ export default function LandingPage() {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: 400,
-          height: 400,
+          width: 500,
+          height: 500,
           background: 'radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%)',
           borderRadius: '50%',
         }} />
         <div style={{ ...containerStyle, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          {/* Play icon */}
-          <div
-          onClick={() => {
-            const el = document.getElementById('pricing')
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }}
-          style={{
-            width: 80,
-            height: 80,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(37,99,235,0.2)',
-            border: '2px solid rgba(37,99,235,0.4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(37,99,235,0.3)'
-            e.currentTarget.style.transform = 'scale(1.1)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(37,99,235,0.2)'
-            e.currentTarget.style.transform = 'scale(1)'
-          }}
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="#ffffff">
-              <polygon points="8,5 19,12 8,19" />
-            </svg>
-          </div>
           <h2 style={{ fontSize: 'clamp(24px, 3.5vw, 36px)', fontWeight: 800, color: '#ffffff', margin: '0 0 12px', fontFamily: pageFont }}>
             {t.landing.demoTitle}
           </h2>
-          <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.6, maxWidth: 500, margin: '0 auto 8px', fontFamily: pageFont }}>
+          <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.6, maxWidth: 500, margin: '0 auto 24px', fontFamily: pageFont }}>
             {t.landing.demoSubtitle}
           </p>
+
+          {/* Video player */}
+          <div style={{
+            maxWidth: 720,
+            margin: '0 auto 28px',
+            borderRadius: 16,
+            overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)',
+          }}>
+            <video
+              controls
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster=""
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+                backgroundColor: '#0f172a',
+              }}
+            >
+              <source src="/demo-pos-manoverde.mp4" type="video/mp4" />
+            </video>
+          </div>
+
           <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 28px', fontFamily: pageFont }}>
             {t.landing.demoDuration}
           </p>
