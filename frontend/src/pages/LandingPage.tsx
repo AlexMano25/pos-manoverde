@@ -1364,7 +1364,7 @@ export default function LandingPage() {
                       backdropFilter: 'blur(4px)',
                       fontFamily: pageFont,
                     }}
-                    onClick={() => scrollToSection('features')}
+                    onClick={() => scrollToSection('video-demo')}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
@@ -1935,7 +1935,7 @@ export default function LandingPage() {
       {/* ================================================================
           VIDEO DEMO
           ================================================================ */}
-      <section style={{
+      <section id="video-demo" style={{
         padding: '80px 24px',
         background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
         position: 'relative',
