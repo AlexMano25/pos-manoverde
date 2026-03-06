@@ -18,14 +18,17 @@ export default function StoreSwitcher() {
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
 
+  const multiStoreAccess = user?.role === 'admin' || user?.role === 'manager'
+
   const [isOpen, setIsOpen] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [switching, setSwitching] = useState(false)
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // ── Auto-fetch stores if list is empty on mount ─────────────────────────
+  // ── Auto-fetch stores if list is empty on mount (admin/manager only) ────
   useEffect(() => {
+    if (!multiStoreAccess) return
     if (availableStores.length > 0 || !supabase || !user) return
 
     const fetchStores = async () => {
@@ -265,10 +268,10 @@ export default function StoreSwitcher() {
       <div style={containerStyle} ref={dropdownRef}>
         {/* Trigger */}
         <button
-          style={triggerStyle}
-          onClick={() => setIsOpen(!isOpen)}
+          style={{ ...triggerStyle, cursor: multiStoreAccess ? (switching ? 'wait' : 'pointer') : 'default' }}
+          onClick={() => { if (multiStoreAccess) setIsOpen(!isOpen) }}
           onMouseEnter={(e) => {
-            if (!switching) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)'
+            if (!switching && multiStoreAccess) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.07)'
@@ -282,13 +285,15 @@ export default function StoreSwitcher() {
             <p style={triggerNameStyle}>{storeName}</p>
             {activityLabel && <p style={triggerActivityStyle}>{activityLabel}</p>}
           </div>
-          <div style={chevronStyle}>
-            <ChevronDown size={14} />
-          </div>
+          {multiStoreAccess && (
+            <div style={chevronStyle}>
+              <ChevronDown size={14} />
+            </div>
+          )}
         </button>
 
-        {/* Dropdown */}
-        {isOpen && (
+        {/* Dropdown (admin/manager only) */}
+        {isOpen && multiStoreAccess && (
           <div style={dropdownStyle}>
             <div style={dropdownHeaderStyle}>
               {t.stores?.myStores || 'Mes points de vente'}

@@ -33,6 +33,11 @@ interface AuthComputed {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Roles that can view/switch between multiple stores */
+function canAccessMultipleStores(role?: string): boolean {
+  return role === 'admin' || role === 'manager'
+}
+
 function getServerUrl(): string {
   try {
     const stored = localStorage.getItem('pos-app-store')
@@ -218,9 +223,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
             }
             appStore.setCurrentStore(store)
 
-            // Fetch all stores for the user's organization
+            // Fetch org stores — only admin/manager can switch between stores
             const orgId = store?.organization_id
-            if (orgId) {
+            if (orgId && canAccessMultipleStores(profile.role)) {
               const { data: orgStores } = await supabase
                 .from('stores')
                 .select('*')
@@ -231,6 +236,10 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                   appStore.setNeedsStoreSelection(true)
                 }
               }
+            } else {
+              // Cashier/stock: lock to their assigned store only
+              appStore.setAvailableStores([store as Store])
+              appStore.setNeedsStoreSelection(false)
             }
 
             // Set auth state
@@ -328,9 +337,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
               }
               appStore.setCurrentStore(store)
 
-              // Fetch all stores for the user's organization
+              // Fetch org stores — only admin/manager can switch between stores
               const orgId = store?.organization_id
-              if (orgId) {
+              if (orgId && canAccessMultipleStores(profile.role)) {
                 const { data: orgStores } = await supabase
                   .from('stores')
                   .select('*')
@@ -341,6 +350,10 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                     appStore.setNeedsStoreSelection(true)
                   }
                 }
+              } else {
+                // Cashier/stock: lock to their assigned store only
+                appStore.setAvailableStores([store as Store])
+                appStore.setNeedsStoreSelection(false)
               }
             }
 

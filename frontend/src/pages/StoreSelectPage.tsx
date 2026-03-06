@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Store as StoreIcon, Plus, Loader2, ChevronRight } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { supabase } from '../services/supabase'
 import { getCurrencySymbol } from '../utils/currency'
@@ -14,7 +15,20 @@ export default function StoreSelectPage() {
     setActivity,
     setNeedsStoreSelection,
   } = useAppStore()
+  const { user } = useAuthStore()
   const { t } = useLanguageStore()
+
+  // Defense: if a non-privileged role reaches this page, redirect to assigned store
+  useEffect(() => {
+    if (user && user.role !== 'admin' && user.role !== 'manager') {
+      const assignedStore = availableStores.find(s => s.id === user.store_id)
+      if (assignedStore) {
+        setCurrentStore(assignedStore)
+        setActivity(assignedStore.activity)
+      }
+      setNeedsStoreSelection(false)
+    }
+  }, [user, availableStores, setCurrentStore, setActivity, setNeedsStoreSelection])
 
   const [switchingId, setSwitchingId] = useState<string | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
