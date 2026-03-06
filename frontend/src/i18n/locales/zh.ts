@@ -526,6 +526,7 @@ export const zh: TranslationKeys = {
     navLogin: '登录',
     navStart: '开始使用',
     navSectors: '行业方案',
+    navInstall: '安装',
     // Hero
     heroTitle1: '智能',
     heroTitle2: '收银系统',
@@ -697,6 +698,11 @@ export const zh: TranslationKeys = {
     faqA7: '免费版限 1 名用户。基础版支持最多 3 名用户。专业版支持无限用户并提供角色管理（管理员、经理、收银员）。企业版包含自定义角色和企业通讯录。',
     faqQ8: '你们提供培训吗？',
     faqA8: '是的。所有版本均可访问在线指南和视频教程。专业版包含一次远程培训。企业版包含面向您团队的现场培训，以及部署期间的专属技术支持。',
+    faqQ9: '如何在手机或电脑上安装应用？',
+    faqA9: 'POS Mano Verde 是一款渐进式 Web 应用 (PWA)。Android：打开 Chrome，点击菜单 ⋮ 然后选择「安装应用」。iOS：打开 Safari，点击分享 ⬆ 然后选择「添加到主屏幕」。桌面端：点击 Chrome 或 Edge 地址栏中的 ⊕ 图标。安装后应用可像原生应用一样使用，支持离线运行。',
+    // Install section
+    installTitle: '30 秒安装应用',
+    installSubtitle: '无需应用商店，所有设备均可使用。从主屏幕即时访问。',
     // CTA
     ctaTitle: '准备好革新您的商业了吗？',
     ctaSubtitle: '加入数百位使用 POS Mano Verde 高效管理店铺的商户行列。',

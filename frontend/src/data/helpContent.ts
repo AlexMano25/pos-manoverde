@@ -282,6 +282,25 @@ export const helpContent: Record<string, PageHelp> = {
           "Cliquez sur l'indicateur pour forcer une synchronisation manuelle.",
         role: 'all',
       },
+      {
+        title: "Installer l'application",
+        icon: '\uD83D\uDCF2',
+        content:
+          "POS Mano Verde est une application web progressive (PWA) installable sur tous vos appareils :\n\n" +
+          "Android (Chrome) :\n" +
+          "1. Appuyez sur le menu \u22ee (3 points) en haut a droite.\n" +
+          "2. Selectionnez « Installer l'app » ou « Ajouter a l'ecran d'accueil ».\n" +
+          "3. Confirmez — l'app apparait sur votre ecran d'accueil.\n\n" +
+          "iOS (Safari) :\n" +
+          "1. Appuyez sur le bouton Partager \u2b06 en bas.\n" +
+          "2. Selectionnez « Ajouter a l'ecran d'accueil ».\n" +
+          "3. Appuyez sur « Ajouter ».\n\n" +
+          "Desktop (Chrome/Edge) :\n" +
+          "1. Cliquez sur l'icone \u2295 dans la barre d'adresse.\n" +
+          "2. Cliquez « Installer » dans la boite de dialogue.\n" +
+          "3. L'app s'ouvre dans sa propre fenetre.",
+        role: 'all',
+      },
     ],
     tips: [
       "Consultez le tableau de bord en debut de journee pour avoir un apercu de la veille.",
@@ -316,6 +335,13 @@ export const helpContent: Record<string, PageHelp> = {
           "Les administrateurs peuvent exporter les donnees depuis la page Commandes. " +
           "Le tableau de bord fournit un apercu visuel, tandis que les exports detailles " +
           "sont disponibles dans la section Commandes.",
+      },
+      {
+        question: "Comment installer l'application sur mon appareil ?",
+        answer:
+          "POS Mano Verde est une PWA installable sans store. Sur Android : menu \u22ee > Installer. " +
+          "Sur iOS : Partager \u2b06 > Ecran d'accueil. Sur desktop : icone \u2295 dans la barre d'adresse. " +
+          "L'app fonctionne ensuite comme une application native, meme hors-ligne.",
       },
     ],
   },
@@ -1172,6 +1198,13 @@ export const defaultHelp: PageHelp = {
       answer:
         "Cliquez sur le bouton '?' bleu en bas a droite de chaque page " +
         "pour ouvrir l'aide contextuelle.",
+    },
+    {
+      question: "Comment installer l'application ?",
+      answer:
+        "Sur Android : menu \u22ee > Installer. Sur iOS : Partager \u2b06 > Ecran d'accueil. " +
+        "Sur desktop : icone \u2295 dans la barre d'adresse de Chrome/Edge. " +
+        "L'app fonctionne comme une application native, meme hors-ligne.",
     },
   ],
 }

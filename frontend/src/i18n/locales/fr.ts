@@ -529,6 +529,7 @@ export const fr: TranslationKeys = {
     navLogin: 'Connexion',
     navStart: 'Commencer',
     navSectors: 'Secteurs',
+    navInstall: 'Installation',
     // Hero
     heroTitle1: 'Le Point de Vente',
     heroTitle2: 'intelligent',
@@ -700,6 +701,11 @@ export const fr: TranslationKeys = {
     faqA7: 'Le plan Gratuit est limite a 1 utilisateur. Le plan Starter permet jusqu\'a 3 utilisateurs. Le plan Pro offre un nombre illimite d\'utilisateurs avec gestion des roles (admin, manager, caissier). Le plan Enterprise inclut des roles personnalises et un annuaire d\'entreprise.',
     faqQ8: 'Proposez-vous une formation ?',
     faqA8: 'Oui. Tous les plans incluent un acces a nos guides en ligne et videos tutoriels. Le plan Pro inclut une session de formation a distance. Le plan Enterprise comprend une formation sur site pour votre equipe, avec un support dedie pour le deploiement.',
+    faqQ9: 'Comment installer l\'application sur mon telephone ou ordinateur ?',
+    faqA9: 'POS Mano Verde est une application web progressive (PWA). Sur Android : ouvrez Chrome, tapez le menu ⋮ puis « Installer l\'app ». Sur iOS : ouvrez Safari, tapez Partager ⬆ puis « Ecran d\'accueil ». Sur ordinateur : cliquez l\'icone ⊕ dans la barre d\'adresse de Chrome ou Edge. L\'app fonctionne ensuite comme une application native, meme hors-ligne.',
+    // Install section
+    installTitle: 'Installez l\'application en 30 secondes',
+    installSubtitle: 'Disponible sur tous vos appareils, sans passer par un store. Acces instantane depuis votre ecran d\'accueil.',
     // CTA
     ctaTitle: 'Pret a transformer votre commerce ?',
     ctaSubtitle: 'Rejoignez les centaines de commercants qui gerent leurs boutiques efficacement avec POS Mano Verde.',

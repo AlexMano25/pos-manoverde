@@ -559,6 +559,7 @@ export const en: TranslationKeys = {
     navLogin: 'Login',
     navStart: 'Get Started',
     navSectors: 'Sectors',
+    navInstall: 'Install',
     // Hero
     heroTitle1: 'The Smart Point of Sale',
     heroTitle2: 'smart',
@@ -730,6 +731,11 @@ export const en: TranslationKeys = {
     faqA7: 'The Free plan is limited to 1 user. The Starter plan allows up to 3 users. The Pro plan offers unlimited users with role management (admin, manager, cashier). The Enterprise plan includes custom roles and a company directory.',
     faqQ8: 'Do you offer training?',
     faqA8: 'Yes. All plans include access to our online guides and tutorial videos. The Pro plan includes a remote training session. The Enterprise plan includes on-site training for your team, with dedicated support for deployment.',
+    faqQ9: 'How do I install the app on my phone or computer?',
+    faqA9: 'POS Mano Verde is a progressive web app (PWA). On Android: open Chrome, tap the menu ⋮ then "Install app". On iOS: open Safari, tap Share ⬆ then "Add to Home Screen". On desktop: click the ⊕ icon in Chrome or Edge address bar. The app then works like a native application, even offline.',
+    // Install section
+    installTitle: 'Install the app in 30 seconds',
+    installSubtitle: 'Available on all your devices, no app store needed. Instant access from your home screen.',
     // CTA
     ctaTitle: 'Ready to transform',
     ctaSubtitle: 'Join the hundreds of merchants who manage their stores efficiently with POS Mano Verde.',

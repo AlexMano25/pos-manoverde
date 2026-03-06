@@ -741,6 +741,12 @@ export type TranslationKeys = {
     faqA7: string
     faqQ8: string
     faqA8: string
+    faqQ9: string
+    faqA9: string
+    // Install section on landing
+    navInstall: string
+    installTitle: string
+    installSubtitle: string
     // CTA
     ctaTitle: string
     ctaSubtitle: string

@@ -675,6 +675,7 @@ export default function LandingPage() {
   ]
 
   const FAQ_ITEMS = [
+    { question: t.landing.faqQ9, answer: t.landing.faqA9 },
     { question: t.landing.faqQ1, answer: t.landing.faqA1 },
     { question: t.landing.faqQ2, answer: t.landing.faqA2 },
     { question: t.landing.faqQ3, answer: t.landing.faqA3 },
@@ -734,6 +735,7 @@ export default function LandingPage() {
     { id: 'features', label: t.landing.navFeatures },
     { id: 'sectors', label: t.landing.navSectors },
     { id: 'pricing', label: t.landing.navPricing },
+    { id: 'install', label: t.landing.navInstall },
     { id: 'testimonials', label: t.landing.navTestimonials },
     { id: 'faq', label: t.landing.navFaq },
   ]
@@ -2755,6 +2757,236 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
+          INSTALL SECTION
+          ================================================================ */}
+      <section id="install" className="landing-section-padding" style={sectionStyle('#f0f9ff')}>
+        <div style={containerStyle}>
+          <p style={{
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#2563eb',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            marginBottom: 12,
+          }}>
+            {t.landing.navInstall}
+          </p>
+          <h2 style={sectionTitleStyle}>{t.landing.installTitle}</h2>
+          <p style={sectionSubtitleStyle}>{t.landing.installSubtitle}</p>
+
+          {/* 3 platform columns */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280, 1fr))',
+            gap: 24,
+            marginTop: 40,
+          }}>
+            {/* Android */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 32,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 16,
+                background: 'linear-gradient(135deg, #34a853, #4caf50)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', fontSize: 28,
+              }}>
+                {'\uD83D\uDCF1'}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>
+                Android (Chrome)
+              </h3>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>1</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.androidStep1}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>2</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.androidStep2}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>3</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.androidStep3}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* iOS */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 32,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 16,
+                background: 'linear-gradient(135deg, #007aff, #5856d6)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', fontSize: 28,
+              }}>
+                {'\uD83C\uDF4F'}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>
+                iOS (Safari)
+              </h3>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#ede9fe',
+                    color: '#7c3aed', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>1</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.iosStep1}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#ede9fe',
+                    color: '#7c3aed', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>2</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.iosStep2}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#ede9fe',
+                    color: '#7c3aed', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>3</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.iosStep3}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: 16,
+              padding: 32,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 64, height: 64, borderRadius: 16,
+                background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 20px', fontSize: 28,
+              }}>
+                {'\uD83D\uDCBB'}
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>
+                Desktop (Chrome / Edge)
+              </h3>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>1</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.desktopStep1}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, marginBottom: 14, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>2</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.desktopStep2}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{
+                    width: 28, height: 28, borderRadius: '50%', backgroundColor: '#dbeafe',
+                    color: '#2563eb', fontSize: 13, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>3</span>
+                  <p style={{ fontSize: 14, color: '#334155', margin: 0, lineHeight: 1.6 }}>
+                    {t.install.desktopStep3}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Install CTA button (if native prompt available) */}
+          {useAppStore.getState().installPromptEvent && (
+            <div style={{ textAlign: 'center', marginTop: 40 }}>
+              <button
+                onClick={async () => {
+                  const evt = useAppStore.getState().installPromptEvent
+                  if (evt) {
+                    evt.prompt()
+                    const result = await evt.userChoice
+                    if (result.outcome === 'accepted') {
+                      useAppStore.getState().setIsAppInstalled(true)
+                      useAppStore.getState().setInstallPromptEvent(null)
+                    }
+                  }
+                }}
+                style={{
+                  padding: '16px 40px',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                  color: '#ffffff',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(37,99,235,0.3)',
+                  transition: 'all 0.2s',
+                  fontFamily: pageFont,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(37,99,235,0.4)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(37,99,235,0.3)'
+                }}
+              >
+                {t.install.installButton}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ================================================================
           FAQ SECTION
           ================================================================ */}
       <section id="faq" className="landing-section-padding" style={sectionStyle('#ffffff')}>
@@ -3032,6 +3264,7 @@ export default function LandingPage() {
                 {[
                   { label: t.landing.navFeatures, action: () => scrollToSection('features') },
                   { label: t.landing.navPricing, action: () => scrollToSection('pricing') },
+                  { label: t.landing.navInstall, action: () => scrollToSection('install') },
                   { label: 'Documentation', action: () => setInfoPage('docs') },
                   { label: 'API', action: () => setInfoPage('api') },
                   { label: 'Changelog', action: () => setInfoPage('changelog') },
@@ -3209,6 +3442,14 @@ export default function LandingPage() {
                   { label: '1. ' + t.landing.howStep1Title, desc: t.landing.howStep1Desc },
                   { label: '2. ' + t.landing.howStep2Title, desc: t.landing.howStep2Desc },
                   { label: '3. ' + t.landing.howStep3Title, desc: t.landing.howStep3Desc },
+                ],
+              },
+              {
+                title: t.landing.navInstall,
+                items: [
+                  { label: 'Android (Chrome)', desc: t.install.androidStep1 + ' \u2192 ' + t.install.androidStep2 + ' \u2192 ' + t.install.androidStep3 },
+                  { label: 'iOS (Safari)', desc: t.install.iosStep1 + ' \u2192 ' + t.install.iosStep2 + ' \u2192 ' + t.install.iosStep3 },
+                  { label: 'Desktop (Chrome / Edge)', desc: t.install.desktopStep1 + ' \u2192 ' + t.install.desktopStep2 + ' \u2192 ' + t.install.desktopStep3 },
                 ],
               },
             ],

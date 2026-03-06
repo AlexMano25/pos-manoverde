@@ -526,6 +526,7 @@ export const de: TranslationKeys = {
     navLogin: 'Anmelden',
     navStart: 'Loslegen',
     navSectors: 'Branchen',
+    navInstall: 'Installation',
     // Hero
     heroTitle1: 'Das intelligente',
     heroTitle2: 'Kassensystem',
@@ -697,6 +698,11 @@ export const de: TranslationKeys = {
     faqA7: 'Der kostenlose Tarif ist auf 1 Benutzer beschr\u00e4nkt. Der Basis-Tarif erlaubt bis zu 3 Benutzer. Der Pro-Tarif bietet unbegrenzte Benutzer mit Rollenverwaltung (Admin, Filialleiter, Kassierer). Der Enterprise-Tarif umfasst individuelle Rollen und ein Firmenverzeichnis.',
     faqQ8: 'Bieten Sie Schulungen an?',
     faqA8: 'Ja. Alle Tarife beinhalten Zugang zu unseren Online-Anleitungen und Video-Tutorials. Der Pro-Tarif enth\u00e4lt eine Fernschulung. Der Enterprise-Tarif umfasst eine Vor-Ort-Schulung f\u00fcr Ihr Team mit dediziertem Support f\u00fcr die Einf\u00fchrung.',
+    faqQ9: 'Wie installiere ich die App auf meinem Telefon oder Computer?',
+    faqA9: 'POS Mano Verde ist eine progressive Web-App (PWA). Auf Android: \u00f6ffnen Sie Chrome, tippen Sie auf das Men\u00fc \u22ee und dann auf \u00abApp installieren\u00bb. Auf iOS: \u00f6ffnen Sie Safari, tippen Sie auf Teilen \u2b06 und dann auf \u00abZum Startbildschirm hinzuf\u00fcgen\u00bb. Auf dem Desktop: klicken Sie auf das \u2295-Symbol in der Adressleiste von Chrome oder Edge. Die App funktioniert dann wie eine native Anwendung, auch offline.',
+    // Install section
+    installTitle: 'Installieren Sie die App in 30 Sekunden',
+    installSubtitle: 'Verf\u00fcgbar auf allen Ihren Ger\u00e4ten, ohne App Store. Sofortiger Zugriff von Ihrem Startbildschirm.',
     // CTA
     ctaTitle: 'Bereit, Ihr Gesch\u00e4ft zu transformieren?',
     ctaSubtitle: 'Schlie\u00dfen Sie sich Hunderten von H\u00e4ndlern an, die ihre Filialen effizient mit POS Mano Verde verwalten.',

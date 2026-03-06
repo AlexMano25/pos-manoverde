@@ -526,6 +526,7 @@ export const it: TranslationKeys = {
     navLogin: 'Accesso',
     navStart: 'Inizia',
     navSectors: 'Settori',
+    navInstall: 'Installazione',
     // Hero
     heroTitle1: 'Il Punto Vendita',
     heroTitle2: 'intelligente',
@@ -697,6 +698,11 @@ export const it: TranslationKeys = {
     faqA7: 'Il piano Gratuito \u00e8 limitato a 1 utente. Il piano Essenziale permette fino a 3 utenti. Il piano Professionale offre un numero illimitato di utenti con gestione dei ruoli (admin, responsabile, cassiere). Il piano Impresa include ruoli personalizzati e una directory aziendale.',
     faqQ8: 'Offrite formazione?',
     faqA8: 'S\u00ec. Tutti i piani includono l\'accesso alle nostre guide online e ai video tutorial. Il piano Professionale include una sessione di formazione a distanza. Il piano Impresa comprende una formazione in sede per il tuo team, con supporto dedicato per il deployment.',
+    faqQ9: 'Come installo l\'app sul mio telefono o computer?',
+    faqA9: 'POS Mano Verde \u00e8 un\'app web progressiva (PWA). Su Android: apri Chrome, tocca il menu \u22ee poi \u00abInstalla app\u00bb. Su iOS: apri Safari, tocca Condividi \u2b06 poi \u00abAggiungi a schermata Home\u00bb. Su desktop: clicca l\'icona \u2295 nella barra degli indirizzi di Chrome o Edge. L\'app funziona poi come un\'applicazione nativa, anche offline.',
+    // Install section
+    installTitle: 'Installa l\'app in 30 secondi',
+    installSubtitle: 'Disponibile su tutti i tuoi dispositivi, senza app store. Accesso istantaneo dalla schermata iniziale.',
     // CTA
     ctaTitle: 'Pronto a trasformare il tuo commercio?',
     ctaSubtitle: 'Unisciti alle centinaia di commercianti che gestiscono i propri negozi in modo efficiente con POS Mano Verde.',
