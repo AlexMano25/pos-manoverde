@@ -22,6 +22,12 @@ const QA_EXPIRY_CHECK: QuickActionDef[] = [
   { i18nKey: 'dashboard.checkExpiry', icon: 'AlertTriangle', targetSection: 'products' },
 ]
 
+const QA_SERVICE: QuickActionDef[] = [
+  { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
+  { i18nKey: 'dashboard.newService', icon: 'Plus', targetSection: 'services' },
+  { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
+]
+
 // ---------------------------------------------------------------------------
 // Main config map
 // ---------------------------------------------------------------------------
@@ -139,7 +145,11 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   hair_salon: {
     statCards: ['revenue', 'services_today', 'avg_check', 'appointments_today', 'products'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: [
+      { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
+      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'appointments' },
+    ],
     widgets: [
       { type: 'category_breakdown' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
@@ -148,7 +158,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   spa: {
     statCards: ['revenue', 'services_today', 'avg_check', 'appointments_today', 'products'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'peak_hours' },
@@ -158,7 +168,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   gym: {
     statCards: ['revenue', 'orders', 'active_members', 'services_today', 'avg_order'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
@@ -167,7 +177,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   pool: {
     statCards: ['revenue', 'orders', 'capacity_rate', 'services_today', 'avg_order'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'peak_hours' },
@@ -180,7 +190,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   laundry: {
     statCards: ['revenue', 'orders', 'avg_order', 'pending_jobs', 'services_today'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
     ],
@@ -188,11 +198,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   home_cleaning: {
     statCards: ['revenue', 'orders', 'avg_order', 'services_today', 'pending_jobs'],
-    quickActions: [
-      { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.newService', icon: 'Plus', targetSection: 'products' },
-      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
-    ],
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'contract_shortcuts', templates: ['devis_prestation'] },
@@ -201,7 +207,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   printing: {
     statCards: ['revenue', 'orders', 'avg_order', 'pending_jobs', 'products'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'contract_shortcuts', templates: ['devis_prestation', 'bon_commande'] },
@@ -214,7 +220,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   car_wash: {
     statCards: ['revenue', 'vehicles_today', 'avg_order', 'services_today', 'orders'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'peak_hours' },
@@ -266,8 +272,8 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_order', 'pending_bookings', 'conversions'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.newBooking', icon: 'Calendar', targetSection: 'pos' },
-      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
+      { i18nKey: 'dashboard.newBooking', icon: 'Calendar', targetSection: 'bookings' },
+      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'bookings' },
     ],
     widgets: [
       { type: 'category_breakdown' },
@@ -283,8 +289,8 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'enrollment', 'services_today', 'avg_order', 'orders'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
-      { i18nKey: 'dashboard.markAttendance', icon: 'CheckSquare', targetSection: 'orders' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services' },
+      { i18nKey: 'dashboard.markAttendance', icon: 'CheckSquare', targetSection: 'enrollments' },
     ],
     widgets: [
       { type: 'category_breakdown' },
@@ -294,7 +300,11 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   school: {
     statCards: ['revenue', 'enrollment', 'orders', 'avg_order', 'products'],
-    quickActions: QA_STANDARD_POS,
+    quickActions: [
+      { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services' },
+      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'enrollments' },
+    ],
     widgets: [
       { type: 'category_breakdown' },
       { type: 'contract_shortcuts', templates: ['fiche_inscription', 'autorisation_parentale'] },
@@ -309,7 +319,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'active_listings', 'conversions', 'orders', 'avg_order'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.newListing', icon: 'Plus', targetSection: 'products' },
+      { i18nKey: 'dashboard.newListing', icon: 'Plus', targetSection: 'properties' },
       { i18nKey: 'dashboard.generateQuote', icon: 'FileText', targetSection: 'dashboard' },
     ],
     widgets: [
@@ -324,11 +334,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
 
   services: {
     statCards: ['revenue', 'orders', 'avg_order', 'services_today', 'appointments_today'],
-    quickActions: [
-      { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.newService', icon: 'Plus', targetSection: 'products' },
-      { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
-    ],
+    quickActions: QA_SERVICE,
     widgets: [
       { type: 'category_breakdown' },
       { type: 'contract_shortcuts', templates: ['devis_prestation'] },

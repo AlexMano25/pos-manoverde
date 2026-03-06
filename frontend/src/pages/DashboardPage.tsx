@@ -34,6 +34,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabase'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportDailySummary } from '../utils/pdfExport'
 import { DASHBOARD_CONFIG } from '../data/dashboardConfig'
+import { getSidebarItems } from '../data/sidebarConfig'
 import { getTemplatesForActivity } from '../data/contractTemplates'
 import { computeStatValue, getStatCardMeta } from '../utils/dashboardComputations'
 import { seedSampleProducts } from '../utils/seedProducts'
@@ -162,6 +163,13 @@ export default function DashboardPage() {
 
   const currentActivity = (activity || currentStore?.activity || 'restaurant') as ActivityType
   const dashConfig = DASHBOARD_CONFIG[currentActivity] || DASHBOARD_CONFIG.restaurant
+
+  // Find the sidebar section that maps to the 'orders' page (varies by activity)
+  const ordersSection = useMemo(() => {
+    const items = getSidebarItems(currentActivity)
+    const match = items.find(i => i.pageComponent === 'orders' && i.section !== 'pos')
+    return match?.section || 'orders'
+  }, [currentActivity])
 
   // ── Contract templates for this activity ──────────────────────────────
 
@@ -480,6 +488,7 @@ export default function DashboardPage() {
             paymentLabels={paymentLabels}
             statusLabels={statusLabels}
             onNavigate={setSection}
+            ordersSection={ordersSection}
             contractTemplates={contractTemplateLabels}
             onSelectContract={handleSelectContract}
           />

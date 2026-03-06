@@ -40,6 +40,8 @@ type WidgetRendererProps = {
   paymentLabels: Record<string, string>
   statusLabels: Record<string, string>
   onNavigate: (section: string) => void
+  /** The sidebar section name for orders (varies by activity: 'orders', 'bookings', 'enrollments', etc.) */
+  ordersSection?: string
   contractTemplates: Array<{ key: string; label: string; icon: string }>
   onSelectContract: (key: string) => void
 }
@@ -58,6 +60,7 @@ const WidgetRenderer = ({
   paymentLabels,
   statusLabels,
   onNavigate,
+  ordersSection = 'orders',
   contractTemplates,
   onSelectContract,
 }: WidgetRendererProps) => {
@@ -158,7 +161,7 @@ const WidgetRenderer = ({
         <RecentItemsTable
           orders={recentOrders}
           title={labels.recentOrders}
-          onViewAll={() => onNavigate('orders')}
+          onViewAll={() => onNavigate(ordersSection)}
           viewAllLabel={labels.viewAll}
           currencyCode={currencyCode}
           labels={{
