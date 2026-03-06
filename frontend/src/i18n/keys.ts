@@ -754,6 +754,17 @@ export type TranslationKeys = {
     ctaSubtitle: string
     ctaButton: string
     ctaNoCard: string
+    // Sectors v2 (all 26 activities)
+    sectorsFeaturedBadge: string
+    sectorsAllTitle: string
+    sectorsAllSubtitle: string
+    sectorsCategoryAll: string
+    sectorsCategoryFood: string
+    sectorsCategoryRetail: string
+    sectorsCategoryServices: string
+    sectorsCategoryWellness: string
+    sectorsCategoryEducation: string
+    sectorsViewPreview: string
     // Footer
     footerDesc: string
     footerProduct: string

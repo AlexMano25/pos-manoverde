@@ -1,36 +1,10 @@
 import React, { useState, useMemo } from 'react'
 import {
-  UtensilsCrossed,
-  ShoppingBasket,
-  Pill,
-  Shirt,
-  Smartphone,
-  Briefcase,
   ArrowLeft,
   ArrowRight,
   Check,
   Store,
   Search,
-  Beer,
-  Croissant,
-  Hotel,
-  Scissors,
-  Sparkles,
-  Dumbbell,
-  Waves,
-  Car,
-  Fuel,
-  WashingMachine,
-  Wrench,
-  Baby,
-  GraduationCap,
-  Home,
-  Flower2,
-  PawPrint,
-  BookOpen,
-  Printer as PrinterIcon,
-  Building2,
-  Plane,
   Globe,
   Eye,
   EyeOff,
@@ -45,48 +19,8 @@ import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { goToLanding } from '../utils/navigation'
 import { formatCurrency } from '../utils/currency'
+import { ACTIVITY_ICONS, ALL_ACTIVITIES } from '../data/activityIcons'
 import type { Activity, BillingCycle, SubscriptionPlan, PayPalResult } from '../types'
-
-// ── Activity icon mapping (same as SetupPage) ───────────────────────────────
-
-const ACTIVITY_ICONS: Record<Activity, React.ElementType> = {
-  restaurant: UtensilsCrossed,
-  supermarket: ShoppingBasket,
-  pharmacy: Pill,
-  fashion: Shirt,
-  electronics: Smartphone,
-  services: Briefcase,
-  bar: Beer,
-  bakery: Croissant,
-  hotel: Hotel,
-  hair_salon: Scissors,
-  spa: Sparkles,
-  gym: Dumbbell,
-  pool: Waves,
-  car_wash: Car,
-  gas_station: Fuel,
-  laundry: WashingMachine,
-  auto_repair: Wrench,
-  daycare: Baby,
-  school: GraduationCap,
-  home_cleaning: Home,
-  florist: Flower2,
-  pet_shop: PawPrint,
-  bookstore: BookOpen,
-  printing: PrinterIcon,
-  real_estate: Building2,
-  travel_agency: Plane,
-}
-
-// ── Ordered activities list (same as SetupPage) ─────────────────────────────
-
-const ALL_ACTIVITIES: Activity[] = [
-  'restaurant', 'supermarket', 'pharmacy', 'fashion', 'electronics', 'services',
-  'bar', 'bakery', 'hotel', 'hair_salon', 'spa', 'gym',
-  'pool', 'car_wash', 'gas_station', 'laundry', 'auto_repair',
-  'daycare', 'school', 'home_cleaning', 'florist', 'pet_shop',
-  'bookstore', 'printing', 'real_estate', 'travel_agency',
-]
 
 // ── Plan pricing ────────────────────────────────────────────────────────────
 

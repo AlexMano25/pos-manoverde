@@ -3,7 +3,10 @@ import { useLanguageStore } from '../stores/languageStore'
 import { useAppStore } from '../stores/appStore'
 import { languages } from '../i18n/types'
 import type { Language } from '../i18n/types'
+import type { Activity } from '../types'
 import LegalModal from '../components/common/LegalModal'
+import { ACTIVITY_ICONS, ALL_ACTIVITIES, ACTIVITY_COLORS } from '../data/activityIcons'
+import { ACTIVITY_WALLPAPERS } from '../data/activityThemes'
 
 // ============================================================================
 // POS Mano Verde - Landing / Marketing Page
@@ -402,8 +405,9 @@ export default function LandingPage() {
   const [legalModal, setLegalModal] = useState<'cgv' | 'rgpd' | 'terms' | null>(null)
   const [infoPage, setInfoPage] = useState<'docs' | 'api' | 'changelog' | null>(null)
   const [showcaseTab, setShowcaseTab] = useState(0)
-  const [sectorModal, setSectorModal] = useState<number | null>(null)
+  const [sectorModal, setSectorModal] = useState<Activity | null>(null)
   const [sectorTab, setSectorTab] = useState(0)
+  const [activeCategory, setActiveCategory] = useState('all')
   const { t } = useLanguageStore()
 
   // Animated counters for hero stats
@@ -686,50 +690,79 @@ export default function LandingPage() {
     { question: t.landing.faqQ8, answer: t.landing.faqA8 },
   ]
 
-  const SECTORS = [
-    { emoji: '\uD83C\uDF7D\uFE0F', title: t.landing.sector1Title, desc: t.landing.sector1Desc, color: '#ef4444',
+  // ── Featured sectors (8 most popular) with mockup data for interactive modal ──
+  const FEATURED_SECTORS: { activity: Activity; color: string; stats: { v: string; c: string }[]; stat3Label: string; bars: number[]; sidebar: string[]; categories: string[]; products: { n: string; p: string; bg: string; badge: string }[]; cart: string[]; total: string }[] = [
+    { activity: 'restaurant', color: '#ef4444',
       stats: [{ v: '185,000', c: '#ef4444' }, { v: '42', c: '#16a34a' }, { v: '4,400', c: '#f59e0b' }], stat3Label: 'Ticket moyen',
       bars: [30,50,70,45,85,60,95,50,80,65,90,75],
       sidebar: ['Caisse','Menu','Commandes','Stock','Employes'],
       categories: ['Plats','Desserts','Boissons'],
       products: [{ n:'Ndole', p:'3,000', bg:'#fef2f2', badge:'\u23F1 30min' },{ n:'Jollof Rice', p:'2,500', bg:'#dcfce7', badge:'\u23F1 25min' },{ n:'Pizza Margherita', p:'4,000', bg:'#fef3c7', badge:'\u23F1 15min' },{ n:'Pad Thai', p:'3,500', bg:'#fce7f3', badge:'\u23F1 20min' },{ n:'Burger Deluxe', p:'3,500', bg:'#e0e7ff', badge:'\u23F1 12min' },{ n:'Crepe Nutella', p:'1,500', bg:'#f1f5f9', badge:'\u23F1 8min' }],
       cart: ['Ndole x2','Jollof Rice x1','Jus frais x3'], total: '9,500' },
-    { emoji: '\uD83D\uDC8A', title: t.landing.sector2Title, desc: t.landing.sector2Desc, color: '#2563eb',
-      stats: [{ v: '320,000', c: '#2563eb' }, { v: '86', c: '#16a34a' }, { v: '5', c: '#ef4444' }], stat3Label: 'Peremptions',
-      bars: [60,45,80,55,70,90,65,85,50,75,88,92],
-      sidebar: ['Caisse','Produits','Stock','Alertes','Ordonnances'],
-      categories: ['Medicaments','Hygiene','Materiel'],
-      products: [{ n:'Paracetamol 500mg', p:'500', bg:'#dbeafe', badge:'\uD83D\uDCC5 09/27' },{ n:'Amoxicilline', p:'1,500', bg:'#dcfce7', badge:'\uD83D\uDCC5 12/26' },{ n:'Ibuprofene 400mg', p:'800', bg:'#fef3c7', badge:'\uD83D\uDCC5 03/28' },{ n:'Vitamine C 1000mg', p:'2,500', bg:'#fce7f3', badge:'\uD83D\uDCC5 06/27' },{ n:'Pansement sterile', p:'750', bg:'#e0e7ff', badge:'' },{ n:'Sirop toux', p:'2,000', bg:'#f1f5f9', badge:'\uD83D\uDCC5 01/27' }],
-      cart: ['Paracetamol x4','Vitamine C x1','Pansement x2'], total: '6,250' },
-    { emoji: '\uD83D\uDED2', title: t.landing.sector3Title, desc: t.landing.sector3Desc, color: '#16a34a',
+    { activity: 'supermarket', color: '#16a34a',
       stats: [{ v: '540,000', c: '#16a34a' }, { v: '215', c: '#2563eb' }, { v: '12', c: '#ef4444' }], stat3Label: 'Stock faible',
       bars: [80,70,90,85,60,95,75,88,65,92,78,86],
       sidebar: ['Caisse','Produits','Stock','Rapports','Employes'],
       categories: ['Alimentaire','Boissons','Menage'],
       products: [{ n:'Riz 5kg', p:'4,500', bg:'#dcfce7', badge:'\u2696 5kg' },{ n:'Huile palme 1L', p:'1,800', bg:'#fef3c7', badge:'\u2696 1L' },{ n:'Lait concentre', p:'900', bg:'#dbeafe', badge:'\uD83D\uDCC5 11/26' },{ n:'Sucre 1kg', p:'800', bg:'#fef2f2', badge:'\u2696 1kg' },{ n:'Eau minerale 1.5L', p:'500', bg:'#f1f5f9', badge:'\u2696 1.5L' },{ n:'Savon Marseille', p:'650', bg:'#e0e7ff', badge:'' }],
       cart: ['Riz 5kg x2','Huile 1L x3','Lait x6'], total: '19,800' },
-    { emoji: '\uD83E\uDD56', title: t.landing.sector4Title, desc: t.landing.sector4Desc, color: '#f59e0b',
-      stats: [{ v: '95,000', c: '#f59e0b' }, { v: '180', c: '#16a34a' }, { v: '24', c: '#2563eb' }], stat3Label: 'Production',
-      bars: [90,85,70,95,80,60,88,75,92,65,85,78],
-      sidebar: ['Caisse','Menu','Commandes','Production','Employes'],
-      categories: ['Pains','Viennoiseries','Patisseries'],
-      products: [{ n:'Baguette tradition', p:'200', bg:'#fef3c7', badge:'\uD83C\uDF3F Frais' },{ n:'Croissant beurre', p:'350', bg:'#fef2f2', badge:'\uD83C\uDF3F Frais' },{ n:'Pain au chocolat', p:'400', bg:'#e0e7ff', badge:'\uD83C\uDF3F Frais' },{ n:'Gateau anniversaire', p:'5,000', bg:'#fce7f3', badge:'\uD83D\uDCC5 Cmd' },{ n:'Tarte aux fruits', p:'3,500', bg:'#dcfce7', badge:'\uD83C\uDF3F Du jour' },{ n:'Macaron x6', p:'500', bg:'#dbeafe', badge:'\uD83C\uDF3F Frais' }],
-      cart: ['Baguette x10','Croissant x5','Pain choco x3'], total: '4,950' },
-    { emoji: '\uD83C\uDFE8', title: t.landing.sector5Title, desc: t.landing.sector5Desc, color: '#9333ea',
-      stats: [{ v: '1,200,000', c: '#9333ea' }, { v: '28', c: '#16a34a' }, { v: '78%', c: '#2563eb' }], stat3Label: 'Occupation',
-      bars: [70,75,80,85,90,88,92,85,80,78,82,88],
-      sidebar: ['Reservations','Chambres','Factures','Services','Employes'],
-      categories: ['Chambres','Restauration','Services'],
-      products: [{ n:'Ch. Double Deluxe', p:'35,000', bg:'#f3e8ff', badge:'\uD83D\uDECF Double' },{ n:'Ch. Simple Std', p:'25,000', bg:'#dbeafe', badge:'\uD83D\uDECF Simple' },{ n:'Suite Presidentielle', p:'65,000', bg:'#fef3c7', badge:'\uD83D\uDECF Suite' },{ n:'Petit-dejeuner buffet', p:'5,000', bg:'#dcfce7', badge:'' },{ n:'Spa & Massage', p:'15,000', bg:'#fce7f3', badge:'\u23F1 60min' },{ n:'Parking 24h', p:'2,000', bg:'#f1f5f9', badge:'' }],
-      cart: ['Ch. Double x1','Petit-dej x2','Parking x1'], total: '47,000' },
-    { emoji: '\uD83D\uDC57', title: t.landing.sector6Title, desc: t.landing.sector6Desc, color: '#e11d48',
+    { activity: 'pharmacy', color: '#2563eb',
+      stats: [{ v: '320,000', c: '#2563eb' }, { v: '86', c: '#16a34a' }, { v: '5', c: '#ef4444' }], stat3Label: 'Peremptions',
+      bars: [60,45,80,55,70,90,65,85,50,75,88,92],
+      sidebar: ['Caisse','Produits','Stock','Alertes','Ordonnances'],
+      categories: ['Medicaments','Hygiene','Materiel'],
+      products: [{ n:'Paracetamol 500mg', p:'500', bg:'#dbeafe', badge:'\uD83D\uDCC5 09/27' },{ n:'Amoxicilline', p:'1,500', bg:'#dcfce7', badge:'\uD83D\uDCC5 12/26' },{ n:'Ibuprofene 400mg', p:'800', bg:'#fef3c7', badge:'\uD83D\uDCC5 03/28' },{ n:'Vitamine C 1000mg', p:'2,500', bg:'#fce7f3', badge:'\uD83D\uDCC5 06/27' },{ n:'Pansement sterile', p:'750', bg:'#e0e7ff', badge:'' },{ n:'Sirop toux', p:'2,000', bg:'#f1f5f9', badge:'\uD83D\uDCC5 01/27' }],
+      cart: ['Paracetamol x4','Vitamine C x1','Pansement x2'], total: '6,250' },
+    { activity: 'fashion', color: '#e11d48',
       stats: [{ v: '280,000', c: '#e11d48' }, { v: '65', c: '#16a34a' }, { v: '12', c: '#9333ea' }], stat3Label: 'Collections',
       bars: [50,65,80,70,90,75,85,60,78,88,72,95],
       sidebar: ['Caisse','Produits','Stock','Collections','Employes'],
       categories: ['Vetements','Chaussures','Accessoires'],
       products: [{ n:'Robe Wax', p:'15,000', bg:'#fce7f3', badge:'\uD83D\uDCCF M/Rouge' },{ n:'Pantalon Chino', p:'8,000', bg:'#dbeafe', badge:'\uD83D\uDCCF L/Bleu' },{ n:'Polo Sport', p:'5,000', bg:'#dcfce7', badge:'\uD83D\uDCCF M/Vert' },{ n:'Sac a main cuir', p:'12,000', bg:'#fef3c7', badge:'\uD83D\uDCCF Unique' },{ n:'Chaussures Derby', p:'18,000', bg:'#f3e8ff', badge:'\uD83D\uDCCF 42/Noir' },{ n:'Ceinture cuir', p:'3,500', bg:'#f1f5f9', badge:'\uD83D\uDCCF L/Marron' }],
       cart: ['Robe Wax x1','Polo Sport x2','Ceinture x1'], total: '28,500' },
+    { activity: 'bakery', color: '#f59e0b',
+      stats: [{ v: '95,000', c: '#f59e0b' }, { v: '180', c: '#16a34a' }, { v: '24', c: '#2563eb' }], stat3Label: 'Production',
+      bars: [90,85,70,95,80,60,88,75,92,65,85,78],
+      sidebar: ['Caisse','Menu','Commandes','Production','Employes'],
+      categories: ['Pains','Viennoiseries','Patisseries'],
+      products: [{ n:'Baguette tradition', p:'200', bg:'#fef3c7', badge:'\uD83C\uDF3F Frais' },{ n:'Croissant beurre', p:'350', bg:'#fef2f2', badge:'\uD83C\uDF3F Frais' },{ n:'Pain au chocolat', p:'400', bg:'#e0e7ff', badge:'\uD83C\uDF3F Frais' },{ n:'Gateau anniversaire', p:'5,000', bg:'#fce7f3', badge:'\uD83D\uDCC5 Cmd' },{ n:'Tarte aux fruits', p:'3,500', bg:'#dcfce7', badge:'\uD83C\uDF3F Du jour' },{ n:'Macaron x6', p:'500', bg:'#dbeafe', badge:'\uD83C\uDF3F Frais' }],
+      cart: ['Baguette x10','Croissant x5','Pain choco x3'], total: '4,950' },
+    { activity: 'bar', color: '#8b5cf6',
+      stats: [{ v: '145,000', c: '#8b5cf6' }, { v: '58', c: '#16a34a' }, { v: '6,200', c: '#f59e0b' }], stat3Label: 'Ticket moyen',
+      bars: [40,55,65,50,80,90,95,85,70,60,75,88],
+      sidebar: ['Caisse','Menu','Commandes','Stock','Employes'],
+      categories: ['Cocktails','Bieres','Softs'],
+      products: [{ n:'Mojito', p:'4,000', bg:'#f3e8ff', badge:'\uD83C\uDF78 Classic' },{ n:'Pina Colada', p:'4,500', bg:'#fef3c7', badge:'\uD83C\uDF78 Tropical' },{ n:'Biere locale', p:'1,500', bg:'#dcfce7', badge:'\uD83C\uDF7A 33cl' },{ n:'Whisky Sour', p:'5,000', bg:'#fef2f2', badge:'\uD83C\uDF78 Premium' },{ n:'Jus naturel', p:'1,000', bg:'#dbeafe', badge:'' },{ n:'Assiette tapas', p:'3,500', bg:'#f1f5f9', badge:'\uD83C\uDF7D Snack' }],
+      cart: ['Mojito x2','Biere x3','Tapas x1'], total: '16,000' },
+    { activity: 'hair_salon', color: '#ec4899',
+      stats: [{ v: '210,000', c: '#ec4899' }, { v: '95', c: '#16a34a' }, { v: '35min', c: '#2563eb' }], stat3Label: 'Duree moy.',
+      bars: [60,70,75,65,80,85,90,88,72,68,82,78],
+      sidebar: ['Caisse','Services','RDV','Produits','Employes'],
+      categories: ['Coiffure','Barbe','Soins'],
+      products: [{ n:'Coupe Homme', p:'3,000', bg:'#fce7f3', badge:'\u2702 30min' },{ n:'Coupe Femme', p:'5,000', bg:'#f3e8ff', badge:'\u2702 45min' },{ n:'Coloration', p:'8,000', bg:'#fef3c7', badge:'\u2702 60min' },{ n:'Tresse africaine', p:'10,000', bg:'#dcfce7', badge:'\u2702 90min' },{ n:'Barbe complete', p:'2,000', bg:'#dbeafe', badge:'\u2702 20min' },{ n:'Soin capillaire', p:'4,000', bg:'#f1f5f9', badge:'\uD83D\uDC86 30min' }],
+      cart: ['Coupe Femme x1','Coloration x1','Soin x1'], total: '17,000' },
+    { activity: 'hotel', color: '#9333ea',
+      stats: [{ v: '1,200,000', c: '#9333ea' }, { v: '28', c: '#16a34a' }, { v: '78%', c: '#2563eb' }], stat3Label: 'Occupation',
+      bars: [70,75,80,85,90,88,92,85,80,78,82,88],
+      sidebar: ['Reservations','Chambres','Factures','Services','Employes'],
+      categories: ['Chambres','Restauration','Services'],
+      products: [{ n:'Ch. Double Deluxe', p:'35,000', bg:'#f3e8ff', badge:'\uD83D\uDECF Double' },{ n:'Ch. Simple Std', p:'25,000', bg:'#dbeafe', badge:'\uD83D\uDECF Simple' },{ n:'Suite Presidentielle', p:'65,000', bg:'#fef3c7', badge:'\uD83D\uDECF Suite' },{ n:'Petit-dejeuner buffet', p:'5,000', bg:'#dcfce7', badge:'' },{ n:'Spa & Massage', p:'15,000', bg:'#fce7f3', badge:'\u23F1 60min' },{ n:'Parking 24h', p:'2,000', bg:'#f1f5f9', badge:'' }],
+      cart: ['Ch. Double x1','Petit-dej x2','Parking x1'], total: '47,000' },
   ]
+
+  const FEATURED_KEYS = new Set(FEATURED_SECTORS.map(s => s.activity))
+
+  // ── Activity categories for the "all sectors" filter tabs ──
+  const ACTIVITY_CATEGORIES: { key: string; i18nKey: keyof typeof t.landing; activities: Activity[] }[] = [
+    { key: 'all', i18nKey: 'sectorsCategoryAll', activities: ALL_ACTIVITIES },
+    { key: 'food', i18nKey: 'sectorsCategoryFood', activities: ['restaurant', 'bar', 'bakery', 'supermarket'] },
+    { key: 'retail', i18nKey: 'sectorsCategoryRetail', activities: ['pharmacy', 'fashion', 'electronics', 'florist', 'pet_shop', 'bookstore', 'gas_station'] },
+    { key: 'services', i18nKey: 'sectorsCategoryServices', activities: ['services', 'laundry', 'printing', 'home_cleaning', 'car_wash', 'auto_repair', 'hair_salon'] },
+    { key: 'wellness', i18nKey: 'sectorsCategoryWellness', activities: ['gym', 'spa', 'pool', 'hotel', 'travel_agency'] },
+    { key: 'education', i18nKey: 'sectorsCategoryEducation', activities: ['school', 'daycare', 'real_estate'] },
+  ]
+
+  const filteredActivities = ACTIVITY_CATEGORIES.find(c => c.key === activeCategory)?.activities || ALL_ACTIVITIES
 
   const NAV_SECTIONS = [
     { id: 'features', label: t.landing.navFeatures },
@@ -931,7 +964,8 @@ export default function LandingPage() {
         .landing-step-connector { display: none !important; }
         .landing-pricing-grid { grid-template-columns: 1fr !important; }
         .landing-testimonials-grid { grid-template-columns: 1fr !important; }
-        .landing-sectors-grid { grid-template-columns: 1fr !important; }
+        .landing-sectors-featured { grid-template-columns: 1fr !important; }
+        .landing-sectors-all-grid { grid-template-columns: repeat(2, 1fr) !important; }
         .landing-sector-stats { grid-template-columns: 1fr !important; }
         .landing-sector-products { grid-template-columns: repeat(2, 1fr) !important; }
         .landing-trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
@@ -947,7 +981,8 @@ export default function LandingPage() {
           .landing-features-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-testimonials-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .landing-sectors-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-sectors-featured { grid-template-columns: repeat(2, 1fr) !important; }
+          .landing-sectors-all-grid { grid-template-columns: repeat(3, 1fr) !important; }
           .landing-trust-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .landing-section-padding { padding: 80px 24px !important; }
@@ -974,7 +1009,8 @@ export default function LandingPage() {
           .landing-step-connector { display: block !important; }
           .landing-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; }
           .landing-testimonials-grid { grid-template-columns: repeat(3, 1fr) !important; }
-          .landing-sectors-grid { grid-template-columns: repeat(3, 1fr) !important; }
+          .landing-sectors-featured { grid-template-columns: repeat(4, 1fr) !important; }
+          .landing-sectors-all-grid { grid-template-columns: repeat(4, 1fr) !important; }
           .landing-trust-grid { grid-template-columns: repeat(4, 1fr) !important; }
           .landing-footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr !important; text-align: left; }
           .landing-footer-bottom { flex-direction: row !important; text-align: left !important; }
@@ -2113,7 +2149,7 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          SECTORS / USE CASES
+          SECTORS / USE CASES — ALL 26 ACTIVITIES
           ================================================================ */}
       <section id="sectors" className="landing-section-padding" style={sectionStyle('#ffffff')}>
         <div style={containerStyle}>
@@ -2131,42 +2167,161 @@ export default function LandingPage() {
           <h2 style={sectionTitleStyle}>{t.landing.sectorsTitle}</h2>
           <p style={sectionSubtitleStyle}>{t.landing.sectorsSubtitle}</p>
 
-          <div className="landing-sectors-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
-            {SECTORS.map((sector, i) => (
-                  <div
-                    key={i}
-                    onClick={() => { setSectorTab(0); setSectorModal(i) }}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: 16,
-                      padding: 28,
-                      border: '1px solid #e2e8f0',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)'
-                      e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-                      e.currentTarget.style.borderColor = sector.color
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                      e.currentTarget.style.borderColor = '#e2e8f0'
-                    }}
-                  >
-                    <div style={{ fontSize: 36, marginBottom: 12 }}>{sector.emoji}</div>
-                    <h3 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', margin: '0 0 8px', fontFamily: pageFont }}>
-                      {sector.title}
+          {/* ── Tier 1: Featured activities (8 large cards) ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              ★ {t.landing.sectorsFeaturedBadge}
+            </span>
+          </div>
+
+          <div className="landing-sectors-featured" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 48 }}>
+            {FEATURED_SECTORS.map((sector) => {
+              const Icon = ACTIVITY_ICONS[sector.activity]
+              const wallpaper = ACTIVITY_WALLPAPERS[sector.activity]
+              const setupKey = sector.activity as keyof typeof t.setup
+              return (
+                <div
+                  key={sector.activity}
+                  onClick={() => { setSectorTab(0); setSectorModal(sector.activity) }}
+                  style={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1px solid #e2e8f0',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)'
+                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
+                    e.currentTarget.style.borderColor = sector.color
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                  }}
+                >
+                  {/* Wallpaper subtle overlay */}
+                  {wallpaper && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `url(${wallpaper.replace('w=1200', 'w=400').replace('q=60', 'q=40')})`,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: 0.08, pointerEvents: 'none',
+                    }} />
+                  )}
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: `${sector.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                      <Icon size={24} color={sector.color} />
+                    </div>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
+                      {t.setup[setupKey]}
                     </h3>
-                    <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: '0 0 12px', fontFamily: pageFont }}>
-                      {sector.desc}
+                    <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, margin: '0 0 12px', fontFamily: pageFont, minHeight: 40 }}>
+                      {t.setup[`${sector.activity}Desc` as keyof typeof t.setup]}
                     </p>
                     <span style={{ fontSize: 13, fontWeight: 600, color: sector.color, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      Voir l'apercu <span style={{ fontSize: 16 }}>&rarr;</span>
+                      {t.landing.sectorsViewPreview} <span style={{ fontSize: 16 }}>&rarr;</span>
                     </span>
                   </div>
-                ))}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* ── Tier 2: All 26 activities compact grid ── */}
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
+              {t.landing.sectorsAllTitle}
+            </h3>
+            <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontFamily: pageFont }}>
+              {t.landing.sectorsAllSubtitle}
+            </p>
+          </div>
+
+          {/* Category filter tabs */}
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+            {ACTIVITY_CATEGORIES.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setActiveCategory(cat.key)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 20,
+                  border: activeCategory === cat.key ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                  backgroundColor: activeCategory === cat.key ? '#eff6ff' : '#fff',
+                  color: activeCategory === cat.key ? '#2563eb' : '#475569',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontFamily: pageFont,
+                }}
+              >
+                {t.landing[cat.i18nKey]}
+                {cat.key !== 'all' && <span style={{ marginLeft: 4, fontSize: 11, opacity: 0.7 }}>({cat.activities.length})</span>}
+              </button>
+            ))}
+          </div>
+
+          {/* Compact activity chips grid */}
+          <div className="landing-sectors-all-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {filteredActivities.map((act) => {
+              const Icon = ACTIVITY_ICONS[act]
+              const color = ACTIVITY_COLORS[act]
+              const isFeatured = FEATURED_KEYS.has(act)
+              const setupKey = act as keyof typeof t.setup
+              return (
+                <div
+                  key={act}
+                  onClick={() => {
+                    if (isFeatured) {
+                      setSectorTab(0)
+                      setSectorModal(act)
+                    } else {
+                      const el = document.getElementById('pricing')
+                      if (el) el.scrollIntoView({ behavior: 'smooth' })
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 16px',
+                    borderRadius: 12,
+                    border: '1px solid #e2e8f0',
+                    backgroundColor: '#fff',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = color
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'
+                    e.currentTarget.style.transform = 'translateY(-2px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <div style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={18} color={color} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', fontFamily: pageFont, flex: 1 }}>
+                    {t.setup[setupKey]}
+                  </span>
+                  {isFeatured && (
+                    <span style={{ fontSize: 10, color: '#f59e0b' }} title={t.landing.sectorsFeaturedBadge}>★</span>
+                  )}
+                  <span style={{ fontSize: 14, color: '#94a3b8' }}>&rarr;</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -3612,9 +3767,11 @@ export default function LandingPage() {
           SECTOR PREVIEW MODAL
           ================================================================ */}
       {sectorModal !== null && (() => {
-        const s = SECTORS[sectorModal]
+        const s = FEATURED_SECTORS.find(f => f.activity === sectorModal)
+        if (!s) return null
         const accent = s.color
         const statLabels = ['CA mensuel', 'Commandes', s.stat3Label]
+        const SectorIcon = ACTIVITY_ICONS[sectorModal]
         return (
           <div
             style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
@@ -3624,8 +3781,10 @@ export default function LandingPage() {
               {/* Header */}
               <div style={{ padding: '24px 28px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 32 }}>{s.emoji}</span>
-                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{s.title}</h2>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: `${accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <SectorIcon size={24} color={accent} />
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{t.setup[sectorModal as keyof typeof t.setup]}</h2>
                 </div>
                 <button onClick={() => setSectorModal(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 8, display: 'flex', color: '#64748b' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#0f172a' }}
