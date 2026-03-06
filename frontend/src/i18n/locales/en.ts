@@ -198,6 +198,7 @@ export const en: TranslationKeys = {
     packages: 'Packages',
     menu: 'Menu',
     caisse: 'Register',
+    transactions: 'Transactions',
     more: 'More',
   },
 

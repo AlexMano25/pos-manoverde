@@ -201,6 +201,7 @@ export type TranslationKeys = {
     packages: string
     menu: string
     caisse: string
+    transactions: string
     more: string
   }
 

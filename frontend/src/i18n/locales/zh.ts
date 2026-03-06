@@ -189,6 +189,7 @@ export const zh: TranslationKeys = {
     packages: '套餐',
     menu: '菜单',
     caisse: '收银台',
+    transactions: '交易',
     more: '更多',
   },
   dashboard: {

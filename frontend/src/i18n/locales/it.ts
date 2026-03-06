@@ -189,6 +189,7 @@ export const it: TranslationKeys = {
     packages: 'Pacchetti',
     menu: 'Menu',
     caisse: 'Cassa',
+    transactions: 'Transazioni',
     more: 'Altro',
   },
   dashboard: {

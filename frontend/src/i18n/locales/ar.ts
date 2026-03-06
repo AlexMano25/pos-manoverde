@@ -189,6 +189,7 @@ export const ar: TranslationKeys = {
     packages: 'الباقات',
     menu: 'القائمة',
     caisse: 'الصندوق',
+    transactions: 'المعاملات',
     more: 'المزيد',
   },
   dashboard: {

@@ -34,7 +34,8 @@ const SERVICE_POS: SidebarItemConfig[] = [
 
 const HOTEL: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
-  { section: 'reservations', icon: 'CalendarCheck', i18nKey: 'nav.reservations', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'reservations', icon: 'CalendarCheck', i18nKey: 'nav.reservations', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'rooms', icon: 'BedDouble', i18nKey: 'nav.rooms', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -43,6 +44,7 @@ const HOTEL: SidebarItemConfig[] = [
 
 const REAL_ESTATE: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
+  { section: 'pos', icon: 'CreditCard', i18nKey: 'nav.transactions', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'properties', icon: 'Home', i18nKey: 'nav.properties', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'contracts', icon: 'FileText', i18nKey: 'nav.contracts', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
@@ -52,6 +54,7 @@ const REAL_ESTATE: SidebarItemConfig[] = [
 
 const EDUCATION: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
+  { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'enrollments', icon: 'GraduationCap', i18nKey: 'nav.enrollments', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
   { section: 'services', icon: 'BookOpen', i18nKey: 'nav.services', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
@@ -61,6 +64,7 @@ const EDUCATION: SidebarItemConfig[] = [
 
 const TRAVEL_AGENCY: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
+  { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'bookings', icon: 'Plane', i18nKey: 'nav.bookings', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'packages', icon: 'Globe', i18nKey: 'nav.packages', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
@@ -81,6 +85,7 @@ const WELLNESS: SidebarItemConfig[] = [
 
 const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
+  { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'workshop', icon: 'Wrench', i18nKey: 'nav.workshop', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'parts', icon: 'Cog', i18nKey: 'nav.parts', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
