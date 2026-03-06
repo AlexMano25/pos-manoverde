@@ -390,6 +390,7 @@ export const zh: TranslationKeys = {
     noEmployees: '未找到员工',
     serverModeOnly: '需要服务器模式',
     serverModeMessage: '员工管理需要使用服务器模式。',
+    currentStore: '当前店铺',
     password: '密码',
     confirmPassword: '确认密码',
     passwordHint: '至少6个字符',

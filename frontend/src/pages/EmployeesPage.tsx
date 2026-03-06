@@ -7,6 +7,7 @@ import {
   Loader2,
   UserCheck,
   UserX,
+  Store as StoreIcon,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
 import { useAuthStore } from '../stores/authStore'
@@ -534,6 +535,36 @@ export default function EmployeesPage() {
           <Plus size={16} /> {t.employees.addEmployee}
         </button>
       </div>
+
+      {/* Store context indicator for admin managing multi-store orgs */}
+      {currentUser?.role === 'admin' && currentStore && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          marginBottom: 16,
+          backgroundColor: '#eff6ff',
+          borderRadius: 8,
+          border: '1px solid #bfdbfe',
+          fontSize: 13,
+          color: '#1e40af',
+        }}>
+          <StoreIcon size={16} />
+          <span>
+            {t.employees.currentStore || 'Boutique actuelle'} : <strong>{currentStore.name}</strong>
+          </span>
+          <span style={{
+            fontSize: 11,
+            backgroundColor: '#dbeafe',
+            padding: '2px 8px',
+            borderRadius: 4,
+            marginLeft: 4,
+          }}>
+            {(t.setup as Record<string, string>)?.[currentStore.activity] || currentStore.activity}
+          </span>
+        </div>
+      )}
 
       {/* Table */}
       <div style={tableCardStyle}>

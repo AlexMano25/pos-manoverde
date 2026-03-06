@@ -390,6 +390,7 @@ export const es: TranslationKeys = {
     noEmployees: 'No se encontraron empleados',
     serverModeOnly: 'Se requiere modo servidor',
     serverModeMessage: 'La gestion de empleados requiere el modo servidor.',
+    currentStore: 'Tienda actual',
     password: 'Contraseña',
     confirmPassword: 'Confirmar contraseña',
     passwordHint: 'Mínimo 6 caracteres',

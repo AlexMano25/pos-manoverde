@@ -390,6 +390,7 @@ export const de: TranslationKeys = {
     noEmployees: 'Keine Mitarbeiter gefunden',
     serverModeOnly: 'Server-Modus erforderlich',
     serverModeMessage: 'Die Mitarbeiterverwaltung erfordert den Server-Modus.',
+    currentStore: 'Aktueller Laden',
     password: 'Passwort',
     confirmPassword: 'Passwort bestätigen',
     passwordHint: 'Mindestens 6 Zeichen',

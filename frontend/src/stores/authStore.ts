@@ -33,9 +33,9 @@ interface AuthComputed {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Roles that can view/switch between multiple stores */
+/** Only admin (owner) can view/switch between multiple stores */
 function canAccessMultipleStores(role?: string): boolean {
-  return role === 'admin' || role === 'manager'
+  return role === 'admin'
 }
 
 function getServerUrl(): string {

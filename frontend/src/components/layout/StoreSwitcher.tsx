@@ -18,7 +18,7 @@ export default function StoreSwitcher() {
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
 
-  const multiStoreAccess = user?.role === 'admin' || user?.role === 'manager'
+  const multiStoreAccess = user?.role === 'admin'
 
   const [isOpen, setIsOpen] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)

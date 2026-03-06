@@ -393,6 +393,7 @@ export const fr: TranslationKeys = {
     noEmployees: 'Aucun employ\u00e9 trouv\u00e9',
     serverModeOnly: 'Mode serveur requis',
     serverModeMessage: 'La gestion des employ\u00e9s n\u00e9cessite le mode serveur.',
+    currentStore: 'Boutique actuelle',
     password: 'Mot de passe',
     confirmPassword: 'Confirmer le mot de passe',
     passwordHint: 'Minimum 6 caract\u00e8res',

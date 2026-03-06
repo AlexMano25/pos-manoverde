@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Store as StoreIcon, Loader2 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
+import { useAuthStore } from '../../stores/authStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { supabase } from '../../services/supabase'
 import { WORLD_CURRENCIES } from '../../utils/currency'
@@ -27,7 +28,14 @@ interface AddStoreModalProps {
 
 export default function AddStoreModal({ isOpen, onClose }: AddStoreModalProps) {
   const { currentStore, availableStores, setAvailableStores, setCurrentStore, setActivity, setNeedsStoreSelection } = useAppStore()
+  const { user } = useAuthStore()
   const { t } = useLanguageStore()
+
+  // Only admin can add stores — defense in depth
+  if (isOpen && user?.role !== 'admin') {
+    onClose()
+    return null
+  }
 
   const [name, setName] = useState('')
   const [activity, setActivityValue] = useState<Activity>('restaurant')

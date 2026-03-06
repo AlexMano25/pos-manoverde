@@ -20,7 +20,7 @@ export default function StoreSelectPage() {
 
   // Defense: if a non-privileged role reaches this page, redirect to assigned store
   useEffect(() => {
-    if (user && user.role !== 'admin' && user.role !== 'manager') {
+    if (user && user.role !== 'admin') {
       const assignedStore = availableStores.find(s => s.id === user.store_id)
       if (assignedStore) {
         setCurrentStore(assignedStore)

@@ -417,6 +417,7 @@ export type TranslationKeys = {
     noEmployees: string
     serverModeOnly: string
     serverModeMessage: string
+    currentStore: string
     password: string
     confirmPassword: string
     passwordHint: string

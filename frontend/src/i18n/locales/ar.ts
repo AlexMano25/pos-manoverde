@@ -390,6 +390,7 @@ export const ar: TranslationKeys = {
     noEmployees: 'لم يتم العثور على موظفين',
     serverModeOnly: 'يتطلب وضع الخادم',
     serverModeMessage: 'إدارة الموظفين تتطلب وضع الخادم.',
+    currentStore: 'المتجر الحالي',
     password: 'كلمة المرور',
     confirmPassword: 'تأكيد كلمة المرور',
     passwordHint: '6 أحرف على الأقل',

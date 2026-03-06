@@ -411,6 +411,7 @@ export const en: TranslationKeys = {
     noEmployees: 'No employees found',
     serverModeOnly: 'Server mode required',
     serverModeMessage: 'Employee management requires server mode.',
+    currentStore: 'Current store',
     password: 'Password',
     confirmPassword: 'Confirm password',
     passwordHint: 'Minimum 6 characters',
