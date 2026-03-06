@@ -58,11 +58,8 @@ const Layout: React.FC<LayoutProps> = ({
             backgroundImage: `url(${wallpaperUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            position: 'absolute',
+            inset: 0,
             opacity: 0.07,
             zIndex: 0,
             pointerEvents: 'none',
@@ -82,6 +79,8 @@ const Layout: React.FC<LayoutProps> = ({
           minWidth: 0,    // prevent flex overflow on x-axis
           minHeight: 0,   // allow flex child to shrink for scroll
           overflow: 'hidden',
+          position: 'relative',
+          zIndex: 1,
           ...(layoutMode === 'tablet' ? { marginLeft: 64 } : {}),
           ...(layoutMode === 'mobile' ? { paddingBottom: 72 } : {}),
         }}
