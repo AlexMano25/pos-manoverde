@@ -23,6 +23,8 @@ import {
   BedDouble,
   Wine,
   UtensilsCrossed,
+  X,
+  Info,
 } from 'lucide-react'
 import { useOrderStore } from '../stores/orderStore'
 import { useProductStore } from '../stores/productStore'
@@ -40,6 +42,7 @@ import QuickActions from '../components/dashboard/QuickActions'
 import WidgetRenderer from '../components/dashboard/WidgetRenderer'
 import ContractModal from '../components/dashboard/ContractModal'
 import { useResponsive } from '../hooks/useLayoutMode'
+import InstallTutorial from '../components/common/InstallTutorial'
 import type { PaymentMethod, CreditBalance, Activity as ActivityType, ContractTemplate } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -86,7 +89,7 @@ const LUCIDE_ICONS: Record<string, React.ElementType> = {
 export default function DashboardPage() {
   const { orders, loading: ordersLoading, loadOrders } = useOrderStore()
   const { products, loading: productsLoading, loadProducts } = useProductStore()
-  const { currentStore, setSection, activity } = useAppStore()
+  const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled } = useAppStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -118,6 +121,8 @@ export default function DashboardPage() {
   const [contractModalOpen, setContractModalOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null)
   const [seeding, setSeeding] = useState(false)
+  const [showInstallTutorial, setShowInstallTutorial] = useState(false)
+  const [installBannerDismissed, setInstallBannerDismissed] = useState(false)
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -289,6 +294,103 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── Install PWA Banner ──────────────────────────────────────── */}
+      {!isAppInstalled && !installBannerDismissed && (
+        <div style={{
+          backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: 12,
+          padding: rv('14px 16px', '16px 20px', '16px 24px'),
+          marginBottom: 20,
+          display: 'flex',
+          alignItems: 'center',
+          gap: rv(12, 16, 16),
+          flexWrap: 'wrap',
+        }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            backgroundColor: '#dbeafe',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <Download size={20} color={C.primary} />
+          </div>
+          <div style={{ flex: 1, minWidth: 150 }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: C.text, margin: 0 }}>
+              {((t as unknown as Record<string, any>).install?.title) || 'Installer l\'application'}
+            </p>
+            <p style={{ fontSize: 12, color: C.textSecondary, margin: '2px 0 0' }}>
+              {((t as unknown as Record<string, any>).install?.description) || 'Accès rapide depuis votre écran d\'accueil'}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {installPromptEvent && (
+              <button
+                onClick={async () => {
+                  try {
+                    await installPromptEvent.prompt()
+                    const result = await installPromptEvent.userChoice
+                    if (result.outcome === 'accepted') {
+                      setIsAppInstalled(true)
+                      setInstallPromptEvent(null)
+                    }
+                  } catch { /* dismissed */ }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  border: 'none',
+                  backgroundColor: C.primary,
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <Download size={14} /> {((t as unknown as Record<string, any>).install?.installButton) || 'Installer'}
+              </button>
+            )}
+            <button
+              onClick={() => setShowInstallTutorial(true)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: `1px solid ${C.border}`,
+                backgroundColor: '#fff',
+                color: C.text,
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Info size={14} /> {((t as unknown as Record<string, any>).install?.howToInstall) || 'Comment installer'}
+            </button>
+            <button
+              onClick={() => setInstallBannerDismissed(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 4,
+                color: '#94a3b8',
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {!hasData ? (
         <div style={emptyStyle}>
           <div style={emptyIconStyle}>
@@ -395,6 +497,11 @@ export default function DashboardPage() {
         storeName={currentStore?.name || 'POS Mano Verde'}
         storeAddress={currentStore?.address}
         storePhone={currentStore?.phone}
+      />
+
+      <InstallTutorial
+        isOpen={showInstallTutorial}
+        onClose={() => setShowInstallTutorial(false)}
       />
     </div>
   )

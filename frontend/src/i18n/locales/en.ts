@@ -509,6 +509,31 @@ export const en: TranslationKeys = {
     testButton: 'Test print',
     openDrawer: 'Open cash drawer',
   },
+  scanner: {
+    pointCamera: 'Point the camera at the barcode',
+    manualEntry: 'Manual entry',
+    notSupported: 'Scanner not supported on this device',
+    scanBarcode: 'Scan barcode',
+  },
+  install: {
+    title: 'Install the app',
+    description: 'Quick access from your home screen, works offline.',
+    installButton: 'Install',
+    howToInstall: 'How to install',
+    tutorialTitle: 'Installation guide',
+    androidStep1: 'Tap the menu ⋮ (3 dots) at the top right of Chrome',
+    androidStep2: 'Select "Install app" or "Add to Home screen"',
+    androidStep3: 'Confirm the installation — the app appears on your home screen',
+    iosStep1: 'Tap the Share button ⬆ at the bottom of Safari',
+    iosStep2: 'Scroll down and tap "Add to Home Screen"',
+    iosStep3: 'Tap "Add" — the app appears on your home screen',
+    desktopStep1: 'Click the install icon ⊕ in the address bar',
+    desktopStep2: 'Click "Install" in the dialog',
+    desktopStep3: 'The app opens in its own window — pin it to your taskbar',
+    step: 'Step',
+    done: 'Got it!',
+    alreadyInstalled: 'The app is already installed!',
+  },
 
   // Errors
   errors: {

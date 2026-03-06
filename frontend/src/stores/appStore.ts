@@ -16,6 +16,8 @@ interface AppState {
   showLogin: boolean
   availableStores: Store[]
   needsStoreSelection: boolean
+  isAppInstalled: boolean
+  installPromptEvent: any | null  // BeforeInstallPromptEvent (non-persisted)
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -32,6 +34,8 @@ interface AppActions {
   setShowLogin: (show: boolean) => void
   setAvailableStores: (stores: Store[]) => void
   setNeedsStoreSelection: (v: boolean) => void
+  setIsAppInstalled: (v: boolean) => void
+  setInstallPromptEvent: (e: any | null) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -51,6 +55,8 @@ export const useAppStore = create<AppState & AppActions>()(
       showLogin: false,
       availableStores: [],
       needsStoreSelection: false,
+      isAppInstalled: false,
+      installPromptEvent: null,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -64,6 +70,8 @@ export const useAppStore = create<AppState & AppActions>()(
       setShowLogin: (show) => set({ showLogin: show }),
       setAvailableStores: (stores) => set({ availableStores: stores }),
       setNeedsStoreSelection: (v) => set({ needsStoreSelection: v }),
+      setIsAppInstalled: (v) => set({ isAppInstalled: v }),
+      setInstallPromptEvent: (e) => set({ installPromptEvent: e }),
     }),
     {
       name: 'pos-app-store',

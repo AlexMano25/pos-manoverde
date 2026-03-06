@@ -516,6 +516,35 @@ export type TranslationKeys = {
     openDrawer: string
   }
 
+  // Barcode scanner
+  scanner: {
+    pointCamera: string
+    manualEntry: string
+    notSupported: string
+    scanBarcode: string
+  }
+
+  // PWA install
+  install: {
+    title: string
+    description: string
+    installButton: string
+    howToInstall: string
+    tutorialTitle: string
+    androidStep1: string
+    androidStep2: string
+    androidStep3: string
+    iosStep1: string
+    iosStep2: string
+    iosStep3: string
+    desktopStep1: string
+    desktopStep2: string
+    desktopStep3: string
+    step: string
+    done: string
+    alreadyInstalled: string
+  }
+
   // Errors
   errors: {
     network: string

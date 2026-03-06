@@ -101,7 +101,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity, registrationMode, showLogin, needsStoreSelection } = useAppStore()
+  const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent } = useAppStore()
   const { user, token } = useAuthStore()
 
   useEffect(() => {
@@ -109,6 +109,33 @@ export default function App() {
       document.documentElement.classList.remove('app-mode')
     }
   }, [activity, registrationMode, showLogin])
+
+  // PWA install prompt + detection
+  useEffect(() => {
+    // Detect if already installed (standalone mode)
+    if (window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as any).standalone === true) {
+      setIsAppInstalled(true)
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      setInstallPromptEvent(e)
+    }
+
+    const handleAppInstalled = () => {
+      setIsAppInstalled(true)
+      setInstallPromptEvent(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [setIsAppInstalled, setInstallPromptEvent])
 
   // Registration flow (all plans including free)
   if (registrationMode) {

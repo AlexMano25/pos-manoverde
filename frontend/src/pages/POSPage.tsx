@@ -12,6 +12,7 @@ import {
   Package,
   Trash2,
   ChevronLeft,
+  ScanBarcode,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
@@ -19,6 +20,7 @@ import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import PaymentModal from '../components/pos/PaymentModal'
+import BarcodeScanner from '../components/common/BarcodeScanner'
 import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, Product } from '../types'
 
@@ -52,12 +54,27 @@ export default function POSPage() {
   const [discountPercent, setDiscountPercent] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('cash')
+  const [showScanner, setShowScanner] = useState(false)
 
   useEffect(() => {
     if (currentStore?.id) {
       loadProducts(currentStore.id)
     }
   }, [currentStore?.id, loadProducts])
+
+  const handleBarcodeScan = (barcode: string) => {
+    setShowScanner(false)
+    // Try to find product by barcode
+    const product = products.find(
+      (p) => p.barcode === barcode || p.sku === barcode,
+    )
+    if (product) {
+      addItem(product)
+    } else {
+      // Fall back to search
+      setSearchQuery(barcode)
+    }
+  }
 
   const filteredProducts = useMemo(() => {
     let result = products
@@ -158,6 +175,21 @@ export default function POSPage() {
               <X size={16} />
             </button>
           )}
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: C.primary,
+              padding: 4,
+              display: 'flex',
+              flexShrink: 0,
+            }}
+            onClick={() => setShowScanner(true)}
+            title="Scan"
+          >
+            <ScanBarcode size={20} />
+          </button>
         </div>
 
         {/* Category pills */}
@@ -411,6 +443,13 @@ export default function POSPage() {
         onClose={() => setShowPaymentModal(false)}
         paymentMethod={selectedPaymentMethod}
       />
+
+      {showScanner && (
+        <BarcodeScanner
+          onScan={handleBarcodeScan}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   )
 }

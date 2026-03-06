@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react'
-import { Camera, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Camera, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -207,8 +207,11 @@ export default function ImageUpload({
           </>
         ) : (
           <div style={placeholderStyle}>
-            <ImageIcon size={32} color={C.border} />
-            {loading && <span style={{ fontSize: 10 }}>...</span>}
+            {loading ? (
+              <Loader2 size={28} color={C.primary} style={{ animation: 'spin 1s linear infinite' }} />
+            ) : (
+              <ImageIcon size={32} color={C.border} />
+            )}
           </div>
         )}
       </div>
@@ -225,7 +228,12 @@ export default function ImageUpload({
         </button>
         <button
           type="button"
-          style={btnStyle}
+          style={{
+            ...btnStyle,
+            backgroundColor: C.primary,
+            color: '#fff',
+            borderColor: C.primary,
+          }}
           onClick={() => cameraInputRef.current?.click()}
           disabled={loading}
         >

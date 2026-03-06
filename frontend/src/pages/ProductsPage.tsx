@@ -9,10 +9,12 @@ import {
   Loader2,
   FileText,
   BarChart3,
+  ScanBarcode,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
 import ImageUpload from '../components/common/ImageUpload'
 import BarcodeDisplay from '../components/common/BarcodeDisplay'
+import BarcodeScanner from '../components/common/BarcodeScanner'
 import ExportMenu from '../components/common/ExportMenu'
 import type { ExportMenuItem } from '../components/common/ExportMenu'
 import { exportProductsCatalog, exportBarcodesSheet, exportInventoryReport } from '../utils/pdfExport'
@@ -110,6 +112,7 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
 
   const { isMobile, rv } = useResponsive()
   const activity = currentStore?.activity
@@ -893,14 +896,24 @@ export default function ProductsPage() {
               onFocus={(e) => (e.target.style.borderColor = C.primary)}
               onBlur={(e) => (e.target.style.borderColor = C.border)}
             />
-            <button
-              type="button"
-              style={generateBarcodeBtnStyle}
-              onClick={handleGenerateBarcode}
-            >
-              <Package size={12} />
-              {t.products.generateBarcode}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                style={generateBarcodeBtnStyle}
+                onClick={handleGenerateBarcode}
+              >
+                <Package size={12} />
+                {t.products.generateBarcode}
+              </button>
+              <button
+                type="button"
+                style={{ ...generateBarcodeBtnStyle, color: C.primary }}
+                onClick={() => setShowScanner(true)}
+              >
+                <ScanBarcode size={12} />
+                Scanner
+              </button>
+            </div>
 
             {/* Barcode preview */}
             {form.barcode.trim() && (
@@ -983,6 +996,16 @@ export default function ProductsPage() {
       </Modal>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+
+      {showScanner && (
+        <BarcodeScanner
+          onScan={(barcode) => {
+            setShowScanner(false)
+            updateField('barcode', barcode)
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
     </div>
   )
 }

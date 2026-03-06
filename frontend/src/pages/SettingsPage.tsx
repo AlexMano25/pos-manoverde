@@ -11,12 +11,17 @@ import {
   Loader2,
   Save,
   Bluetooth,
+  BluetoothOff,
+  BluetoothSearching,
   DollarSign,
+  AlertTriangle,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useResponsive } from '../hooks/useLayoutMode'
+import { useBluetooth } from '../hooks/useBluetooth'
+import { ESCPOSEncoder, bluetoothPrinter } from '../services/bluetooth'
 import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
@@ -78,6 +83,17 @@ export default function SettingsPage() {
 
   // Device
   const deviceId = getDeviceId()
+
+  // Bluetooth printer
+  const {
+    printerStatus,
+    printerName,
+    isSupported: btSupported,
+    scanAndConnect,
+    disconnect: btDisconnect,
+    openCashDrawer,
+    error: btError,
+  } = useBluetooth()
 
   useEffect(() => {
     countPending()
@@ -143,8 +159,29 @@ export default function SettingsPage() {
     await countPending()
   }
 
-  const handlePrinterTest = () => {
-    alert(t.printer.notSupported)
+  const handlePrinterTest = async () => {
+    if (!bluetoothPrinter.isConnected()) return
+    const E = ESCPOSEncoder
+    try {
+      const data = E.concat([
+        E.initialize(),
+        E.setAlign('center'),
+        E.setBold(true),
+        E.text(currentStore?.name || 'POS Mano Verde'),
+        E.newline(),
+        E.setBold(false),
+        E.separator(),
+        E.text('Test impression'),
+        E.newline(),
+        E.text(new Date().toLocaleString(locale)),
+        E.newline(),
+        E.newline(),
+        E.cut(),
+      ])
+      await bluetoothPrinter.write(data)
+    } catch (err) {
+      console.error('Test print failed:', err)
+    }
   }
 
   const locale = language === 'ar' ? 'ar-SA' : language === 'zh' ? 'zh-CN' : language === 'de' ? 'de-DE' : language === 'it' ? 'it-IT' : language === 'es' ? 'es-ES' : language === 'en' ? 'en-US' : 'fr-FR'
@@ -525,8 +562,14 @@ export default function SettingsPage() {
       {/* ── Printer ────────────────────────────────────────────────── */}
       <div style={sectionCardStyle}>
         <div style={sectionHeaderStyle}>
-          <div style={sectionIconStyle('#8b5cf6')}>
-            <Printer size={18} color="#8b5cf6" />
+          <div style={sectionIconStyle(
+            printerStatus === 'connected' ? C.success :
+            printerStatus === 'error' ? C.danger : '#8b5cf6'
+          )}>
+            <Printer size={18} color={
+              printerStatus === 'connected' ? C.success :
+              printerStatus === 'error' ? C.danger : '#8b5cf6'
+            } />
           </div>
           <div>
             <h3 style={sectionTitleStyle}>{t.settings.printer}</h3>
@@ -534,19 +577,90 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={statusBadgeStyle(C.textSecondary)}>
-            <Bluetooth size={14} /> {t.settings.printerDisconnected}
-          </span>
+        {/* Status */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {printerStatus === 'connected' && (
+            <span style={statusBadgeStyle(C.success)}>
+              <Bluetooth size={14} /> {t.settings.printerConnected}
+              {printerName && ` — ${printerName}`}
+            </span>
+          )}
+          {printerStatus === 'disconnected' && (
+            <span style={statusBadgeStyle(C.textSecondary)}>
+              <BluetoothOff size={14} /> {t.settings.printerDisconnected}
+            </span>
+          )}
+          {printerStatus === 'printing' && (
+            <span style={statusBadgeStyle(C.primary)}>
+              <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> {t.printer.printing}
+            </span>
+          )}
+          {printerStatus === 'error' && (
+            <span style={statusBadgeStyle(C.danger)}>
+              <XCircle size={14} /> {t.printer.error}
+            </span>
+          )}
         </div>
 
+        {/* Error message */}
+        {btError && (
+          <div style={{
+            marginTop: 10,
+            padding: '10px 14px',
+            borderRadius: 8,
+            backgroundColor: C.danger + '10',
+            color: C.danger,
+            fontSize: 13,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+          }}>
+            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{btError}</span>
+          </div>
+        )}
+
+        {/* Not supported banner */}
+        {!btSupported && (
+          <div style={{
+            marginTop: 10,
+            padding: '10px 14px',
+            borderRadius: 8,
+            backgroundColor: C.warning + '10',
+            color: '#92400e',
+            fontSize: 13,
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 8,
+          }}>
+            <Info size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{t.printer.notSupported}</span>
+          </div>
+        )}
+
+        {/* Actions */}
         <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button style={outlineBtnStyle} onClick={() => alert(t.printer.notSupported)}>
-            <Bluetooth size={16} /> {t.settings.searchPrinter}
-          </button>
-          <button style={outlineBtnStyle} onClick={handlePrinterTest}>
-            <Printer size={16} /> {t.settings.testPrint}
-          </button>
+          {printerStatus !== 'connected' ? (
+            <button
+              style={{ ...primaryBtnStyle, opacity: !btSupported ? 0.5 : 1 }}
+              onClick={scanAndConnect}
+              disabled={!btSupported || printerStatus === 'printing'}
+            >
+              <BluetoothSearching size={16} /> {t.printer.scanButton}
+            </button>
+          ) : (
+            <>
+              <button style={outlineBtnStyle} onClick={btDisconnect}>
+                <BluetoothOff size={16} /> {t.printer.disconnectButton}
+              </button>
+              <button style={outlineBtnStyle} onClick={handlePrinterTest}>
+                <Printer size={16} /> {t.printer.testButton}
+              </button>
+              <button style={outlineBtnStyle} onClick={openCashDrawer}>
+                <DollarSign size={16} /> {t.printer.openDrawer}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
