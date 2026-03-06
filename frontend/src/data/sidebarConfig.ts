@@ -46,6 +46,7 @@ const REAL_ESTATE: SidebarItemConfig[] = [
   { section: 'properties', icon: 'Home', i18nKey: 'nav.properties', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'contracts', icon: 'FileText', i18nKey: 'nav.contracts', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
+  { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -64,6 +65,7 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   { section: 'packages', icon: 'Globe', i18nKey: 'nav.packages', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -73,6 +75,7 @@ const WELLNESS: SidebarItemConfig[] = [
   { section: 'services', icon: 'Sparkles', i18nKey: 'nav.services', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'members', icon: 'UserCheck', i18nKey: 'nav.members', pageComponent: 'employees', allowedRoles: ['admin', 'manager'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 

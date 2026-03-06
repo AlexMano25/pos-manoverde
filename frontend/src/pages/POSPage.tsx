@@ -241,7 +241,7 @@ export default function POSPage() {
                     {/* Product image */}
                     {product.image_url ? (
                       <div style={{ width: '100%', height: 60, borderRadius: 6, overflow: 'hidden', marginBottom: 2 }}>
-                        <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       </div>
                     ) : (
                       <div style={{ width: '100%', height: 60, borderRadius: 6, backgroundColor: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>

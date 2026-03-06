@@ -711,6 +711,7 @@ export default function ProductsPage() {
                           src={product.image_url}
                           alt={product.name}
                           style={thumbnailStyle}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       ) : (
                         <div style={thumbnailPlaceholderStyle}>

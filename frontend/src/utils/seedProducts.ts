@@ -25,6 +25,7 @@ export async function seedSampleProducts(
     is_active: true,
     created_at: now,
     updated_at: now,
+    image_url: s.image_url,
     // Activity-specific fields
     description: s.description,
     expiry_date: s.expiry_date,

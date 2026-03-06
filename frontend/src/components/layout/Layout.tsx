@@ -2,6 +2,8 @@ import React from 'react'
 import Sidebar from './Sidebar'
 import Topbar from './Topbar'
 import { useLayoutMode } from '../../hooks/useLayoutMode'
+import { useAppStore } from '../../stores/appStore'
+import { ACTIVITY_WALLPAPERS } from '../../data/activityThemes'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,6 +36,9 @@ const Layout: React.FC<LayoutProps> = ({
   actions,
 }) => {
   const layoutMode = useLayoutMode()
+  const { currentStore, activity } = useAppStore()
+  const currentActivity = activity || currentStore?.activity
+  const wallpaperUrl = currentActivity ? ACTIVITY_WALLPAPERS[currentActivity] : undefined
 
   return (
     <div
@@ -43,8 +48,28 @@ const Layout: React.FC<LayoutProps> = ({
         height: '100vh',
         overflow: 'hidden',
         backgroundColor: colors.background,
+        position: 'relative',
       }}
     >
+      {/* Activity wallpaper — subtle background */}
+      {wallpaperUrl && (
+        <div
+          style={{
+            backgroundImage: `url(${wallpaperUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            opacity: 0.07,
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+
       {/* Sidebar (desktop: left column, mobile: fixed bottom bar) */}
       <Sidebar />
 
