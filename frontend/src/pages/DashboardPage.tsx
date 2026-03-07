@@ -90,7 +90,7 @@ const LUCIDE_ICONS: Record<string, React.ElementType> = {
 export default function DashboardPage() {
   const { orders, loading: ordersLoading, loadOrders } = useOrderStore()
   const { products, loading: productsLoading, loadProducts } = useProductStore()
-  const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled } = useAppStore()
+  const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled, setPendingAction } = useAppStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -194,6 +194,7 @@ export default function DashboardPage() {
       label: (t.dashboard as Record<string, string>)[qa.i18nKey.replace('dashboard.', '')] || qa.i18nKey,
       icon: qa.icon,
       targetSection: qa.targetSection,
+      action: qa.action,
     })),
     [dashConfig.quickActions, t.dashboard]
   )
@@ -459,7 +460,10 @@ export default function DashboardPage() {
           <div style={{ marginBottom: 24 }}>
             <QuickActions
               actions={resolvedQuickActions}
-              onNavigate={setSection}
+              onNavigate={(section, action) => {
+                if (action) setPendingAction({ type: action as 'add', section })
+                setSection(section)
+              }}
               title={t.dashboard.quickActions}
             />
           </div>

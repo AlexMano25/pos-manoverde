@@ -5,6 +5,7 @@
  */
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import JsBarcode from 'jsbarcode'
 import type { Product, Order } from '../types'
 import { formatCurrencyPlain } from './currency'
 
@@ -583,4 +584,125 @@ export function exportDailySummary(
   }
 
   doc.save(`${storeName.replace(/\s+/g, '_')}_daily_${todayStr}.pdf`)
+}
+
+// ── Price Labels with Barcodes ─────────────────────────────────────────────
+
+export function exportPriceLabels(
+  products: Product[],
+  storeName: string,
+  options: {
+    labelWidth?: number    // mm (default 60)
+    labelHeight?: number   // mm (default 40)
+    columns?: number       // labels per row (default 3)
+    showCategory?: boolean
+    showSku?: boolean
+    currencyCode?: string
+  } = {}
+) {
+  const {
+    labelWidth = 60,
+    labelHeight = 40,
+    columns = 3,
+    showCategory = false,
+    showSku = false,
+    currencyCode = 'XAF',
+  } = options
+
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pageWidth = 210
+  const pageHeight = 297
+  const marginX = Math.max(5, (pageWidth - columns * labelWidth) / 2)
+  const marginY = 8
+
+  let col = 0
+  let row = 0
+
+  for (let i = 0; i < products.length; i++) {
+    const product = products[i]
+    const x = marginX + col * labelWidth
+    const y = marginY + row * labelHeight
+
+    // Page break when exceeding page
+    if (y + labelHeight > pageHeight - 5) {
+      doc.addPage()
+      row = 0
+      col = 0
+    }
+
+    const cx = marginX + col * labelWidth
+    const cy = marginY + row * labelHeight
+
+    // Dashed border (cutting guide)
+    doc.setDrawColor(180)
+    doc.setLineDashPattern([1.5, 1.5], 0)
+    doc.rect(cx, cy, labelWidth, labelHeight)
+    doc.setLineDashPattern([], 0)
+
+    // Product name (bold, top)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(30)
+    const nameLines = doc.splitTextToSize(product.name, labelWidth - 8)
+    doc.text(nameLines.slice(0, 2), cx + 4, cy + 6)
+
+    // Category (small, optional)
+    let infoY = cy + (nameLines.length > 1 ? 12 : 9)
+    if (showCategory && product.category) {
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100)
+      doc.text(product.category, cx + 4, infoY)
+      infoY += 3
+    }
+    if (showSku && product.sku) {
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100)
+      doc.text(`SKU: ${product.sku}`, cx + 4, infoY)
+    }
+
+    // Price (large, prominent, right-aligned)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0)
+    const priceStr = formatCurrencyPlain(product.price, currencyCode)
+    doc.text(priceStr, cx + labelWidth - 4, cy + 10, { align: 'right' })
+
+    // Barcode (bottom of label)
+    if (product.barcode) {
+      try {
+        const canvas = document.createElement('canvas')
+        JsBarcode(canvas, product.barcode, {
+          format: 'CODE128',
+          width: 1.5,
+          height: 28,
+          displayValue: true,
+          fontSize: 9,
+          margin: 0,
+          textMargin: 1,
+        })
+        const barcodeDataUrl = canvas.toDataURL('image/png')
+        const barcodeW = Math.min(labelWidth - 8, 52)
+        const barcodeH = 14
+        const barcodeX = cx + (labelWidth - barcodeW) / 2
+        const barcodeY = cy + labelHeight - barcodeH - 3
+        doc.addImage(barcodeDataUrl, 'PNG', barcodeX, barcodeY, barcodeW, barcodeH)
+      } catch (err) {
+        // Barcode generation failed, skip
+        doc.setFontSize(7)
+        doc.setTextColor(150)
+        doc.text(product.barcode, cx + labelWidth / 2, cy + labelHeight - 5, { align: 'center' })
+      }
+    }
+
+    // Advance grid
+    col++
+    if (col >= columns) {
+      col = 0
+      row++
+    }
+  }
+
+  doc.save(`${storeName.replace(/\s+/g, '_')}_labels.pdf`)
 }

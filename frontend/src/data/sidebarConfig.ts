@@ -16,6 +16,7 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
 const FOOD_BEVERAGE: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'products', icon: 'UtensilsCrossed', i18nKey: 'nav.menu', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
@@ -35,6 +36,7 @@ const SERVICE_POS: SidebarItemConfig[] = [
 const HOTEL: SidebarItemConfig[] = [
   { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'reservations', icon: 'CalendarCheck', i18nKey: 'nav.reservations', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'rooms', icon: 'BedDouble', i18nKey: 'nav.rooms', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },

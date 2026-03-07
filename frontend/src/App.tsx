@@ -21,6 +21,8 @@ import EmployeesPage from './pages/EmployeesPage'
 import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
 import BillingPage from './pages/BillingPage'
+import TablesPage from './pages/TablesPage'
+import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
@@ -77,8 +79,17 @@ function AppContent() {
     }
   }, [activity, currentStore?.activity])
 
+  // Activities that use table-based waiter mode in client mode
+  const TABLE_ACTIVITIES = ['restaurant', 'bar', 'bakery', 'hotel']
+
   const renderPage = () => {
-    if (mode === 'client') return <POSPage />
+    if (mode === 'client') {
+      // For restaurant/bar/bakery/hotel, use lightweight waiter interface
+      if (TABLE_ACTIVITIES.includes(currentActivity)) {
+        return <WaiterPOSPage />
+      }
+      return <POSPage />
+    }
 
     switch (pageKey) {
       case 'pos':       return <POSPage />
@@ -88,6 +99,7 @@ function AppContent() {
       case 'employees': return <EmployeesPage />
       case 'settings':  return <SettingsPage />
       case 'billing':   return <BillingPage />
+      case 'tables':    return <TablesPage />
       default:          return <DashboardPage />
     }
   }

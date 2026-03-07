@@ -203,6 +203,7 @@ export type TranslationKeys = {
     caisse: string
     transactions: string
     more: string
+    tables: string
   }
 
   // Dashboard
@@ -346,6 +347,16 @@ export type TranslationKeys = {
     isbn: string
     destination: string
     ageGroup: string
+    // Label printing
+    printLabels: string
+    labelSize: string
+    columnsPerRow: string
+    showCategory: string
+    showSku: string
+    autoGenerateBarcode: string
+    labelsCount: string
+    generateLabels: string
+    selected: string
   }
 
   // Orders
@@ -472,6 +483,18 @@ export type TranslationKeys = {
     currencyDesc: string
     currencyLabel: string
     currencyCustom: string
+    // Data management (admin)
+    dataManagement: string
+    dataManagementDesc: string
+    clearAllOrders: string
+    clearByDate: string
+    resetDailySales: string
+    clearConfirmTitle: string
+    clearConfirmMessage: string
+    ordersCleared: string
+    enterPin: string
+    dateFrom: string
+    dateTo: string
   }
 
   // Sync
@@ -1043,5 +1066,31 @@ export type TranslationKeys = {
     quantity: string
     deliveryDate: string
     notes: string
+  }
+
+  // Tables (restaurant/bar)
+  tables: {
+    title: string
+    subtitle: string
+    addTable: string
+    editTable: string
+    deleteTable: string
+    tableNumber: string
+    tableName: string
+    capacity: string
+    zone: string
+    free: string
+    occupied: string
+    reserved: string
+    billRequested: string
+    selectTable: string
+    closeTable: string
+    viewOrder: string
+    noTables: string
+    setupTables: string
+    tableCount: string
+    createTables: string
+    occupiedCount: string
+    freeCount: string
   }
 }

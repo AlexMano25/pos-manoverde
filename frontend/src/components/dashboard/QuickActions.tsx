@@ -17,8 +17,8 @@ import type { LucideIcon } from 'lucide-react'
 // ---------------------------------------------------------------------------
 
 type QuickActionsProps = {
-  actions: Array<{ label: string; icon: string; targetSection: string }>
-  onNavigate: (section: string) => void
+  actions: Array<{ label: string; icon: string; targetSection: string; action?: string }>
+  onNavigate: (section: string, action?: string) => void
   title?: string
 }
 
@@ -88,7 +88,7 @@ const QuickActions = ({ actions, onNavigate, title }: QuickActionsProps) => {
           return (
             <button
               key={action.targetSection}
-              onClick={() => onNavigate(action.targetSection)}
+              onClick={() => onNavigate(action.targetSection, action.action)}
               onMouseEnter={() => setHoveredIdx(idx)}
               onMouseLeave={() => setHoveredIdx(null)}
               style={{

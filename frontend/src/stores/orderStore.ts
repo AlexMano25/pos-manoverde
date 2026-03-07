@@ -24,6 +24,10 @@ interface OrderActions {
   ) => Promise<Order>
   getOrdersByDate: (date: string) => Order[]
   getTodayRevenue: () => number
+  clearOrders: (
+    storeId: string,
+    filter?: { from?: string; to?: string }
+  ) => Promise<number>
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -192,6 +196,63 @@ export const useOrderStore = create<OrderState & OrderActions>()(
             order.status === 'paid'
         )
         .reduce((sum, order) => sum + order.total, 0)
+    },
+
+    clearOrders: async (
+      storeId: string,
+      filter?: { from?: string; to?: string }
+    ): Promise<number> => {
+      try {
+        // Get matching orders
+        let ordersToDelete: Order[]
+
+        if (filter?.from || filter?.to) {
+          // Filter by date range
+          const allOrders = await db.orders
+            .where('store_id')
+            .equals(storeId)
+            .toArray()
+
+          ordersToDelete = allOrders.filter((o) => {
+            const d = o.created_at.slice(0, 10)
+            if (filter.from && d < filter.from) return false
+            if (filter.to && d > filter.to) return false
+            return true
+          })
+        } else {
+          // All orders for this store
+          ordersToDelete = await db.orders
+            .where('store_id')
+            .equals(storeId)
+            .toArray()
+        }
+
+        if (ordersToDelete.length === 0) return 0
+
+        const count = ordersToDelete.length
+
+        // Delete in transaction + sync queue
+        await db.transaction('rw', db.orders, db.sync_queue, async () => {
+          const ids = ordersToDelete.map((o) => o.id)
+          await db.orders.bulkDelete(ids)
+
+          // Queue deletions for sync
+          for (const order of ordersToDelete) {
+            await addToSyncQueue('order', order.id, 'delete', order, storeId)
+          }
+        })
+
+        // Update in-memory state
+        const deletedIds = new Set(ordersToDelete.map((o) => o.id))
+        set((state) => ({
+          orders: state.orders.filter((o) => !deletedIds.has(o.id)),
+        }))
+
+        return count
+      } catch (error) {
+        console.error('[orderStore] Failed to clear orders:', error)
+        throw error
+      }
     },
   })
 )

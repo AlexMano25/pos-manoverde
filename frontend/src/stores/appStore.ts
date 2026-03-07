@@ -18,6 +18,7 @@ interface AppState {
   needsStoreSelection: boolean
   isAppInstalled: boolean
   installPromptEvent: any | null  // BeforeInstallPromptEvent (non-persisted)
+  pendingAction: { type: 'add'; section: string } | null  // transient, not persisted
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -36,6 +37,7 @@ interface AppActions {
   setNeedsStoreSelection: (v: boolean) => void
   setIsAppInstalled: (v: boolean) => void
   setInstallPromptEvent: (e: any | null) => void
+  setPendingAction: (action: AppState['pendingAction']) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ export const useAppStore = create<AppState & AppActions>()(
       needsStoreSelection: false,
       isAppInstalled: false,
       installPromptEvent: null,
+      pendingAction: null,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -72,6 +75,7 @@ export const useAppStore = create<AppState & AppActions>()(
       setNeedsStoreSelection: (v) => set({ needsStoreSelection: v }),
       setIsAppInstalled: (v) => set({ isAppInstalled: v }),
       setInstallPromptEvent: (e) => set({ installPromptEvent: e }),
+      setPendingAction: (action) => set({ pendingAction: action }),
     }),
     {
       name: 'pos-app-store',

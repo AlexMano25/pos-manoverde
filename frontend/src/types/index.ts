@@ -39,6 +39,23 @@ export type Activity =
   | 'real_estate'
   | 'travel_agency'
 
+// -- Restaurant / Bar table management ----------------------------------------
+
+export type TableStatus = 'free' | 'occupied' | 'reserved' | 'bill_requested'
+
+export type RestaurantTable = {
+  id: string
+  store_id: string
+  number: number
+  name: string
+  capacity: number
+  status: TableStatus
+  current_order_id?: string
+  zone?: string
+  created_at: string
+  updated_at: string
+}
+
 // -- Sidebar section identifiers ----------------------------------------------
 
 /** All possible sidebar sections across all activities */
@@ -51,6 +68,7 @@ export type SidebarSection =
   | 'employees'
   | 'settings'
   | 'billing'
+  | 'tables'       // restaurant, bar, bakery, hotel
   // Activity-specific sections (reuse existing page components)
   | 'reservations'  // hotel, travel_agency
   | 'rooms'         // hotel
@@ -78,6 +96,7 @@ export type PageComponent =
   | 'employees'
   | 'settings'
   | 'billing'
+  | 'tables'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -227,6 +246,8 @@ export type Order = {
   note?: string
   synced: boolean // false = needs sync, true = synced to server
   device_id: string
+  table_id?: string       // restaurant table association
+  table_name?: string     // e.g. "Table 5"
   created_at: string
   updated_at: string
 }
@@ -474,6 +495,7 @@ export type QuickActionDef = {
   i18nKey: string
   icon: string
   targetSection: string
+  action?: 'add'  // triggers an action on the target page (e.g. open add modal)
 }
 
 export type DashboardWidgetConfig = {

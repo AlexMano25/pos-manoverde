@@ -17,7 +17,8 @@ import BarcodeDisplay from '../components/common/BarcodeDisplay'
 import BarcodeScanner from '../components/common/BarcodeScanner'
 import ExportMenu from '../components/common/ExportMenu'
 import type { ExportMenuItem } from '../components/common/ExportMenu'
-import { exportProductsCatalog, exportBarcodesSheet, exportInventoryReport } from '../utils/pdfExport'
+import { exportProductsCatalog, exportBarcodesSheet, exportInventoryReport, exportPriceLabels } from '../utils/pdfExport'
+import LabelPrintModal from '../components/common/LabelPrintModal'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -100,7 +101,7 @@ const emptyForm: ProductForm = {
 
 export default function ProductsPage() {
   const { products, categories, loading, loadProducts, addProduct, updateProduct, deleteProduct } = useProductStore()
-  const { currentStore } = useAppStore()
+  const { currentStore, pendingAction, setPendingAction } = useAppStore()
   const { t } = useLanguageStore()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -113,6 +114,8 @@ export default function ProductsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [showScanner, setShowScanner] = useState(false)
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
+  const [showLabelModal, setShowLabelModal] = useState(false)
 
   const { isMobile, rv } = useResponsive()
   const activity = currentStore?.activity
@@ -134,6 +137,14 @@ export default function ProductsPage() {
       loadProducts(currentStore.id)
     }
   }, [currentStore?.id, loadProducts])
+
+  // Auto-open add modal when navigated from dashboard quick action
+  useEffect(() => {
+    if (pendingAction?.type === 'add') {
+      openAddModal()
+      setPendingAction(null)
+    }
+  }, [pendingAction])
 
   const filteredProducts = useMemo(() => {
     let result = products
@@ -679,6 +690,41 @@ export default function ProductsPage() {
         </select>
       </div>
 
+      {/* Selection toolbar */}
+      {selectedProducts.size > 0 && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px',
+          backgroundColor: '#eff6ff', borderRadius: 10, marginBottom: 12,
+          border: '1px solid #bfdbfe', flexWrap: 'wrap',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.primary }}>
+            {selectedProducts.size} {t.products.selected}
+          </span>
+          <button
+            onClick={() => setShowLabelModal(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px', borderRadius: 8, border: 'none',
+              backgroundColor: '#059669', color: '#fff', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', transition: 'opacity 0.2s',
+            }}
+          >
+            <ScanBarcode size={15} />
+            {t.products.printLabels}
+          </button>
+          <button
+            onClick={() => setSelectedProducts(new Set())}
+            style={{
+              padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0',
+              backgroundColor: '#fff', color: '#475569', fontSize: 13, fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div style={tableCardStyle}>
         {filteredProducts.length === 0 ? (
@@ -691,7 +737,18 @@ export default function ProductsPage() {
           <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={{ ...thStyle, width: 56, padding: '10px 8px 10px 16px' }}></th>
+                <th style={{ ...thStyle, width: 36, padding: '10px 6px 10px 12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedProducts(new Set(filteredProducts.map(p => p.id)))
+                      else setSelectedProducts(new Set())
+                    }}
+                    style={{ width: 15, height: 15, accentColor: C.primary, cursor: 'pointer' }}
+                  />
+                </th>
+                <th style={{ ...thStyle, width: 56, padding: '10px 8px 10px 8px' }}></th>
                 <th style={thStyle}>{t.common.name} / {t.products.sku}</th>
                 <th style={thStyle}>{t.common.category}</th>
                 <th style={thStyle}>{t.common.price}</th>
@@ -705,7 +762,20 @@ export default function ProductsPage() {
                 const isLowStock = product.stock <= (product.min_stock ?? 5)
                 return (
                   <tr key={product.id}>
-                    <td style={{ ...tdStyle, width: 56, padding: '8px 8px 8px 16px' }}>
+                    <td style={{ ...tdStyle, width: 36, padding: '8px 6px 8px 12px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.has(product.id)}
+                        onChange={(e) => {
+                          const next = new Set(selectedProducts)
+                          if (e.target.checked) next.add(product.id)
+                          else next.delete(product.id)
+                          setSelectedProducts(next)
+                        }}
+                        style={{ width: 15, height: 15, accentColor: C.primary, cursor: 'pointer' }}
+                      />
+                    </td>
+                    <td style={{ ...tdStyle, width: 56, padding: '8px 8px 8px 8px' }}>
                       {product.image_url ? (
                         <img
                           src={product.image_url}
@@ -1007,6 +1077,21 @@ export default function ProductsPage() {
           onClose={() => setShowScanner(false)}
         />
       )}
+
+      <LabelPrintModal
+        isOpen={showLabelModal}
+        onClose={() => { setShowLabelModal(false); setSelectedProducts(new Set()) }}
+        products={products.filter(p => selectedProducts.has(p.id))}
+        storeName={currentStore?.name || 'Store'}
+        currencyCode={currentStore?.currency}
+        onAutoGenerateBarcodes={async (ids) => {
+          const prefix = (activity?.slice(0, 3).toUpperCase() || 'POS')
+          for (const id of ids) {
+            const barcode = prefix + '-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 4).toUpperCase()
+            await updateProduct(id, { barcode })
+          }
+        }}
+      />
     </div>
   )
 }

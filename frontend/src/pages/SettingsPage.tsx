@@ -25,6 +25,7 @@ import { ESCPOSEncoder, bluetoothPrinter } from '../services/bluetooth'
 import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
+import DataManagementSection from '../components/settings/DataManagementSection'
 import { WORLD_CURRENCIES } from '../utils/currency'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -711,6 +712,9 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Data Management (Admin only) ─────────────────────────── */}
+      <DataManagementSection />
 
       {/* ── About ──────────────────────────────────────────────────── */}
       <div style={sectionCardStyle}>

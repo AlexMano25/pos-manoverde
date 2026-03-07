@@ -12,19 +12,19 @@ import type { Activity, ActivityDashboardConfig, QuickActionDef } from '../types
 
 const QA_STANDARD_POS: QuickActionDef[] = [
   { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-  { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
+  { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products', action: 'add' },
   { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
 ]
 
 const QA_EXPIRY_CHECK: QuickActionDef[] = [
   { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-  { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
+  { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products', action: 'add' },
   { i18nKey: 'dashboard.checkExpiry', icon: 'AlertTriangle', targetSection: 'products' },
 ]
 
 const QA_SERVICE: QuickActionDef[] = [
   { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-  { i18nKey: 'dashboard.newService', icon: 'Plus', targetSection: 'services' },
+  { i18nKey: 'dashboard.newService', icon: 'Plus', targetSection: 'services', action: 'add' },
   { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
 ]
 
@@ -130,7 +130,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_order', 'products', 'low_stock'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products', action: 'add' },
       { i18nKey: 'dashboard.searchISBN', icon: 'Search', targetSection: 'products' },
     ],
     widgets: [
@@ -147,7 +147,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'services_today', 'avg_check', 'appointments_today', 'products'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'products', action: 'add' },
       { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'appointments' },
     ],
     widgets: [
@@ -289,7 +289,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'enrollment', 'services_today', 'avg_order', 'orders'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services', action: 'add' },
       { i18nKey: 'dashboard.markAttendance', icon: 'CheckSquare', targetSection: 'enrollments' },
     ],
     widgets: [
@@ -302,7 +302,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'enrollment', 'orders', 'avg_order', 'products'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services' },
+      { i18nKey: 'dashboard.addProduct', icon: 'Plus', targetSection: 'services', action: 'add' },
       { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'enrollments' },
     ],
     widgets: [
@@ -319,7 +319,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'active_listings', 'conversions', 'orders', 'avg_order'],
     quickActions: [
       { i18nKey: 'dashboard.newSale', icon: 'ShoppingCart', targetSection: 'pos' },
-      { i18nKey: 'dashboard.newListing', icon: 'Plus', targetSection: 'properties' },
+      { i18nKey: 'dashboard.newListing', icon: 'Plus', targetSection: 'properties', action: 'add' },
       { i18nKey: 'dashboard.generateQuote', icon: 'FileText', targetSection: 'dashboard' },
     ],
     widgets: [
