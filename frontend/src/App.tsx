@@ -22,6 +22,9 @@ import SettingsPage from './pages/SettingsPage'
 import RegistrationPage from './pages/RegistrationPage'
 import BillingPage from './pages/BillingPage'
 import TablesPage from './pages/TablesPage'
+import CustomersPage from './pages/CustomersPage'
+import PromotionsPage from './pages/PromotionsPage'
+import ReportsPage from './pages/ReportsPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -98,9 +101,12 @@ function AppContent() {
       case 'stock':     return <StockPage />
       case 'employees': return <EmployeesPage />
       case 'settings':  return <SettingsPage />
-      case 'billing':   return <BillingPage />
-      case 'tables':    return <TablesPage />
-      default:          return <DashboardPage />
+      case 'billing':    return <BillingPage />
+      case 'tables':     return <TablesPage />
+      case 'customers':  return <CustomersPage />
+      case 'promotions': return <PromotionsPage />
+      case 'reports':    return <ReportsPage />
+      default:           return <DashboardPage />
     }
   }
 

@@ -18,11 +18,13 @@ import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useCustomerStore } from '../stores/customerStore'
+import { usePromotionStore } from '../stores/promotionStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import PaymentModal from '../components/pos/PaymentModal'
 import BarcodeScanner from '../components/common/BarcodeScanner'
 import { formatCurrency } from '../utils/currency'
-import type { PaymentMethod, Product } from '../types'
+import type { Customer, PaymentMethod, Product } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -45,6 +47,8 @@ export default function POSPage() {
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()
   const { t } = useLanguageStore()
+  const { selectedCustomer, selectCustomer, loadCustomers, searchCustomers } = useCustomerStore()
+  const { getActivePromotions, calculateTotalDiscount, loadPromotions } = usePromotionStore()
 
   const { isMobile, rv } = useResponsive()
   const [showMobileCart, setShowMobileCart] = useState(false)
@@ -56,11 +60,59 @@ export default function POSPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('cash')
   const [showScanner, setShowScanner] = useState(false)
 
+  // CRM & Promotions
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false)
+  const [customerQuery, setCustomerQuery] = useState('')
+  const [customerResults, setCustomerResults] = useState<Customer[]>([])
+
+  const storeId = currentStore?.id || 'default-store'
+  const currencyCode = currentStore?.currency || 'XAF'
+
   useEffect(() => {
     if (currentStore?.id) {
       loadProducts(currentStore.id)
+      loadCustomers(currentStore.id)
+      loadPromotions(currentStore.id)
     }
-  }, [currentStore?.id, loadProducts])
+  }, [currentStore?.id, loadProducts, loadCustomers, loadPromotions])
+
+  // Active promotions for product badges
+  const activePromos = useMemo(
+    () => getActivePromotions(storeId),
+    [storeId, getActivePromotions]
+  )
+
+  // Calculate promotion discount for current cart
+  const promoResult = useMemo(
+    () => calculateTotalDiscount(items, storeId),
+    [items, storeId, calculateTotalDiscount]
+  )
+
+  // Customer search
+  const handleCustomerSearch = async (query: string) => {
+    setCustomerQuery(query)
+    if (query.trim().length >= 2) {
+      const results = await searchCustomers(storeId, query)
+      setCustomerResults(results)
+    } else {
+      setCustomerResults([])
+    }
+  }
+
+  const handleSelectCustomer = (customer: Customer) => {
+    selectCustomer(customer)
+    setShowCustomerSearch(false)
+    setCustomerQuery('')
+    setCustomerResults([])
+  }
+
+  // Check if a product has an active promo
+  const hasPromo = (productId: string): boolean => {
+    return activePromos.some(p =>
+      p.conditions.product_ids?.includes(productId) ||
+      (!p.conditions.product_ids?.length && !p.conditions.categories?.length)
+    )
+  }
 
   const handleBarcodeScan = (barcode: string) => {
     setShowScanner(false)
@@ -248,8 +300,13 @@ export default function POSPage() {
                         <Package size={24} color={C.border} />
                       </div>
                     )}
-                    <p style={productNameStyle}>{product.name}</p>
-                    <p style={productPriceStyle}>{formatCurrency(product.price, currentStore?.currency)}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <p style={{ ...productNameStyle, flex: 1 }}>{product.name}</p>
+                      {hasPromo(product.id) && (
+                        <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, backgroundColor: '#fef3c7', color: '#b45309', fontWeight: 700, flexShrink: 0 }}>🏷</span>
+                      )}
+                    </div>
+                    <p style={productPriceStyle}>{formatCurrency(product.price, currencyCode)}</p>
                     <p style={productStockStyle(product.stock)}>
                       {inStock ? `${t.pos.inStock}: ${product.stock}` : t.pos.outOfStock}
                     </p>
@@ -279,11 +336,38 @@ export default function POSPage() {
               {items.length > 0 && <span style={cartCountBadge}>{items.length}</span>}
             </h2>
           </div>
-          {items.length > 0 && (
-            <button style={clearBtnStyle} onClick={clear}>
-              <Trash2 size={14} /> {t.pos.clearCart}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {/* Customer selection button */}
+            <button
+              style={{
+                padding: '5px 10px',
+                borderRadius: 8,
+                border: selectedCustomer ? '1px solid #22c55e' : `1px solid ${C.border}`,
+                backgroundColor: selectedCustomer ? '#f0fdf4' : 'transparent',
+                color: selectedCustomer ? '#166534' : C.textSecondary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+              onClick={() => setShowCustomerSearch(true)}
+            >
+              👤 {selectedCustomer ? selectedCustomer.name : (t.customers?.selectCustomer || 'Client')}
+              {selectedCustomer && (
+                <span
+                  onClick={(e) => { e.stopPropagation(); selectCustomer(null) }}
+                  style={{ marginLeft: 2, cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
+                >×</span>
+              )}
             </button>
-          )}
+            {items.length > 0 && (
+              <button style={clearBtnStyle} onClick={clear}>
+                <Trash2 size={14} /> {t.pos.clearCart}
+              </button>
+            )}
+          </div>
         </div>
 
         {items.length === 0 ? (
@@ -361,11 +445,23 @@ export default function POSPage() {
                 </div>
               )}
 
+              {/* Promotion discount */}
+              {promoResult.total > 0 && (
+                <div style={{ ...summaryRowStyle, color: '#f59e0b' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    🏷 {promoResult.applied.map(a => a.promotion.name).join(', ')}
+                  </span>
+                  <span style={{ fontWeight: 600, color: '#d97706' }}>
+                    -{formatCurrency(promoResult.total, currencyCode)}
+                  </span>
+                </div>
+              )}
+
               <div style={{ height: 1, backgroundColor: C.border, margin: '8px 0' }} />
 
               <div style={totalRowStyle}>
                 <span>{t.pos.grandTotal}</span>
-                <span style={{ color: C.primary }}>{formatCurrency(total, currentStore?.currency)}</span>
+                <span style={{ color: C.primary }}>{formatCurrency(total - promoResult.total, currencyCode)}</span>
               </div>
 
               <div style={paymentButtonsStyle}>
@@ -449,6 +545,53 @@ export default function POSPage() {
           onScan={handleBarcodeScan}
           onClose={() => setShowScanner(false)}
         />
+      )}
+
+      {/* Customer Search Modal */}
+      {showCustomerSearch && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400, maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>👤 {t.customers?.selectCustomer || 'Select Customer'}</h3>
+              <button onClick={() => { setShowCustomerSearch(false); setCustomerQuery(''); setCustomerResults([]) }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: C.textSecondary }}>✕</button>
+            </div>
+            <input
+              type="text"
+              placeholder={t.customers?.searchCustomers || 'Search by name or phone...'}
+              value={customerQuery}
+              onChange={(e) => handleCustomerSearch(e.target.value)}
+              autoFocus
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', marginBottom: 12, boxSizing: 'border-box' }}
+            />
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {customerResults.length === 0 && customerQuery.length >= 2 && (
+                <p style={{ textAlign: 'center', color: C.textSecondary, fontSize: 13, padding: 20 }}>{t.customers?.noCustomers || 'No customers found'}</p>
+              )}
+              {customerResults.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => handleSelectCustomer(c)}
+                  style={{ padding: '10px 12px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, borderBottom: `1px solid ${C.border}` }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f0fdf4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: '#166534', flexShrink: 0 }}>
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: C.text }}>{c.name}</div>
+                    <div style={{ fontSize: 12, color: C.textSecondary }}>
+                      {c.phone && `📞 ${c.phone}`}{c.phone && c.email && ' · '}{c.email && `✉️ ${c.email}`}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>
+                    🎁 {c.loyalty_points} pts
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

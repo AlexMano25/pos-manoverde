@@ -1,7 +1,9 @@
 import Dexie, { type Table } from 'dexie'
 import type {
+  Customer,
   Order,
   Product,
+  Promotion,
   RestaurantTable,
   StockMove,
   SyncEntry,
@@ -22,6 +24,8 @@ export class PosDatabase extends Dexie {
   stock_moves!: Table<StockMove, string>
   sync_queue!: Table<SyncEntry, string>
   restaurant_tables!: Table<RestaurantTable, string>
+  customers!: Table<Customer, string>
+  promotions!: Table<Promotion, string>
 
   constructor() {
     super('pos_manoverde')
@@ -86,6 +90,27 @@ export class PosDatabase extends Dexie {
       restaurant_tables:
         'id, store_id, number, status, zone, current_order_id, [store_id+status]',
     })
+
+    // Schema version 5 -- CRM customers + promotions
+    this.version(5).stores({
+      stores: 'id, name, activity, created_at',
+      users:
+        'id, store_id, email, role, pin, is_active, created_at, [store_id+role], [store_id+is_active]',
+      products:
+        'id, store_id, name, category, sku, barcode, is_active, price, created_at, updated_at, [store_id+category], [store_id+is_active], [store_id+barcode], [store_id+expiry_date]',
+      orders:
+        'id, store_id, user_id, device_id, status, payment_method, synced, created_at, updated_at, [store_id+status], [store_id+created_at], [store_id+synced], table_id, customer_id',
+      stock_moves:
+        'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
+      sync_queue:
+        'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
+      restaurant_tables:
+        'id, store_id, number, status, zone, current_order_id, [store_id+status]',
+      customers:
+        'id, store_id, name, phone, email, loyalty_points, [store_id+name], [store_id+phone]',
+      promotions:
+        'id, store_id, type, is_active, start_date, end_date, [store_id+is_active]',
+    })
   }
 
   // ---- Clear all data (useful for store reset / logout) ----
@@ -101,6 +126,8 @@ export class PosDatabase extends Dexie {
         this.stock_moves,
         this.sync_queue,
         this.restaurant_tables,
+        this.customers,
+        this.promotions,
       ],
       async () => {
         await this.stores.clear()
@@ -110,6 +137,8 @@ export class PosDatabase extends Dexie {
         await this.stock_moves.clear()
         await this.sync_queue.clear()
         await this.restaurant_tables.clear()
+        await this.customers.clear()
+        await this.promotions.clear()
       },
     )
   }

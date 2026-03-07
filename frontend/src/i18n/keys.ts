@@ -204,6 +204,9 @@ export type TranslationKeys = {
     transactions: string
     more: string
     tables: string
+    customers: string
+    promotions: string
+    reports: string
   }
 
   // Dashboard
@@ -1092,5 +1095,98 @@ export type TranslationKeys = {
     createTables: string
     occupiedCount: string
     freeCount: string
+  }
+
+  // Customers / CRM
+  customers: {
+    title: string
+    addCustomer: string
+    editCustomer: string
+    deleteCustomer: string
+    searchCustomers: string
+    name: string
+    phone: string
+    email: string
+    address: string
+    notes: string
+    loyaltyPoints: string
+    totalSpent: string
+    visitCount: string
+    lastVisit: string
+    tags: string
+    noCustomers: string
+    customerDetails: string
+    orderHistory: string
+    topCustomers: string
+    selectCustomer: string
+    removeCustomer: string
+    pointsEarned: string
+    vipBadge: string
+    customerSince: string
+    addNote: string
+    allCustomers: string
+    deleteConfirm: string
+  }
+
+  // Promotions
+  promotions: {
+    title: string
+    addPromotion: string
+    editPromotion: string
+    deletePromotion: string
+    type: string
+    percentage: string
+    fixedAmount: string
+    bogo: string
+    bundle: string
+    happyHour: string
+    value: string
+    conditions: string
+    minQty: string
+    minAmount: string
+    categories: string
+    startDate: string
+    endDate: string
+    active: string
+    expired: string
+    scheduled: string
+    usageCount: string
+    maxUses: string
+    noPromotions: string
+    promoApplied: string
+    deleteConfirm: string
+    daysOfWeek: string
+    timeWindow: string
+    loyaltyOnly: string
+    allPromotions: string
+  }
+
+  // Reports
+  reports: {
+    title: string
+    period: string
+    today: string
+    thisWeek: string
+    thisMonth: string
+    custom: string
+    revenue: string
+    transactions: string
+    avgTicket: string
+    grossMargin: string
+    topProducts: string
+    paymentBreakdown: string
+    employeePerformance: string
+    qty: string
+    amount: string
+    growth: string
+    decline: string
+    noData: string
+    exportPdf: string
+    exportCsv: string
+    comparedTo: string
+    rank: string
+    product: string
+    employee: string
+    method: string
   }
 }

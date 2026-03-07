@@ -85,6 +85,9 @@ export type SidebarSection =
   | 'appointments'  // hair_salon
   | 'bookings'      // travel_agency
   | 'packages'      // travel_agency
+  | 'customers'     // CRM — all activities
+  | 'promotions'    // promotions engine
+  | 'reports'       // advanced reporting
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -97,6 +100,9 @@ export type PageComponent =
   | 'settings'
   | 'billing'
   | 'tables'
+  | 'customers'
+  | 'promotions'
+  | 'reports'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -180,6 +186,56 @@ export type Product = {
   age_group?: string         // daycare, school: "0-3", "3-6", "6-12"
 }
 
+// -- Customers / CRM ----------------------------------------------------------
+
+export type Customer = {
+  id: string
+  store_id: string
+  name: string
+  phone?: string
+  email?: string
+  address?: string
+  notes?: string
+  loyalty_points: number
+  total_spent: number
+  visit_count: number
+  last_visit?: string
+  tags?: string[]       // "VIP", "allergies", "professionnel"
+  created_at: string
+  updated_at: string
+}
+
+// -- Promotions ---------------------------------------------------------------
+
+export type PromotionType = 'percentage' | 'fixed_amount' | 'bogo' | 'bundle' | 'happy_hour'
+
+export type PromotionConditions = {
+  min_qty?: number        // qté minimum pour déclencher
+  min_amount?: number     // montant minimum
+  categories?: string[]   // catégories éligibles
+  product_ids?: string[]  // produits spécifiques
+  days?: number[]         // jours de la semaine (0=dim, 6=sam)
+  time_start?: string     // "17:00" (happy hour)
+  time_end?: string       // "19:00"
+  customer_only?: boolean // réservé clients fidélité
+}
+
+export type Promotion = {
+  id: string
+  store_id: string
+  name: string
+  type: PromotionType
+  value: number             // % ou montant fixe
+  conditions: PromotionConditions
+  start_date: string
+  end_date?: string
+  is_active: boolean
+  usage_count: number
+  max_uses?: number
+  created_at: string
+  updated_at: string
+}
+
 // -- Cart (in-memory, not persisted to DB) -----------------------------------
 
 export type CartItem = {
@@ -248,6 +304,10 @@ export type Order = {
   device_id: string
   table_id?: string       // restaurant table association
   table_name?: string     // e.g. "Table 5"
+  customer_id?: string    // CRM customer association
+  customer_name?: string  // denormalized for quick display
+  promotion_discount?: number // discount from promotions engine
+  promotion_names?: string[]  // applied promotion names
   created_at: string
   updated_at: string
 }
@@ -275,7 +335,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload

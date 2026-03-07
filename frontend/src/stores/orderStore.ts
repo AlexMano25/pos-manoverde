@@ -20,7 +20,15 @@ interface OrderActions {
     items: CartItem[],
     paymentMethod: PaymentMethod,
     userId: string,
-    storeId: string
+    storeId: string,
+    options?: {
+      customer_id?: string
+      customer_name?: string
+      table_id?: string
+      table_name?: string
+      promotion_discount?: number
+      promotion_names?: string[]
+    }
   ) => Promise<Order>
   getOrdersByDate: (date: string) => Order[]
   getTodayRevenue: () => number
@@ -87,7 +95,15 @@ export const useOrderStore = create<OrderState & OrderActions>()(
       items: CartItem[],
       paymentMethod: PaymentMethod,
       userId: string,
-      storeId: string
+      storeId: string,
+      options?: {
+        customer_id?: string
+        customer_name?: string
+        table_id?: string
+        table_name?: string
+        promotion_discount?: number
+        promotion_names?: string[]
+      }
     ): Promise<Order> => {
       const deviceId = getDeviceId()
       const now = new Date().toISOString()
@@ -105,6 +121,9 @@ export const useOrderStore = create<OrderState & OrderActions>()(
       const tax = 0 // Tax can be computed by the caller or via store tax_rate
       const total = subtotal - discount + tax
 
+      const promoDiscount = options?.promotion_discount ?? 0
+      const finalTotal = total - promoDiscount
+
       const order: Order = {
         id: generateUUID(),
         store_id: storeId,
@@ -112,12 +131,18 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         device_id: deviceId,
         items,
         subtotal,
-        discount,
+        discount: discount + promoDiscount,
         tax,
-        total,
+        total: finalTotal,
         payment_method: paymentMethod,
         status: 'paid',
         synced: false,
+        customer_id: options?.customer_id,
+        customer_name: options?.customer_name,
+        table_id: options?.table_id,
+        table_name: options?.table_name,
+        promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
+        promotion_names: options?.promotion_names,
         created_at: now,
         updated_at: now,
       }

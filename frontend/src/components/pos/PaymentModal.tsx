@@ -13,6 +13,8 @@ import { useOrderStore } from '../../stores/orderStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useAppStore } from '../../stores/appStore'
 import { useLanguageStore } from '../../stores/languageStore'
+import { useCustomerStore } from '../../stores/customerStore'
+import { usePromotionStore } from '../../stores/promotionStore'
 import { formatCurrency } from '../../utils/currency'
 import type { PaymentMethod } from '../../types'
 
@@ -57,6 +59,8 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
   const { t } = useLanguageStore()
+  const { selectedCustomer, selectCustomer, recordVisit } = useCustomerStore()
+  const { calculateTotalDiscount, incrementUsage } = usePromotionStore()
 
   const [amountReceived, setAmountReceived] = useState('')
   const [loading, setLoading] = useState(false)
@@ -75,9 +79,15 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   }
 
   const subtotal = getTotal()
-  const discount = 0
+  const storeId = currentStore?.id || 'default-store'
+  const promoResult = useMemo(
+    () => calculateTotalDiscount(items, storeId),
+    [items, storeId, calculateTotalDiscount]
+  )
+  const promoDiscount = promoResult.total
+  const discount = promoDiscount
   const taxRate = currentStore?.tax_rate ?? 0
-  const tax = Math.round(subtotal * (taxRate / 100))
+  const tax = Math.round((subtotal - discount) * (taxRate / 100))
   const total = subtotal - discount + tax
 
   const changeDue = useMemo(() => {
@@ -99,10 +109,28 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     setError('')
 
     try {
-      await createOrder(items, paymentMethod, user.id, currentStore.id)
+      const promoNames = promoResult.applied.map(a => a.promotion.name)
+      const order = await createOrder(items, paymentMethod, user.id, currentStore.id, {
+        customer_id: selectedCustomer?.id,
+        customer_name: selectedCustomer?.name,
+        promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
+        promotion_names: promoNames.length > 0 ? promoNames : undefined,
+      })
+
+      // Record customer visit + loyalty points
+      if (selectedCustomer) {
+        recordVisit(selectedCustomer.id, order.total).catch(() => {})
+      }
+
+      // Increment promotion usage
+      for (const applied of promoResult.applied) {
+        incrementUsage(applied.promotion.id).catch(() => {})
+      }
+
       setSuccess(true)
       setTimeout(() => {
         clear()
+        selectCustomer(null) // clear selected customer after order
         setSuccess(false)
         setAmountReceived('')
         onClose()
@@ -174,6 +202,19 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
         ))}
       </div>
 
+      {/* Customer info */}
+      {selectedCustomer && (
+        <div style={{ ...sectionStyle, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <span style={{ fontSize: 18 }}>👤</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#166534' }}>{selectedCustomer.name}</div>
+              <div style={{ fontSize: 12, color: '#15803d' }}>🎁 {selectedCustomer.loyalty_points} pts</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Totals */}
       <div style={dividerStyle} />
       <div style={itemRowStyle}>
@@ -182,7 +223,14 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       </div>
       {discount > 0 && (
         <div style={itemRowStyle}>
-          <span style={{ color: C.textSecondary }}>{t.pos.discount}</span>
+          <span style={{ color: C.textSecondary }}>
+            {t.pos.discount}
+            {promoResult.applied.length > 0 && (
+              <span style={{ fontSize: 11, marginLeft: 4, color: '#f59e0b' }}>
+                🏷 {promoResult.applied.map(a => a.promotion.name).join(', ')}
+              </span>
+            )}
+          </span>
           <span style={{ color: C.danger }}>-{formatCurrency(discount, currentStore?.currency)}</span>
         </div>
       )}
