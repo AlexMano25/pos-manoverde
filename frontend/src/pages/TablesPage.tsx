@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Plus, Trash2, Edit3, X, Users, Grid3X3,
-  CheckCircle2, AlertTriangle, Save,
+  CheckCircle2, Save,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useTableStore } from '../stores/tableStore'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import {
-  Search, ShoppingCart, Minus, Plus, X, Banknote, CreditCard,
-  Smartphone, ArrowRightLeft, ChevronLeft, Grid3X3, Users,
+  Search, ShoppingCart, Minus, Plus, X, Banknote,
+  ChevronLeft, Grid3X3, Users,
   CheckCircle2,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
@@ -12,7 +12,6 @@ import { useOrderStore } from '../stores/orderStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useResponsive } from '../hooks/useLayoutMode'
-import PaymentModal from '../components/pos/PaymentModal'
 import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, RestaurantTable, TableStatus } from '../types'
 
@@ -45,12 +44,12 @@ type WaiterStep = 'tables' | 'order' | 'payment'
 export default function WaiterPOSPage() {
   const { currentStore } = useAppStore()
   const { products, categories, loadProducts } = useProductStore()
-  const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
+  const { items, addItem, updateQty, clear, getTotal } = useCartStore()
   const { tables, loadTables, setTableStatus } = useTableStore()
   const { createOrder } = useOrderStore()
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
-  const { isMobile, rv } = useResponsive()
+  const { rv } = useResponsive()
 
   const currencyCode = currentStore?.currency || 'XAF'
   const storeId = currentStore?.id || ''
@@ -103,7 +102,7 @@ export default function WaiterPOSPage() {
     if (!user || !storeId || !selectedTable) return
 
     try {
-      const order = await createOrder(items, paymentMethod, user.id, storeId)
+      await createOrder(items, paymentMethod, user.id, storeId)
 
       // Free the table after payment
       await setTableStatus(selectedTable.id, 'free')
@@ -441,12 +440,7 @@ export default function WaiterPOSPage() {
                   borderColor: inCart ? C.primary : C.border,
                   borderWidth: inCart ? 2 : 1,
                 }}
-                onClick={() => addItem({
-                  product_id: product.id,
-                  name: product.name,
-                  price: product.price,
-                  qty: 1,
-                })}
+                onClick={() => addItem(product)}
               >
                 <p style={{
                   fontSize: 13,
@@ -525,14 +519,42 @@ export default function WaiterPOSPage() {
         </div>
       </div>
 
-      {/* Payment modal */}
+      {/* Payment modal — inline method selection */}
       {showPaymentModal && (
-        <PaymentModal
-          total={getTotal()}
-          currencyCode={currencyCode}
-          onConfirm={handlePaymentConfirm}
-          onClose={() => setShowPaymentModal(false)}
-        />
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }} onClick={() => setShowPaymentModal(false)}>
+          <div style={{
+            backgroundColor: '#fff', borderRadius: 16, padding: 24,
+            width: '90%', maxWidth: 380,
+          }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 18, color: C.text }}>{t.pos.confirmPayment}</h3>
+            <p style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 700, color: C.primary }}>
+              {formatCurrency(getTotal(), currencyCode)}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {(['cash', 'momo', 'carte_bancaire'] as PaymentMethod[]).map(method => (
+                <button key={method} onClick={() => handlePaymentConfirm(method)} style={{
+                  padding: '14px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
+                  backgroundColor: C.card, cursor: 'pointer', fontSize: 15, fontWeight: 600,
+                  color: C.text, textAlign: 'left',
+                }}>
+                  {method === 'cash' ? `💵 ${t.pos.cash}` :
+                   method === 'momo' ? `📱 ${t.pos.momo}` :
+                   `💳 ${t.pos.carteBancaire}`}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setShowPaymentModal(false)} style={{
+              marginTop: 12, width: '100%', padding: '10px', borderRadius: 8,
+              border: 'none', backgroundColor: C.bg, color: C.textSecondary,
+              cursor: 'pointer', fontSize: 14,
+            }}>
+              {t.common.cancel}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )

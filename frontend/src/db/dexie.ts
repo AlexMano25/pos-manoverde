@@ -21,7 +21,7 @@ export class PosDatabase extends Dexie {
   orders!: Table<Order, string>
   stock_moves!: Table<StockMove, string>
   sync_queue!: Table<SyncEntry, string>
-  tables!: Table<RestaurantTable, string>
+  restaurant_tables!: Table<RestaurantTable, string>
 
   constructor() {
     super('pos_manoverde')
@@ -83,7 +83,7 @@ export class PosDatabase extends Dexie {
         'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
       sync_queue:
         'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
-      tables:
+      restaurant_tables:
         'id, store_id, number, status, zone, current_order_id, [store_id+status]',
     })
   }
@@ -100,7 +100,7 @@ export class PosDatabase extends Dexie {
         this.orders,
         this.stock_moves,
         this.sync_queue,
-        this.tables,
+        this.restaurant_tables,
       ],
       async () => {
         await this.stores.clear()
@@ -109,7 +109,7 @@ export class PosDatabase extends Dexie {
         await this.orders.clear()
         await this.stock_moves.clear()
         await this.sync_queue.clear()
-        await this.tables.clear()
+        await this.restaurant_tables.clear()
       },
     )
   }

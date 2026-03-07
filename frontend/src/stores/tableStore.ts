@@ -32,7 +32,7 @@ export const useTableStore = create<TableState & TableActions>()(
     loadTables: async (storeId: string) => {
       set({ loading: true })
       try {
-        const tables = await db.tables
+        const tables = await db.restaurant_tables
           .where('store_id')
           .equals(storeId)
           .sortBy('number')
@@ -58,7 +58,7 @@ export const useTableStore = create<TableState & TableActions>()(
         updated_at: now,
       }
 
-      await db.tables.add(table)
+      await db.restaurant_tables.add(table)
       set((state) => ({
         tables: [...state.tables, table].sort((a, b) => a.number - b.number),
       }))
@@ -67,7 +67,7 @@ export const useTableStore = create<TableState & TableActions>()(
 
     updateTable: async (id, data) => {
       const now = new Date().toISOString()
-      await db.tables.update(id, { ...data, updated_at: now })
+      await db.restaurant_tables.update(id, { ...data, updated_at: now })
       set((state) => ({
         tables: state.tables.map((t) =>
           t.id === id ? { ...t, ...data, updated_at: now } : t
@@ -76,7 +76,7 @@ export const useTableStore = create<TableState & TableActions>()(
     },
 
     deleteTable: async (id) => {
-      await db.tables.delete(id)
+      await db.restaurant_tables.delete(id)
       set((state) => ({
         tables: state.tables.filter((t) => t.id !== id),
       }))
@@ -95,7 +95,7 @@ export const useTableStore = create<TableState & TableActions>()(
         update.current_order_id = undefined
       }
 
-      await db.tables.update(id, update)
+      await db.restaurant_tables.update(id, update)
       set((state) => ({
         tables: state.tables.map((t) =>
           t.id === id ? { ...t, ...update } : t
@@ -120,7 +120,7 @@ export const useTableStore = create<TableState & TableActions>()(
         })
       }
 
-      await db.tables.bulkAdd(newTables)
+      await db.restaurant_tables.bulkAdd(newTables)
       set({ tables: newTables })
     },
 

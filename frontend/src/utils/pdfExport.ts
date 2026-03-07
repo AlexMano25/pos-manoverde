@@ -620,7 +620,6 @@ export function exportPriceLabels(
 
   for (let i = 0; i < products.length; i++) {
     const product = products[i]
-    const x = marginX + col * labelWidth
     const y = marginY + row * labelHeight
 
     // Page break when exceeding page
