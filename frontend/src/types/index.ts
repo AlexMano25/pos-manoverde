@@ -88,6 +88,7 @@ export type SidebarSection =
   | 'customers'     // CRM — all activities
   | 'promotions'    // promotions engine
   | 'reports'       // advanced reporting
+  | 'quotes'        // quotes/estimates
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -103,6 +104,11 @@ export type PageComponent =
   | 'customers'
   | 'promotions'
   | 'reports'
+  // Phase 2 — activity-specific modules
+  | 'appointments'
+  | 'memberships'
+  | 'work_orders'
+  | 'quotes'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -335,7 +341,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -592,6 +598,145 @@ export type ContractTemplate = {
   activities: Activity[]
   icon: string
   fields: ContractField[]
+}
+
+// -- Appointments / Reservations / Bookings -----------------------------------
+
+export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
+
+export type Appointment = {
+  id: string
+  store_id: string
+  customer_id?: string
+  customer_name?: string
+  service_id?: string        // product_id of the service
+  service_name?: string
+  staff_id?: string          // assigned employee
+  staff_name?: string
+  date: string               // 'YYYY-MM-DD'
+  time_start: string         // 'HH:mm'
+  time_end: string           // 'HH:mm'
+  duration_minutes: number
+  status: AppointmentStatus
+  price?: number
+  notes?: string
+  // Hotel-specific
+  room_id?: string
+  room_number?: string
+  guests?: number
+  // Travel-specific
+  destination?: string
+  passengers?: number
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// -- Memberships / Subscriptions ----------------------------------------------
+
+export type MembershipStatus = 'active' | 'expired' | 'suspended' | 'cancelled'
+export type MembershipPlanType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'session_pack'
+
+export type Membership = {
+  id: string
+  store_id: string
+  customer_id: string
+  customer_name: string
+  plan_type: MembershipPlanType
+  plan_name: string
+  price: number
+  status: MembershipStatus
+  start_date: string
+  end_date: string
+  sessions_total?: number     // for session_pack type
+  sessions_used?: number
+  auto_renew: boolean
+  payment_method?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// -- Work Orders / Service Tickets --------------------------------------------
+
+export type WorkOrderStatus = 'received' | 'diagnosed' | 'quoted' | 'approved' | 'in_progress' | 'completed' | 'delivered' | 'cancelled'
+export type WorkOrderPriority = 'low' | 'normal' | 'high' | 'urgent'
+
+export type WorkOrderItem = {
+  description: string
+  type: 'labor' | 'part' | 'service'
+  product_id?: string
+  quantity: number
+  unit_price: number
+  total: number
+}
+
+export type WorkOrder = {
+  id: string
+  store_id: string
+  order_number: string       // auto-generated: "WO-YYMMDD-NNN"
+  customer_id?: string
+  customer_name?: string
+  customer_phone?: string
+  status: WorkOrderStatus
+  priority: WorkOrderPriority
+  item_description: string   // "Toyota Corolla 2019" / "iPhone 14" / "3 suits"
+  item_identifier?: string   // license plate / serial number / tag number
+  diagnosis?: string
+  items: WorkOrderItem[]
+  labor_total: number
+  parts_total: number
+  estimated_total: number
+  final_total?: number
+  received_at: string
+  estimated_completion?: string
+  completed_at?: string
+  delivered_at?: string
+  quote_id?: string          // linked quote
+  order_id?: string          // linked POS order when invoiced
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// -- Quotes / Estimates -------------------------------------------------------
+
+export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'converted'
+
+export type QuoteItem = {
+  description: string
+  product_id?: string
+  quantity: number
+  unit_price: number
+  discount?: number
+  total: number
+}
+
+export type Quote = {
+  id: string
+  store_id: string
+  quote_number: string       // auto-generated: "QT-YYMMDD-NNN"
+  customer_id?: string
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
+  status: QuoteStatus
+  title: string
+  items: QuoteItem[]
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+  valid_until: string
+  notes?: string
+  terms?: string
+  work_order_id?: string     // if converted to work order
+  order_id?: string          // if converted to order
+  synced: boolean
+  created_at: string
+  updated_at: string
 }
 
 // -- Registration Data --------------------------------------------------------

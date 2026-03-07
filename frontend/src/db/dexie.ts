@@ -1,14 +1,18 @@
 import Dexie, { type Table } from 'dexie'
 import type {
+  Appointment,
   Customer,
+  Membership,
   Order,
   Product,
   Promotion,
+  Quote,
   RestaurantTable,
   StockMove,
   SyncEntry,
   Store,
   User,
+  WorkOrder,
 } from '../types'
 import { generateUUID } from '../utils/uuid'
 
@@ -26,6 +30,10 @@ export class PosDatabase extends Dexie {
   restaurant_tables!: Table<RestaurantTable, string>
   customers!: Table<Customer, string>
   promotions!: Table<Promotion, string>
+  appointments!: Table<Appointment, string>
+  memberships!: Table<Membership, string>
+  work_orders!: Table<WorkOrder, string>
+  quotes!: Table<Quote, string>
 
   constructor() {
     super('pos_manoverde')
@@ -111,6 +119,35 @@ export class PosDatabase extends Dexie {
       promotions:
         'id, store_id, type, is_active, start_date, end_date, [store_id+is_active]',
     })
+
+    // Schema version 6 -- Phase 2 activity-specific tables
+    this.version(6).stores({
+      stores: 'id, name, activity, created_at',
+      users:
+        'id, store_id, email, role, pin, is_active, created_at, [store_id+role], [store_id+is_active]',
+      products:
+        'id, store_id, name, category, sku, barcode, is_active, price, created_at, updated_at, [store_id+category], [store_id+is_active], [store_id+barcode], [store_id+expiry_date]',
+      orders:
+        'id, store_id, user_id, device_id, status, payment_method, synced, created_at, updated_at, [store_id+status], [store_id+created_at], [store_id+synced], table_id, customer_id',
+      stock_moves:
+        'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
+      sync_queue:
+        'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
+      restaurant_tables:
+        'id, store_id, number, status, zone, current_order_id, [store_id+status]',
+      customers:
+        'id, store_id, name, phone, email, loyalty_points, [store_id+name], [store_id+phone]',
+      promotions:
+        'id, store_id, type, is_active, start_date, end_date, [store_id+is_active]',
+      appointments:
+        'id, store_id, customer_id, status, date, [store_id+date], [store_id+status]',
+      memberships:
+        'id, store_id, customer_id, status, plan_type, end_date, [store_id+status], [store_id+customer_id]',
+      work_orders:
+        'id, store_id, customer_id, status, priority, [store_id+status]',
+      quotes:
+        'id, store_id, customer_id, status, valid_until, [store_id+status]',
+    })
   }
 
   // ---- Clear all data (useful for store reset / logout) ----
@@ -128,6 +165,10 @@ export class PosDatabase extends Dexie {
         this.restaurant_tables,
         this.customers,
         this.promotions,
+        this.appointments,
+        this.memberships,
+        this.work_orders,
+        this.quotes,
       ],
       async () => {
         await this.stores.clear()
@@ -139,6 +180,10 @@ export class PosDatabase extends Dexie {
         await this.restaurant_tables.clear()
         await this.customers.clear()
         await this.promotions.clear()
+        await this.appointments.clear()
+        await this.memberships.clear()
+        await this.work_orders.clear()
+        await this.quotes.clear()
       },
     )
   }

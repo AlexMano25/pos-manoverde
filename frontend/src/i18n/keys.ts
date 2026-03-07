@@ -197,6 +197,9 @@ export type TranslationKeys = {
     parts: string
     invoices: string
     appointments: string
+    memberships: string
+    workOrders: string
+    quotes: string
     bookings: string
     packages: string
     menu: string
@@ -1188,5 +1191,211 @@ export type TranslationKeys = {
     product: string
     employee: string
     method: string
+  }
+
+  // Appointments (hair salon, hotel, travel, education, etc.)
+  appointments: {
+    title: string
+    addAppointment: string
+    editAppointment: string
+    deleteAppointment: string
+    date: string
+    time: string
+    duration: string
+    service: string
+    staff: string
+    customer: string
+    status: string
+    notes: string
+    price: string
+    scheduled: string
+    confirmed: string
+    inProgress: string
+    completed: string
+    cancelled: string
+    noShow: string
+    dayView: string
+    weekView: string
+    listView: string
+    todayCount: string
+    confirmedCount: string
+    revenue: string
+    confirm: string
+    start: string
+    complete: string
+    cancel: string
+    markNoShow: string
+    createOrder: string
+    today: string
+    noAppointments: string
+    availableSlots: string
+    selectSlot: string
+    appointment: string
+    reservation: string
+    booking: string
+    session: string
+    enrollment: string
+    deleteConfirm: string
+    allStatuses: string
+    guests: string
+    roomNumber: string
+    destination: string
+    passengers: string
+  }
+
+  // Memberships (gym, spa, pool)
+  memberships: {
+    title: string
+    addMembership: string
+    editMembership: string
+    deleteMembership: string
+    daily: string
+    weekly: string
+    monthly: string
+    quarterly: string
+    yearly: string
+    sessionPack: string
+    planType: string
+    planName: string
+    price: string
+    startDate: string
+    endDate: string
+    autoRenew: string
+    sessionsTotal: string
+    sessionsUsed: string
+    sessionsRemaining: string
+    active: string
+    expired: string
+    suspended: string
+    cancelled: string
+    expiringSoon: string
+    renew: string
+    suspend: string
+    activate: string
+    checkIn: string
+    checkOut: string
+    activeMembers: string
+    expiringCount: string
+    monthlyRevenue: string
+    noMemberships: string
+    deleteConfirm: string
+    quickCheckIn: string
+    searchMember: string
+    paymentMethod: string
+    all: string
+  }
+
+  // Work Orders (auto repair, etc.)
+  workOrders: {
+    title: string
+    addWorkOrder: string
+    editWorkOrder: string
+    deleteWorkOrder: string
+    orderNumber: string
+    received: string
+    diagnosed: string
+    quoted: string
+    approved: string
+    inProgress: string
+    completed: string
+    delivered: string
+    cancelled: string
+    low: string
+    normal: string
+    high: string
+    urgent: string
+    priority: string
+    itemDescription: string
+    itemIdentifier: string
+    diagnosis: string
+    estimatedCompletion: string
+    completedAt: string
+    deliveredAt: string
+    notes: string
+    lineItems: string
+    addItem: string
+    labor: string
+    part: string
+    service: string
+    description: string
+    quantity: string
+    unitPrice: string
+    total: string
+    laborTotal: string
+    partsTotal: string
+    estimatedTotal: string
+    finalTotal: string
+    diagnose: string
+    startWork: string
+    complete: string
+    deliver: string
+    generateInvoice: string
+    generateQuote: string
+    activeOrders: string
+    pendingDiagnosis: string
+    readyForDelivery: string
+    todayCompletions: string
+    workOrder: string
+    repairTicket: string
+    serviceTicket: string
+    serviceOrder: string
+    vehicle: string
+    device: string
+    licensePlate: string
+    serialNumber: string
+    tagNumber: string
+    noWorkOrders: string
+    deleteConfirm: string
+    allStatuses: string
+    customer: string
+  }
+
+  // Quotes (auto repair, travel, services, real estate)
+  quotes: {
+    title: string
+    addQuote: string
+    editQuote: string
+    deleteQuote: string
+    quoteNumber: string
+    quoteTitle: string
+    draft: string
+    sent: string
+    accepted: string
+    rejected: string
+    expired: string
+    converted: string
+    validUntil: string
+    terms: string
+    notes: string
+    lineItems: string
+    addItem: string
+    description: string
+    quantity: string
+    unitPrice: string
+    discount: string
+    itemTotal: string
+    subtotal: string
+    totalDiscount: string
+    tax: string
+    grandTotal: string
+    send: string
+    accept: string
+    reject: string
+    convertToOrder: string
+    convertToWorkOrder: string
+    duplicate: string
+    preview: string
+    share: string
+    quotesThisMonth: string
+    pendingAcceptance: string
+    conversionRate: string
+    expiredCount: string
+    noQuotes: string
+    deleteConfirm: string
+    allStatuses: string
+    customer: string
+    expiresIn: string
+    expiredLabel: string
+    daysLeft: string
   }
 }

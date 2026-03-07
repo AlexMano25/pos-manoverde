@@ -25,6 +25,10 @@ import TablesPage from './pages/TablesPage'
 import CustomersPage from './pages/CustomersPage'
 import PromotionsPage from './pages/PromotionsPage'
 import ReportsPage from './pages/ReportsPage'
+import AppointmentsPage from './pages/AppointmentsPage'
+import MembershipsPage from './pages/MembershipsPage'
+import WorkOrdersPage from './pages/WorkOrdersPage'
+import QuotesPage from './pages/QuotesPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -105,8 +109,12 @@ function AppContent() {
       case 'tables':     return <TablesPage />
       case 'customers':  return <CustomersPage />
       case 'promotions': return <PromotionsPage />
-      case 'reports':    return <ReportsPage />
-      default:           return <DashboardPage />
+      case 'reports':       return <ReportsPage />
+      case 'appointments':  return <AppointmentsPage />
+      case 'memberships':   return <MembershipsPage />
+      case 'work_orders':   return <WorkOrdersPage />
+      case 'quotes':        return <QuotesPage />
+      default:              return <DashboardPage />
     }
   }
 
