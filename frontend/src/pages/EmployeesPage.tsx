@@ -249,60 +249,9 @@ export default function EmployeesPage() {
     setFormError('')
 
     try {
-      // Cloud mode: use Edge Functions
-      if (isSupabaseConfigured && supabase) {
-        if (editingEmployee) {
-          // Update via Edge Function
-          const updates: Record<string, unknown> = {
-            name: form.name.trim(),
-            role: form.role,
-            phone: form.phone.trim() || null,
-            pin: form.pin.trim() || null,
-          }
-          if (form.email.trim() !== editingEmployee.email) {
-            updates.email = form.email.trim()
-          }
-          if (form.password) {
-            updates.password = form.password
-          }
-
-          const { data, error } = await supabase.functions.invoke('update-employee', {
-            body: { employee_id: editingEmployee.id, updates },
-          })
-
-          if (error) throw new Error(extractEdgeError(error))
-          if (data?.error) throw new Error(data.error)
-
-          // Update local IndexedDB
-          if (data?.user) {
-            await db.users.update(editingEmployee.id, data.user)
-          }
-        } else {
-          // Create via Edge Function
-          const { data, error } = await supabase.functions.invoke('create-employee', {
-            body: {
-              name: form.name.trim(),
-              email: form.email.trim(),
-              password: form.password,
-              role: form.role,
-              phone: form.phone.trim() || null,
-              pin: form.pin.trim() || null,
-              store_id: currentStore.id,
-            },
-          })
-
-          if (error) throw new Error(extractEdgeError(error))
-          if (data?.error) throw new Error(data.error)
-
-          // Add to local IndexedDB
-          if (data?.user) {
-            await db.users.add(data.user as User)
-          }
-        }
-      } else {
-        // Offline / local mode: direct IndexedDB (no auth account)
+      // Helper: save employee locally in IndexedDB
+      const saveLocal = async () => {
         const now = new Date().toISOString()
-
         if (editingEmployee) {
           await db.users.update(editingEmployee.id, {
             name: form.name.trim(),
@@ -329,6 +278,76 @@ export default function EmployeesPage() {
         }
       }
 
+      // Cloud mode: try Edge Functions, fallback to local
+      if (isSupabaseConfigured && supabase) {
+        let cloudSuccess = false
+
+        try {
+          if (editingEmployee) {
+            // Update via Edge Function
+            const updates: Record<string, unknown> = {
+              name: form.name.trim(),
+              role: form.role,
+              phone: form.phone.trim() || null,
+              pin: form.pin.trim() || null,
+            }
+            if (form.email.trim() !== editingEmployee.email) {
+              updates.email = form.email.trim()
+            }
+            if (form.password) {
+              updates.password = form.password
+            }
+
+            const { data, error } = await supabase.functions.invoke('update-employee', {
+              body: { employee_id: editingEmployee.id, updates },
+            })
+
+            if (error) throw new Error(extractEdgeError(error))
+            if (data?.error) throw new Error(data.error)
+
+            // Update local IndexedDB
+            if (data?.user) {
+              await db.users.update(editingEmployee.id, data.user)
+            }
+            cloudSuccess = true
+          } else {
+            // Create via Edge Function
+            const { data, error } = await supabase.functions.invoke('create-employee', {
+              body: {
+                name: form.name.trim(),
+                email: form.email.trim(),
+                password: form.password,
+                role: form.role,
+                phone: form.phone.trim() || null,
+                pin: form.pin.trim() || null,
+                store_id: currentStore.id,
+              },
+            })
+
+            if (error) throw new Error(extractEdgeError(error))
+            if (data?.error) throw new Error(data.error)
+
+            // Add to local IndexedDB
+            if (data?.user) {
+              await db.users.add(data.user as User)
+            }
+            cloudSuccess = true
+          }
+        } catch (cloudErr) {
+          // Edge Function unavailable or failed → fall back to local storage
+          console.warn('[employees] Edge Function failed, falling back to local:', cloudErr)
+          cloudSuccess = false
+        }
+
+        // Fallback: save locally if cloud failed
+        if (!cloudSuccess) {
+          await saveLocal()
+        }
+      } else {
+        // Offline / local mode: direct IndexedDB (no auth account)
+        await saveLocal()
+      }
+
       setShowModal(false)
       setForm(emptyForm)
       await loadEmployees()
@@ -343,18 +362,32 @@ export default function EmployeesPage() {
   const handleDelete = async () => {
     if (!deletingEmployee) return
     try {
-      if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.functions.invoke('update-employee', {
-          body: { employee_id: deletingEmployee.id, updates: { is_active: false } },
-        })
-        if (error) throw new Error(extractEdgeError(error))
-        if (data?.error) throw new Error(data.error)
-        if (data?.user) await db.users.update(deletingEmployee.id, data.user)
-      } else {
+      const deactivateLocal = async () => {
         await db.users.update(deletingEmployee.id, {
           is_active: false,
           updated_at: new Date().toISOString(),
         })
+      }
+
+      if (isSupabaseConfigured && supabase) {
+        let cloudSuccess = false
+        try {
+          const { data, error } = await supabase.functions.invoke('update-employee', {
+            body: { employee_id: deletingEmployee.id, updates: { is_active: false } },
+          })
+          if (error) throw new Error(extractEdgeError(error))
+          if (data?.error) throw new Error(data.error)
+          if (data?.user) await db.users.update(deletingEmployee.id, data.user)
+          cloudSuccess = true
+        } catch (cloudErr) {
+          console.warn('[employees] Edge Function failed on delete, falling back to local:', cloudErr)
+          cloudSuccess = false
+        }
+        if (!cloudSuccess) {
+          await deactivateLocal()
+        }
+      } else {
+        await deactivateLocal()
       }
       setShowDeleteModal(false)
       setDeletingEmployee(null)
@@ -366,18 +399,32 @@ export default function EmployeesPage() {
 
   const toggleActive = async (emp: User) => {
     try {
-      if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.functions.invoke('update-employee', {
-          body: { employee_id: emp.id, updates: { is_active: !emp.is_active } },
-        })
-        if (error) throw new Error(extractEdgeError(error))
-        if (data?.error) throw new Error(data.error)
-        if (data?.user) await db.users.update(emp.id, data.user)
-      } else {
+      const toggleLocal = async () => {
         await db.users.update(emp.id, {
           is_active: !emp.is_active,
           updated_at: new Date().toISOString(),
         })
+      }
+
+      if (isSupabaseConfigured && supabase) {
+        let cloudSuccess = false
+        try {
+          const { data, error } = await supabase.functions.invoke('update-employee', {
+            body: { employee_id: emp.id, updates: { is_active: !emp.is_active } },
+          })
+          if (error) throw new Error(extractEdgeError(error))
+          if (data?.error) throw new Error(data.error)
+          if (data?.user) await db.users.update(emp.id, data.user)
+          cloudSuccess = true
+        } catch (cloudErr) {
+          console.warn('[employees] Edge Function failed on toggle, falling back to local:', cloudErr)
+          cloudSuccess = false
+        }
+        if (!cloudSuccess) {
+          await toggleLocal()
+        }
+      } else {
+        await toggleLocal()
       }
       await loadEmployees()
     } catch (err) {
