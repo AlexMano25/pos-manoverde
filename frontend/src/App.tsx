@@ -29,6 +29,10 @@ import AppointmentsPage from './pages/AppointmentsPage'
 import MembershipsPage from './pages/MembershipsPage'
 import WorkOrdersPage from './pages/WorkOrdersPage'
 import QuotesPage from './pages/QuotesPage'
+import CashRegisterPage from './pages/CashRegisterPage'
+import SuppliersPage from './pages/SuppliersPage'
+import InvoicesPage from './pages/InvoicesPage'
+import DeliveriesPage from './pages/DeliveriesPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -114,6 +118,10 @@ function AppContent() {
       case 'memberships':   return <MembershipsPage />
       case 'work_orders':   return <WorkOrdersPage />
       case 'quotes':        return <QuotesPage />
+      case 'cash_register': return <CashRegisterPage />
+      case 'suppliers':     return <SuppliersPage />
+      case 'invoices':      return <InvoicesPage />
+      case 'deliveries':    return <DeliveriesPage />
       default:              return <DashboardPage />
     }
   }

@@ -210,6 +210,9 @@ export type TranslationKeys = {
     customers: string
     promotions: string
     reports: string
+    cashRegister: string
+    suppliers: string
+    deliveries: string
   }
 
   // Dashboard
@@ -1397,5 +1400,211 @@ export type TranslationKeys = {
     expiresIn: string
     expiredLabel: string
     daysLeft: string
+  }
+
+  // Cash Register / Till Management
+  cashRegister: {
+    title: string
+    openRegister: string
+    closeRegister: string
+    openingFloat: string
+    closingCount: string
+    cashIn: string
+    cashOut: string
+    tip: string
+    pettyCash: string
+    returnCash: string
+    amount: string
+    reason: string
+    currentSession: string
+    sessionHistory: string
+    noSession: string
+    openSession: string
+    closeSession: string
+    denomination: string
+    count: string
+    denominationTotal: string
+    expectedCash: string
+    actualCash: string
+    discrepancy: string
+    over: string
+    short: string
+    balanced: string
+    zReport: string
+    cashSales: string
+    cardSales: string
+    otherSales: string
+    totalSales: string
+    movements: string
+    noMovements: string
+    addMovement: string
+    notes: string
+    openedBy: string
+    closedBy: string
+    openedAt: string
+    closedAt: string
+    sessionOpen: string
+    sessionClosed: string
+    confirmClose: string
+    confirmCloseMessage: string
+    movementType: string
+  }
+
+  // Suppliers & Purchase Orders
+  suppliers: {
+    title: string
+    addSupplier: string
+    editSupplier: string
+    deleteSupplier: string
+    supplierName: string
+    contactName: string
+    email: string
+    phone: string
+    address: string
+    category: string
+    paymentTerms: string
+    notes: string
+    active: string
+    inactive: string
+    noSuppliers: string
+    deleteConfirm: string
+    searchSuppliers: string
+    purchaseOrders: string
+    addPurchaseOrder: string
+    editPurchaseOrder: string
+    poNumber: string
+    supplier: string
+    status: string
+    draft: string
+    sent: string
+    partial: string
+    received: string
+    cancelled: string
+    expectedDelivery: string
+    items: string
+    addItem: string
+    product: string
+    description: string
+    quantity: string
+    receivedQty: string
+    unitCost: string
+    itemTotal: string
+    subtotal: string
+    tax: string
+    total: string
+    sendOrder: string
+    receiveGoods: string
+    cancelOrder: string
+    noPurchaseOrders: string
+    allStatuses: string
+    deletePoConfirm: string
+    receiveTitle: string
+    receiveQuantity: string
+    supplierTab: string
+    ordersTab: string
+  }
+
+  // POS Invoices
+  invoices: {
+    title: string
+    addInvoice: string
+    editInvoice: string
+    deleteInvoice: string
+    invoiceNumber: string
+    customer: string
+    customerName: string
+    customerEmail: string
+    customerPhone: string
+    customerAddress: string
+    status: string
+    draft: string
+    sent: string
+    paid: string
+    overdue: string
+    cancelled: string
+    issuedAt: string
+    dueDate: string
+    items: string
+    addItem: string
+    description: string
+    quantity: string
+    unitPrice: string
+    taxRate: string
+    discount: string
+    itemTotal: string
+    subtotal: string
+    totalDiscount: string
+    tax: string
+    grandTotal: string
+    amountPaid: string
+    balanceDue: string
+    payments: string
+    addPayment: string
+    paymentAmount: string
+    paymentMethod: string
+    paymentDate: string
+    paymentNote: string
+    terms: string
+    notes: string
+    sendInvoice: string
+    markPaid: string
+    cancelInvoice: string
+    fromOrder: string
+    fromWorkOrder: string
+    fromQuote: string
+    noInvoices: string
+    deleteConfirm: string
+    allStatuses: string
+    totalInvoiced: string
+    totalReceived: string
+    outstanding: string
+    overdueCount: string
+    overdueAlert: string
+    invoiceDetail: string
+  }
+
+  // Deliveries
+  deliveries: {
+    title: string
+    addDelivery: string
+    editDelivery: string
+    deleteDelivery: string
+    orderRef: string
+    customer: string
+    customerName: string
+    customerPhone: string
+    deliveryAddress: string
+    deliveryNotes: string
+    driver: string
+    driverName: string
+    assignDriver: string
+    status: string
+    pending: string
+    assigned: string
+    pickedUp: string
+    inTransit: string
+    delivered: string
+    failed: string
+    fee: string
+    feeType: string
+    flat: string
+    zone: string
+    estimatedTime: string
+    pickedUpAt: string
+    deliveredAt: string
+    failedReason: string
+    noDeliveries: string
+    deleteConfirm: string
+    allStatuses: string
+    todayDeliveries: string
+    pendingCount: string
+    inProgressCount: string
+    deliveredCount: string
+    markPickedUp: string
+    markInTransit: string
+    markDelivered: string
+    markFailed: string
+    pipeline: string
+    selectDriver: string
   }
 }

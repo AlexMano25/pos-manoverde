@@ -89,6 +89,10 @@ export type SidebarSection =
   | 'promotions'    // promotions engine
   | 'reports'       // advanced reporting
   | 'quotes'        // quotes/estimates
+  // Phase 3 — cash register, suppliers, invoices, deliveries
+  | 'cash_register'  // all activities
+  | 'suppliers'      // retail, food & beverage, auto_repair
+  | 'deliveries'     // restaurant, pharmacy, florist, etc.
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -109,6 +113,11 @@ export type PageComponent =
   | 'memberships'
   | 'work_orders'
   | 'quotes'
+  // Phase 3 — cash register, suppliers, invoices, deliveries
+  | 'cash_register'
+  | 'suppliers'
+  | 'invoices'
+  | 'deliveries'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -341,7 +350,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -754,5 +763,176 @@ export type RegistrationData = {
   activity: Activity
   password: string
   termsAcceptedAt?: string
+}
+
+// -- Phase 3: Cash Register, Suppliers, POS Invoices, Deliveries ---------------
+
+// Cash Register / Till Management
+export type CashSessionStatus = 'open' | 'closed'
+export type CashMovementType = 'cash_in' | 'cash_out' | 'tip' | 'petty_cash' | 'return'
+
+export type DenominationCount = {
+  denomination: number
+  count: number
+  total: number
+}
+
+export type CashMovement = {
+  id: string
+  type: CashMovementType
+  amount: number
+  reason?: string
+  user_id: string
+  user_name?: string
+  created_at: string
+}
+
+export type CashSession = {
+  id: string
+  store_id: string
+  user_id: string
+  user_name?: string
+  status: CashSessionStatus
+  opening_float: number
+  closing_count: DenominationCount[]
+  closing_total: number
+  cash_sales_total: number
+  expected_cash: number
+  discrepancy: number
+  cash_movements: CashMovement[]
+  opened_at: string
+  closed_at?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Suppliers & Purchase Orders
+export type PurchaseOrderStatus = 'draft' | 'sent' | 'partial' | 'received' | 'cancelled'
+
+export type PurchaseOrderItem = {
+  product_id?: string
+  description: string
+  quantity: number
+  received_quantity: number
+  unit_cost: number
+  total: number
+}
+
+export type PurchaseOrder = {
+  id: string
+  store_id: string
+  po_number: string
+  supplier_id: string
+  supplier_name: string
+  items: PurchaseOrderItem[]
+  subtotal: number
+  tax: number
+  total: number
+  status: PurchaseOrderStatus
+  expected_delivery?: string
+  received_at?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type Supplier = {
+  id: string
+  store_id: string
+  name: string
+  contact_name?: string
+  email?: string
+  phone?: string
+  address?: string
+  category?: string
+  payment_terms?: string
+  notes?: string
+  is_active: boolean
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// POS Invoices (customer invoices, not subscription billing)
+export type PosInvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+
+export type PosInvoiceItem = {
+  description: string
+  product_id?: string
+  quantity: number
+  unit_price: number
+  tax_rate: number
+  discount: number
+  total: number
+}
+
+export type PosInvoicePayment = {
+  id: string
+  amount: number
+  payment_method: PaymentMethod
+  paid_at: string
+  note?: string
+}
+
+export type PosInvoice = {
+  id: string
+  store_id: string
+  invoice_number: string
+  customer_id?: string
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
+  customer_address?: string
+  status: PosInvoiceStatus
+  items: PosInvoiceItem[]
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
+  amount_paid: number
+  balance_due: number
+  payments: PosInvoicePayment[]
+  order_id?: string
+  work_order_id?: string
+  quote_id?: string
+  due_date?: string
+  issued_at: string
+  paid_at?: string
+  notes?: string
+  terms?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Delivery Management
+export type DeliveryStatus = 'pending' | 'assigned' | 'picked_up' | 'in_transit' | 'delivered' | 'failed'
+export type DeliveryFeeType = 'flat' | 'zone'
+
+export type Delivery = {
+  id: string
+  store_id: string
+  order_id?: string
+  customer_id?: string
+  customer_name?: string
+  customer_phone?: string
+  delivery_address: string
+  delivery_notes?: string
+  driver_id?: string
+  driver_name?: string
+  status: DeliveryStatus
+  fee: number
+  fee_type: DeliveryFeeType
+  zone?: string
+  estimated_time?: string
+  picked_up_at?: string
+  delivered_at?: string
+  failed_reason?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
 }
 
