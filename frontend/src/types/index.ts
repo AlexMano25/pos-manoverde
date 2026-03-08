@@ -97,6 +97,11 @@ export type SidebarSection =
   | 'time_attendance' // all activities
   | 'loyalty'         // all activities
   | 'kds'             // food & beverage only
+  // Phase 5 — gift cards, expenses, campaigns, payroll
+  | 'gift_cards'      // all activities
+  | 'expenses'        // all activities
+  | 'campaigns'       // all activities
+  | 'payroll'         // all activities
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -126,6 +131,11 @@ export type PageComponent =
   | 'time_attendance'
   | 'loyalty'
   | 'kds'
+  // Phase 5 — gift cards, expenses, campaigns, payroll
+  | 'gift_cards'
+  | 'expenses'
+  | 'campaigns'
+  | 'payroll'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -365,7 +375,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1047,4 +1057,150 @@ export type KdsOrder = {
   completed_at?: string
   elapsed_seconds?: number
   synced: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5 — Gift Cards, Expense Tracking, Marketing Campaigns, Payroll
+// ---------------------------------------------------------------------------
+
+// Gift Cards & Vouchers
+export type GiftCardStatus = 'active' | 'redeemed' | 'expired' | 'disabled'
+
+export type GiftCard = {
+  id: string
+  store_id: string
+  code: string              // unique redemption code e.g. "GC-XXXX-YYYY"
+  initial_balance: number
+  current_balance: number
+  status: GiftCardStatus
+  customer_id?: string
+  customer_name?: string
+  purchased_by?: string     // name of purchaser
+  recipient_name?: string
+  recipient_email?: string
+  recipient_phone?: string
+  message?: string          // personal message on the card
+  expires_at?: string
+  activated_at?: string
+  last_used_at?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type GiftCardTransaction = {
+  id: string
+  store_id: string
+  gift_card_id: string
+  gift_card_code: string
+  type: 'purchase' | 'redeem' | 'refund' | 'adjust' | 'expire'
+  amount: number
+  balance_after: number
+  order_id?: string
+  cashier_id?: string
+  cashier_name?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+}
+
+// Expense Tracking
+export type ExpenseCategory = 'rent' | 'utilities' | 'salaries' | 'supplies' | 'marketing' | 'maintenance' | 'transport' | 'taxes' | 'insurance' | 'food_cost' | 'equipment' | 'other'
+export type ExpenseStatus = 'pending' | 'approved' | 'rejected' | 'paid'
+export type ExpenseRecurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+
+export type Expense = {
+  id: string
+  store_id: string
+  category: ExpenseCategory
+  description: string
+  amount: number
+  payment_method?: PaymentMethod
+  vendor?: string
+  receipt_url?: string
+  status: ExpenseStatus
+  approved_by?: string
+  user_id: string
+  user_name: string
+  recurrence: ExpenseRecurrence
+  expense_date: string
+  notes?: string
+  tags?: string[]
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Marketing Campaigns
+export type CampaignType = 'sms' | 'email' | 'push' | 'whatsapp'
+export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'cancelled'
+export type CampaignAudience = 'all_customers' | 'vip' | 'inactive' | 'birthday' | 'loyalty_tier' | 'custom'
+
+export type Campaign = {
+  id: string
+  store_id: string
+  name: string
+  type: CampaignType
+  status: CampaignStatus
+  audience: CampaignAudience
+  audience_filter?: string       // JSON-encoded filter for custom audiences
+  subject?: string               // email subject line
+  message: string                // campaign body/content
+  template_id?: string
+  scheduled_at?: string
+  sent_at?: string
+  recipients_count: number
+  delivered_count: number
+  opened_count: number
+  clicked_count: number
+  failed_count: number
+  promotion_id?: string          // linked promotion
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Payroll & Commissions
+export type PayrollStatus = 'draft' | 'approved' | 'paid'
+export type CommissionType = 'percentage' | 'fixed_per_sale' | 'tiered'
+
+export type PayrollEntry = {
+  id: string
+  store_id: string
+  user_id: string
+  user_name: string
+  period_start: string
+  period_end: string
+  base_salary: number
+  hours_worked: number
+  overtime_hours: number
+  overtime_pay: number
+  commission_total: number
+  tips_total: number
+  bonuses: number
+  deductions: number
+  net_pay: number
+  status: PayrollStatus
+  approved_by?: string
+  paid_at?: string
+  payment_method?: PaymentMethod
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type CommissionRule = {
+  id: string
+  store_id: string
+  name: string
+  type: CommissionType
+  value: number                  // percentage or fixed amount
+  min_sales?: number             // minimum sales to qualify
+  product_categories?: string[]  // specific categories eligible
+  is_active: boolean
+  synced: boolean
+  created_at: string
+  updated_at: string
 }

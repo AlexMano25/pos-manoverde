@@ -36,6 +36,10 @@ import DeliveriesPage from './pages/DeliveriesPage'
 import TimeAttendancePage from './pages/TimeAttendancePage'
 import LoyaltyPage from './pages/LoyaltyPage'
 import KitchenDisplayPage from './pages/KitchenDisplayPage'
+import GiftCardsPage from './pages/GiftCardsPage'
+import ExpensesPage from './pages/ExpensesPage'
+import CampaignsPage from './pages/CampaignsPage'
+import PayrollPage from './pages/PayrollPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -128,6 +132,10 @@ function AppContent() {
       case 'time_attendance': return <TimeAttendancePage />
       case 'loyalty':       return <LoyaltyPage />
       case 'kds':           return <KitchenDisplayPage />
+      case 'gift_cards':    return <GiftCardsPage />
+      case 'expenses':      return <ExpensesPage />
+      case 'campaigns':     return <CampaignsPage />
+      case 'payroll':       return <PayrollPage />
       default:              return <DashboardPage />
     }
   }
