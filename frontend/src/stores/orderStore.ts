@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CartItem, Order, PaymentMethod, SyncEntry } from '../types'
+import type { CartItem, Order, OrderPayment, PaymentMethod, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { supabase } from '../services/supabase'
@@ -28,6 +28,7 @@ interface OrderActions {
       table_name?: string
       promotion_discount?: number
       promotion_names?: string[]
+      payments?: OrderPayment[]
     }
   ) => Promise<Order>
   getOrdersByDate: (date: string) => Order[]
@@ -103,6 +104,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         table_name?: string
         promotion_discount?: number
         promotion_names?: string[]
+        payments?: OrderPayment[]
       }
     ): Promise<Order> => {
       const deviceId = getDeviceId()
@@ -143,6 +145,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         table_name: options?.table_name,
         promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
         promotion_names: options?.promotion_names,
+        payments: options?.payments,
         created_at: now,
         updated_at: now,
       }

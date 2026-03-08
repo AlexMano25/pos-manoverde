@@ -6,6 +6,8 @@ import {
   ArrowRightLeft,
   CheckCircle2,
   Loader2,
+  Columns,
+  Trash2,
 } from 'lucide-react'
 import Modal from '../common/Modal'
 import { useCartStore } from '../../stores/cartStore'
@@ -16,7 +18,7 @@ import { useLanguageStore } from '../../stores/languageStore'
 import { useCustomerStore } from '../../stores/customerStore'
 import { usePromotionStore } from '../../stores/promotionStore'
 import { formatCurrency } from '../../utils/currency'
-import type { PaymentMethod } from '../../types'
+import type { PaymentMethod, OrderPayment } from '../../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -43,6 +45,10 @@ const paymentIcons: Record<PaymentMethod, React.ReactNode> = {
   paypal: <CreditCard size={20} />,
 }
 
+const AVAILABLE_METHODS: PaymentMethod[] = [
+  'cash', 'card', 'momo', 'transfer', 'orange_money', 'mtn_money', 'carte_bancaire', 'paypal',
+]
+
 // ── Props ────────────────────────────────────────────────────────────────
 
 interface PaymentModalProps {
@@ -66,6 +72,23 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [isSplitMode, setIsSplitMode] = useState(false)
+  const [splitPayments, setSplitPayments] = useState<OrderPayment[]>([])
+
+  // i18n fallback for split payment keys
+  const posLabel = t.pos as Record<string, string>
+  const splitL = {
+    splitPayment: posLabel.splitPayment || 'Split Payment',
+    splitPaymentTitle: posLabel.splitPaymentTitle || 'Split Payment',
+    splitPaymentDesc: posLabel.splitPaymentDesc || 'Split the total across multiple payment methods',
+    addPaymentMethod: posLabel.addPaymentMethod || 'Add Payment Method',
+    remainingAmount: posLabel.remainingAmount || 'Remaining',
+    paymentSummary: posLabel.paymentSummary || 'Payment Summary',
+    fullPayment: posLabel.fullPayment || 'Full Payment',
+    paymentComplete: posLabel.paymentComplete || 'Payment Complete',
+    overpayment: posLabel.overpayment || 'Overpayment',
+    underpayment: posLabel.underpayment || 'Underpayment',
+  }
 
   const paymentLabels: Record<PaymentMethod, string> = {
     cash: t.pos.cash,
@@ -80,6 +103,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
 
   const subtotal = getTotal()
   const storeId = currentStore?.id || 'default-store'
+  const currency = currentStore?.currency
   const promoResult = useMemo(
     () => calculateTotalDiscount(items, storeId),
     [items, storeId, calculateTotalDiscount]
@@ -90,18 +114,56 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const tax = Math.round((subtotal - discount) * (taxRate / 100))
   const total = subtotal - discount + tax
 
+  // Split payment calculations
+  const splitTotal = useMemo(() =>
+    splitPayments.reduce((sum, p) => sum + p.amount, 0),
+  [splitPayments])
+
+  const splitRemaining = total - splitTotal
+
   const changeDue = useMemo(() => {
+    if (isSplitMode) return Math.max(0, splitTotal - total)
     const received = parseFloat(amountReceived) || 0
     return Math.max(0, received - total)
-  }, [amountReceived, total])
+  }, [amountReceived, total, isSplitMode, splitTotal])
 
   const canConfirm = useMemo(() => {
+    if (isSplitMode) {
+      return splitPayments.length >= 2 && Math.abs(splitRemaining) < 1
+    }
     if (paymentMethod === 'cash') {
       const received = parseFloat(amountReceived) || 0
       return received >= total
     }
     return true
-  }, [paymentMethod, amountReceived, total])
+  }, [paymentMethod, amountReceived, total, isSplitMode, splitPayments, splitRemaining])
+
+  // Split payment handlers
+  const addSplitMethod = (method: PaymentMethod) => {
+    setSplitPayments(prev => [
+      ...prev,
+      { method, amount: prev.length === 0 ? Math.max(0, splitRemaining) : 0 },
+    ])
+  }
+
+  const updateSplitAmount = (index: number, amount: number) => {
+    setSplitPayments(prev => prev.map((p, i) => i === index ? { ...p, amount } : p))
+  }
+
+  const removeSplitMethod = (index: number) => {
+    setSplitPayments(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const toggleSplitMode = () => {
+    if (!isSplitMode) {
+      // Initialize with current payment method
+      setSplitPayments([{ method: paymentMethod, amount: total }])
+      setIsSplitMode(true)
+    } else {
+      setSplitPayments([])
+      setIsSplitMode(false)
+    }
+  }
 
   const handleConfirm = async () => {
     if (!user || !currentStore) return
@@ -110,11 +172,20 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
 
     try {
       const promoNames = promoResult.applied.map(a => a.promotion.name)
-      const order = await createOrder(items, paymentMethod, user.id, currentStore.id, {
+
+      // Determine primary method and payments array
+      const primaryMethod = isSplitMode
+        ? splitPayments.reduce((a, b) => a.amount >= b.amount ? a : b).method
+        : paymentMethod
+
+      const payments = isSplitMode ? splitPayments : undefined
+
+      const order = await createOrder(items, primaryMethod, user.id, currentStore.id, {
         customer_id: selectedCustomer?.id,
         customer_name: selectedCustomer?.name,
         promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
         promotion_names: promoNames.length > 0 ? promoNames : undefined,
+        payments,
       })
 
       // Record customer visit + loyalty points
@@ -130,9 +201,11 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       setSuccess(true)
       setTimeout(() => {
         clear()
-        selectCustomer(null) // clear selected customer after order
+        selectCustomer(null)
         setSuccess(false)
         setAmountReceived('')
+        setIsSplitMode(false)
+        setSplitPayments([])
         onClose()
       }, 1500)
     } catch (err) {
@@ -147,6 +220,8 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       setAmountReceived('')
       setError('')
       setSuccess(false)
+      setIsSplitMode(false)
+      setSplitPayments([])
       onClose()
     }
   }
@@ -165,6 +240,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const cancelBtnStyle: React.CSSProperties = { width: '100%', padding: '12px 20px', borderRadius: 10, border: 'none', backgroundColor: 'transparent', color: C.textSecondary, fontSize: 14, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer' }
   const errorStyle: React.CSSProperties = { backgroundColor: '#fef2f2', color: C.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16, textAlign: 'center' }
   const successOverlayStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }
+  const splitBtnStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px 16px', borderRadius: 10, border: `2px dashed ${isSplitMode ? C.primary : C.border}`, backgroundColor: isSplitMode ? C.primary + '08' : 'transparent', color: isSplitMode ? C.primary : C.textSecondary, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16, transition: 'all 0.2s' }
 
   if (success) {
     return (
@@ -177,13 +253,130 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           <p style={{ color: C.textSecondary, fontSize: 14, margin: 0 }}>
             {t.pos.orderCreated}
           </p>
-          {paymentMethod === 'cash' && changeDue > 0 && (
+          {!isSplitMode && paymentMethod === 'cash' && changeDue > 0 && (
             <p style={{ color: C.success, fontSize: 18, fontWeight: 700, marginTop: 12 }}>
-              {t.pos.changeDue} : {formatCurrency(changeDue, currentStore?.currency)}
+              {t.pos.changeDue} : {formatCurrency(changeDue, currency)}
             </p>
+          )}
+          {isSplitMode && (
+            <div style={{ marginTop: 12, fontSize: 13, color: C.textSecondary }}>
+              {splitPayments.map((p, i) => (
+                <div key={i} style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 4 }}>
+                  {paymentIcons[p.method]}
+                  <span>{paymentLabels[p.method]}: {formatCurrency(p.amount, currency)}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </Modal>
+    )
+  }
+
+  // ── Render: Split Payment Section ──────────────────────────────────────
+
+  const renderSplitPayment = () => {
+    if (!isSplitMode) return null
+
+    const usedMethods = splitPayments.map(p => p.method)
+    const availableMethods = AVAILABLE_METHODS.filter(m => !usedMethods.includes(m))
+
+    return (
+      <div style={{ marginTop: 16 }}>
+        <p style={sectionTitleStyle}>{splitL.splitPaymentTitle}</p>
+        <p style={{ fontSize: 12, color: C.textSecondary, margin: '0 0 12px' }}>
+          {splitL.splitPaymentDesc}
+        </p>
+
+        {/* Split payment entries */}
+        {splitPayments.map((payment, index) => (
+          <div
+            key={index}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '10px 12px', borderRadius: 10,
+              backgroundColor: C.bg, marginBottom: 8,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+              {paymentIcons[payment.method]}
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, whiteSpace: 'nowrap' }}>
+                {paymentLabels[payment.method]}
+              </span>
+            </div>
+            <input
+              type="number"
+              value={payment.amount || ''}
+              onChange={(e) => updateSplitAmount(index, Number(e.target.value) || 0)}
+              style={{
+                width: 100, padding: '8px 10px', borderRadius: 8,
+                border: `1px solid ${C.border}`, fontSize: 14, fontWeight: 600,
+                color: C.text, outline: 'none', textAlign: 'right',
+                boxSizing: 'border-box',
+              }}
+              min={0}
+              placeholder="0"
+            />
+            {splitPayments.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeSplitMethod(index)}
+                style={{
+                  padding: 6, border: 'none', borderRadius: 6,
+                  backgroundColor: '#fef2f2', color: C.danger,
+                  cursor: 'pointer', display: 'flex',
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            )}
+          </div>
+        ))}
+
+        {/* Add method button */}
+        {availableMethods.length > 0 && splitPayments.length < 4 && (
+          <div style={{ position: 'relative', marginBottom: 8 }}>
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  addSplitMethod(e.target.value as PaymentMethod)
+                  e.target.value = ''
+                }
+              }}
+              style={{
+                width: '100%', padding: '8px 12px', borderRadius: 8,
+                border: `1px dashed ${C.border}`, fontSize: 13,
+                color: C.textSecondary, backgroundColor: 'transparent',
+                cursor: 'pointer', outline: 'none',
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                + {splitL.addPaymentMethod}
+              </option>
+              {availableMethods.map(m => (
+                <option key={m} value={m}>{paymentLabels[m]}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Remaining amount indicator */}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '10px 14px', borderRadius: 10, marginTop: 8,
+          backgroundColor: Math.abs(splitRemaining) < 1 ? C.success + '10' : (splitRemaining > 0 ? C.warning + '15' : '#fef2f2'),
+          border: `1px solid ${Math.abs(splitRemaining) < 1 ? C.success + '30' : (splitRemaining > 0 ? C.warning + '30' : C.danger + '30')}`,
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: Math.abs(splitRemaining) < 1 ? C.success : (splitRemaining > 0 ? C.warning : C.danger) }}>
+            {Math.abs(splitRemaining) < 1 ? splitL.paymentComplete : (splitRemaining > 0 ? splitL.remainingAmount : splitL.overpayment)}
+          </span>
+          <span style={{ fontSize: 16, fontWeight: 700, color: Math.abs(splitRemaining) < 1 ? C.success : (splitRemaining > 0 ? C.warning : C.danger) }}>
+            {formatCurrency(Math.abs(splitRemaining), currency)}
+          </span>
+        </div>
+      </div>
     )
   }
 
@@ -197,7 +390,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
             <span>
               {item.name} <span style={{ color: C.textSecondary }}>x{item.qty}</span>
             </span>
-            <span style={{ fontWeight: 500 }}>{formatCurrency(item.price * item.qty, currentStore?.currency)}</span>
+            <span style={{ fontWeight: 500 }}>{formatCurrency(item.price * item.qty, currency)}</span>
           </div>
         ))}
       </div>
@@ -219,7 +412,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
       <div style={dividerStyle} />
       <div style={itemRowStyle}>
         <span style={{ color: C.textSecondary }}>{t.pos.subtotal}</span>
-        <span>{formatCurrency(subtotal, currentStore?.currency)}</span>
+        <span>{formatCurrency(subtotal, currency)}</span>
       </div>
       {discount > 0 && (
         <div style={itemRowStyle}>
@@ -231,53 +424,66 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
               </span>
             )}
           </span>
-          <span style={{ color: C.danger }}>-{formatCurrency(discount, currentStore?.currency)}</span>
+          <span style={{ color: C.danger }}>-{formatCurrency(discount, currency)}</span>
         </div>
       )}
       {tax > 0 && (
         <div style={itemRowStyle}>
           <span style={{ color: C.textSecondary }}>{t.pos.tax} ({taxRate}%)</span>
-          <span>{formatCurrency(tax, currentStore?.currency)}</span>
+          <span>{formatCurrency(tax, currency)}</span>
         </div>
       )}
       <div style={dividerStyle} />
       <div style={totalRowStyle}>
         <span>{t.pos.grandTotal}</span>
-        <span>{formatCurrency(total, currentStore?.currency)}</span>
+        <span>{formatCurrency(total, currency)}</span>
       </div>
 
-      {/* Payment Method */}
-      <div style={{ ...sectionStyle, marginTop: 16 }}>
-        <p style={sectionTitleStyle}>{t.orders.paymentMethod}</p>
-        <div style={paymentMethodBoxStyle}>
-          {paymentIcons[paymentMethod]}
-          {paymentLabels[paymentMethod]}
-        </div>
-      </div>
+      {/* Split Payment Toggle */}
+      <button type="button" style={splitBtnStyle} onClick={toggleSplitMode}>
+        <Columns size={16} />
+        {isSplitMode ? splitL.fullPayment : splitL.splitPayment}
+      </button>
 
-      {/* Cash-specific: Amount Received */}
-      {paymentMethod === 'cash' && (
-        <div style={sectionStyle}>
-          <p style={sectionTitleStyle}>{t.pos.amountReceived}</p>
-          <input
-            style={inputStyle}
-            type="number"
-            placeholder={t.pos.amountReceived}
-            value={amountReceived}
-            onChange={(e) => setAmountReceived(e.target.value)}
-            onFocus={(e) => (e.target.style.borderColor = C.primary)}
-            onBlur={(e) => (e.target.style.borderColor = C.border)}
-            min={0}
-            autoFocus
-          />
-          <div style={changeBoxStyle}>
-            <span style={{ fontSize: 14, color: C.textSecondary }}>{t.pos.changeDue}</span>
-            <span style={{ fontSize: 18, fontWeight: 700, color: changeDue > 0 ? C.success : C.text }}>
-              {formatCurrency(changeDue, currentStore?.currency)}
-            </span>
+      {/* Payment Method (single) */}
+      {!isSplitMode && (
+        <>
+          <div style={{ ...sectionStyle, marginTop: 0 }}>
+            <p style={sectionTitleStyle}>{t.orders.paymentMethod}</p>
+            <div style={paymentMethodBoxStyle}>
+              {paymentIcons[paymentMethod]}
+              {paymentLabels[paymentMethod]}
+            </div>
           </div>
-        </div>
+
+          {/* Cash-specific: Amount Received */}
+          {paymentMethod === 'cash' && (
+            <div style={sectionStyle}>
+              <p style={sectionTitleStyle}>{t.pos.amountReceived}</p>
+              <input
+                style={inputStyle}
+                type="number"
+                placeholder={t.pos.amountReceived}
+                value={amountReceived}
+                onChange={(e) => setAmountReceived(e.target.value)}
+                onFocus={(e) => (e.target.style.borderColor = C.primary)}
+                onBlur={(e) => (e.target.style.borderColor = C.border)}
+                min={0}
+                autoFocus
+              />
+              <div style={changeBoxStyle}>
+                <span style={{ fontSize: 14, color: C.textSecondary }}>{t.pos.changeDue}</span>
+                <span style={{ fontSize: 18, fontWeight: 700, color: changeDue > 0 ? C.success : C.text }}>
+                  {formatCurrency(changeDue, currency)}
+                </span>
+              </div>
+            </div>
+          )}
+        </>
       )}
+
+      {/* Split Payment Section */}
+      {renderSplitPayment()}
 
       {/* Error */}
       {error && <div style={errorStyle}>{error}</div>}

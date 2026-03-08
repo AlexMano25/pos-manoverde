@@ -213,6 +213,9 @@ export type TranslationKeys = {
     cashRegister: string
     suppliers: string
     deliveries: string
+    timeAttendance: string
+    loyalty: string
+    kds: string
   }
 
   // Dashboard
@@ -308,6 +311,20 @@ export type TranslationKeys = {
     orangeMoney: string
     mtnMoney: string
     carteBancaire: string
+    // Split Payment
+    splitPayment: string
+    splitPaymentTitle: string
+    splitPaymentDesc: string
+    addPaymentMethod: string
+    remainingAmount: string
+    paymentSummary: string
+    splitEqual: string
+    splitCustom: string
+    methodAmount: string
+    fullPayment: string
+    paymentComplete: string
+    overpayment: string
+    underpayment: string
   }
 
   // Products
@@ -1606,5 +1623,151 @@ export type TranslationKeys = {
     markFailed: string
     pipeline: string
     selectDriver: string
+  }
+
+  // Time & Attendance
+  timeAttendance: {
+    title: string
+    clockIn: string
+    clockOut: string
+    breakStart: string
+    breakEnd: string
+    clockedIn: string
+    clockedOut: string
+    onBreak: string
+    enterPin: string
+    presentToday: string
+    onBreakCount: string
+    totalHoursToday: string
+    absentCount: string
+    currentStatus: string
+    workingFor: string
+    breakFor: string
+    timesheet: string
+    weeklyReport: string
+    employee: string
+    date: string
+    startTime: string
+    endTime: string
+    breakDuration: string
+    totalHours: string
+    noEntries: string
+    editEntry: string
+    notes: string
+    manualEntry: string
+    addEntry: string
+    deleteEntry: string
+    deleteConfirm: string
+    today: string
+    thisWeek: string
+    thisMonth: string
+    allEmployees: string
+    exportReport: string
+    lateArrival: string
+    earlyDeparture: string
+    overtime: string
+    regularHours: string
+  }
+
+  // Loyalty & Rewards
+  loyalty: {
+    title: string
+    totalMembers: string
+    pointsDistributed: string
+    rewardsRedeemed: string
+    loyaltyRevenue: string
+    rewardsTab: string
+    transactionsTab: string
+    configTab: string
+    addReward: string
+    editReward: string
+    deleteReward: string
+    rewardName: string
+    description: string
+    pointsRequired: string
+    rewardType: string
+    discountPercent: string
+    discountFixed: string
+    freeProduct: string
+    voucher: string
+    rewardValue: string
+    isActive: string
+    redemptionCount: string
+    noRewards: string
+    deleteConfirm: string
+    earn: string
+    redeem: string
+    bonus: string
+    expire: string
+    adjust: string
+    points: string
+    balance: string
+    customer: string
+    type: string
+    noTransactions: string
+    allTypes: string
+    earnPoints: string
+    redeemPoints: string
+    customerSearch: string
+    selectReward: string
+    insufficientPoints: string
+    pointsPerUnit: string
+    currencyPerPoint: string
+    tierThresholds: string
+    bronze: string
+    silver: string
+    gold: string
+    platinum: string
+    currentTier: string
+    pointsToNext: string
+    topEarners: string
+    thisMonth: string
+    configSaved: string
+    imageUrl: string
+  }
+
+  // Kitchen Display System (KDS)
+  kds: {
+    title: string
+    newOrders: string
+    inProgress: string
+    ready: string
+    served: string
+    allStations: string
+    grill: string
+    fridge: string
+    drinks: string
+    pastry: string
+    expo: string
+    bumpOrder: string
+    startOrder: string
+    markReady: string
+    markServed: string
+    undoReady: string
+    orderNumber: string
+    tableNumber: string
+    elapsedTime: string
+    priority: string
+    setPriority: string
+    removePriority: string
+    avgTime: string
+    noOrders: string
+    newCount: string
+    inProgressCount: string
+    readyCount: string
+    avgTimeLabel: string
+    fullscreen: string
+    exitFullscreen: string
+    autoRefresh: string
+    soundAlerts: string
+    station: string
+    filterByStation: string
+    itemDone: string
+    allItemsDone: string
+    minutes: string
+    seconds: string
+    onTime: string
+    warning: string
+    late: string
   }
 }

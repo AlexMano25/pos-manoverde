@@ -93,6 +93,10 @@ export type SidebarSection =
   | 'cash_register'  // all activities
   | 'suppliers'      // retail, food & beverage, auto_repair
   | 'deliveries'     // restaurant, pharmacy, florist, etc.
+  // Phase 4 — time attendance, loyalty, KDS
+  | 'time_attendance' // all activities
+  | 'loyalty'         // all activities
+  | 'kds'             // food & beverage only
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -118,6 +122,10 @@ export type PageComponent =
   | 'suppliers'
   | 'invoices'
   | 'deliveries'
+  // Phase 4 — time attendance, loyalty, KDS
+  | 'time_attendance'
+  | 'loyalty'
+  | 'kds'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -301,6 +309,12 @@ export type PaymentGateway = 'paypal' | 'orange_money' | 'mtn_momo'
 
 export type OrderStatus = 'paid' | 'pending' | 'refunded' | 'cancelled'
 
+// Split payment support
+export type OrderPayment = {
+  method: PaymentMethod
+  amount: number
+}
+
 export type Order = {
   id: string
   store_id: string
@@ -312,7 +326,8 @@ export type Order = {
   total: number // final amount in FCFA
   amount_received?: number // cash tendered
   change_due?: number // change given back
-  payment_method: PaymentMethod
+  payment_method: PaymentMethod // primary method (backward compat)
+  payments?: OrderPayment[] // split payments (Phase 4)
   status: OrderStatus
   note?: string
   synced: boolean // false = needs sync, true = synced to server
@@ -350,7 +365,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -936,3 +951,100 @@ export type Delivery = {
   updated_at: string
 }
 
+// ---------------------------------------------------------------------------
+// Phase 4 — Time & Attendance, Loyalty & Rewards, Kitchen Display
+// ---------------------------------------------------------------------------
+
+// Time & Attendance
+export type ClockStatus = 'clocked_in' | 'clocked_out' | 'on_break'
+
+export type TimeEntry = {
+  id: string
+  store_id: string
+  user_id: string
+  user_name: string
+  clock_in: string
+  clock_out?: string
+  break_start?: string
+  break_end?: string
+  total_hours?: number
+  status: ClockStatus
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Loyalty & Rewards
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold' | 'platinum'
+
+export type PointTransactionType = 'earn' | 'redeem' | 'bonus' | 'expire' | 'adjust'
+
+export type LoyaltyRewardType = 'discount_pct' | 'discount_fixed' | 'free_product' | 'voucher'
+
+export type LoyaltyReward = {
+  id: string
+  store_id: string
+  name: string
+  description?: string
+  points_required: number
+  reward_type: LoyaltyRewardType
+  reward_value: number
+  is_active: boolean
+  image_url?: string
+  redemption_count: number
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type PointTransaction = {
+  id: string
+  store_id: string
+  customer_id: string
+  customer_name: string
+  type: PointTransactionType
+  points: number
+  balance_after: number
+  order_id?: string
+  reward_id?: string
+  description?: string
+  synced: boolean
+  created_at: string
+}
+
+export type LoyaltyConfig = {
+  points_per_unit: number
+  currency_per_point: number
+  tier_thresholds: Record<LoyaltyTier, number>
+}
+
+// Kitchen Display System (KDS)
+export type KdsOrderStatus = 'new' | 'in_progress' | 'ready' | 'served'
+
+export type KdsStation = 'grill' | 'fridge' | 'drinks' | 'pastry' | 'expo' | 'all'
+
+export type KdsOrderItem = {
+  product_name: string
+  quantity: number
+  notes?: string
+  station: KdsStation
+  done: boolean
+}
+
+export type KdsOrder = {
+  id: string
+  store_id: string
+  order_id: string
+  order_number: string
+  table_number?: string
+  items: KdsOrderItem[]
+  status: KdsOrderStatus
+  station: KdsStation
+  priority: boolean
+  created_at: string
+  started_at?: string
+  completed_at?: string
+  elapsed_seconds?: number
+  synced: boolean
+}

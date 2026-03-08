@@ -9,6 +9,7 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   { section: 'products', icon: 'Package', i18nKey: 'nav.products', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
@@ -16,6 +17,7 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
@@ -25,15 +27,18 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'cash_register', icon: 'Banknote', i18nKey: 'nav.cashRegister', pageComponent: 'cash_register', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'kds', icon: 'ChefHat', i18nKey: 'nav.kds', pageComponent: 'kds', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'products', icon: 'UtensilsCrossed', i18nKey: 'nav.menu', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'deliveries', icon: 'Bike', i18nKey: 'nav.deliveries', pageComponent: 'deliveries', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -44,12 +49,14 @@ const SERVICE_POS: SidebarItemConfig[] = [
   { section: 'services', icon: 'Briefcase', i18nKey: 'nav.services', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   { section: 'deliveries', icon: 'Bike', i18nKey: 'nav.deliveries', pageComponent: 'deliveries', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -63,9 +70,11 @@ const HOTEL: SidebarItemConfig[] = [
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -76,9 +85,11 @@ const REAL_ESTATE: SidebarItemConfig[] = [
   { section: 'properties', icon: 'Home', i18nKey: 'nav.properties', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'contracts', icon: 'FileText', i18nKey: 'nav.contracts', pageComponent: 'orders', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -89,9 +100,11 @@ const EDUCATION: SidebarItemConfig[] = [
   { section: 'enrollments', icon: 'GraduationCap', i18nKey: 'nav.enrollments', pageComponent: 'appointments', allowedRoles: ['admin', 'manager'] },
   { section: 'services', icon: 'BookOpen', i18nKey: 'nav.services', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -102,11 +115,13 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   { section: 'bookings', icon: 'Plane', i18nKey: 'nav.bookings', pageComponent: 'appointments', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'packages', icon: 'Globe', i18nKey: 'nav.packages', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -119,9 +134,11 @@ const WELLNESS: SidebarItemConfig[] = [
   { section: 'members', icon: 'UserCheck', i18nKey: 'nav.members', pageComponent: 'memberships', allowedRoles: ['admin', 'manager'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'customers', icon: 'Heart', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -133,12 +150,14 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'parts', icon: 'Cog', i18nKey: 'nav.parts', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -149,9 +168,11 @@ const HAIR_SALON: SidebarItemConfig[] = [
   { section: 'appointments', icon: 'Calendar', i18nKey: 'nav.appointments', pageComponent: 'appointments', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'products', icon: 'Package', i18nKey: 'nav.products', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 

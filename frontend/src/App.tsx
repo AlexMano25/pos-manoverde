@@ -33,6 +33,9 @@ import CashRegisterPage from './pages/CashRegisterPage'
 import SuppliersPage from './pages/SuppliersPage'
 import InvoicesPage from './pages/InvoicesPage'
 import DeliveriesPage from './pages/DeliveriesPage'
+import TimeAttendancePage from './pages/TimeAttendancePage'
+import LoyaltyPage from './pages/LoyaltyPage'
+import KitchenDisplayPage from './pages/KitchenDisplayPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -122,6 +125,9 @@ function AppContent() {
       case 'suppliers':     return <SuppliersPage />
       case 'invoices':      return <InvoicesPage />
       case 'deliveries':    return <DeliveriesPage />
+      case 'time_attendance': return <TimeAttendancePage />
+      case 'loyalty':       return <LoyaltyPage />
+      case 'kds':           return <KitchenDisplayPage />
       default:              return <DashboardPage />
     }
   }
