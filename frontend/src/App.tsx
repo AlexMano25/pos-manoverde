@@ -44,6 +44,10 @@ import NotificationsPage from './pages/NotificationsPage'
 import AuditTrailPage from './pages/AuditTrailPage'
 import ReturnsPage from './pages/ReturnsPage'
 import DocumentsPage from './pages/DocumentsPage'
+import TransfersPage from './pages/TransfersPage'
+import RecipesPage from './pages/RecipesPage'
+import OnlineOrdersPage from './pages/OnlineOrdersPage'
+import MaintenancePage from './pages/MaintenancePage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -144,6 +148,10 @@ function AppContent() {
       case 'audit_trail':    return <AuditTrailPage />
       case 'returns':        return <ReturnsPage />
       case 'documents':      return <DocumentsPage />
+      case 'transfers':      return <TransfersPage />
+      case 'recipes':        return <RecipesPage />
+      case 'online_orders':  return <OnlineOrdersPage />
+      case 'maintenance':    return <MaintenancePage />
       default:               return <DashboardPage />
     }
   }

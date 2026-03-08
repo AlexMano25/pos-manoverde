@@ -107,6 +107,11 @@ export type SidebarSection =
   | 'audit_trail'     // all activities (admin only)
   | 'returns'         // all activities
   | 'documents'       // all activities
+  // Phase 7 — transfers, recipes, online orders, maintenance
+  | 'transfers'        // multi-store stock transfers
+  | 'recipes'          // recipe & production management (food)
+  | 'online_orders'    // e-commerce / online ordering
+  | 'maintenance'      // equipment & facility maintenance
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -146,6 +151,11 @@ export type PageComponent =
   | 'audit_trail'
   | 'returns'
   | 'documents'
+  // Phase 7 — transfers, recipes, online orders, maintenance
+  | 'transfers'
+  | 'recipes'
+  | 'online_orders'
+  | 'maintenance'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -385,7 +395,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1326,6 +1336,185 @@ export type PosDocument = {
   uploaded_by: string
   uploaded_by_name: string
   expires_at?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — Stock Transfers, Recipes & Production, Online Orders, Maintenance
+// ---------------------------------------------------------------------------
+
+// Stock Transfers (inter-store)
+export type TransferStatus = 'draft' | 'pending' | 'in_transit' | 'received' | 'cancelled'
+
+export type TransferItem = {
+  product_id: string
+  product_name: string
+  quantity_sent: number
+  quantity_received: number
+  unit_cost: number
+  total: number
+}
+
+export type StockTransfer = {
+  id: string
+  store_id: string
+  transfer_number: string
+  from_store_id: string
+  from_store_name: string
+  to_store_id: string
+  to_store_name: string
+  items: TransferItem[]
+  total_items: number
+  total_value: number
+  status: TransferStatus
+  requested_by: string
+  requested_by_name: string
+  approved_by?: string
+  approved_by_name?: string
+  shipped_at?: string
+  received_at?: string
+  received_by?: string
+  received_by_name?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Recipes & Production
+export type RecipeStatus = 'active' | 'draft' | 'archived'
+export type ProductionStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled'
+
+export type RecipeIngredient = {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit: string
+  unit_cost: number
+  total_cost: number
+}
+
+export type Recipe = {
+  id: string
+  store_id: string
+  name: string
+  category?: string
+  description?: string
+  output_product_id?: string
+  output_product_name?: string
+  output_quantity: number
+  ingredients: RecipeIngredient[]
+  instructions?: string
+  prep_time_minutes?: number
+  cook_time_minutes?: number
+  total_cost: number
+  selling_price?: number
+  margin_percent?: number
+  status: RecipeStatus
+  image_url?: string
+  allergens?: string[]
+  tags?: string[]
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ProductionBatch = {
+  id: string
+  store_id: string
+  batch_number: string
+  recipe_id: string
+  recipe_name: string
+  quantity: number
+  status: ProductionStatus
+  planned_date: string
+  started_at?: string
+  completed_at?: string
+  produced_by?: string
+  produced_by_name?: string
+  actual_cost?: number
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Online Orders / E-commerce
+export type OnlineOrderStatus = 'new' | 'confirmed' | 'preparing' | 'ready' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+export type OnlineOrderChannel = 'website' | 'mobile_app' | 'whatsapp' | 'facebook' | 'instagram' | 'marketplace' | 'other'
+export type OnlineFulfillment = 'delivery' | 'pickup' | 'dine_in'
+
+export type OnlineOrderItem = {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit_price: number
+  notes?: string
+  total: number
+}
+
+export type OnlineOrder = {
+  id: string
+  store_id: string
+  order_number: string
+  channel: OnlineOrderChannel
+  customer_name: string
+  customer_email?: string
+  customer_phone?: string
+  delivery_address?: string
+  fulfillment: OnlineFulfillment
+  items: OnlineOrderItem[]
+  subtotal: number
+  delivery_fee: number
+  discount: number
+  tax: number
+  total: number
+  payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
+  payment_method?: PaymentMethod
+  status: OnlineOrderStatus
+  estimated_delivery?: string
+  delivered_at?: string
+  pos_order_id?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Maintenance & Equipment
+export type MaintenanceStatus = 'scheduled' | 'in_progress' | 'completed' | 'overdue' | 'cancelled'
+export type MaintenancePriority = 'low' | 'medium' | 'high' | 'critical'
+export type MaintenanceType = 'preventive' | 'corrective' | 'emergency' | 'inspection'
+
+export type MaintenanceTask = {
+  id: string
+  store_id: string
+  task_number: string
+  title: string
+  description?: string
+  equipment_name: string
+  equipment_id?: string
+  location?: string
+  type: MaintenanceType
+  priority: MaintenancePriority
+  status: MaintenanceStatus
+  assigned_to?: string
+  assigned_to_name?: string
+  scheduled_date: string
+  due_date?: string
+  started_at?: string
+  completed_at?: string
+  completed_by?: string
+  completed_by_name?: string
+  cost?: number
+  parts_used?: string[]
+  vendor?: string
+  recurrence?: 'none' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  last_maintenance?: string
+  next_maintenance?: string
+  notes?: string
   synced: boolean
   created_at: string
   updated_at: string

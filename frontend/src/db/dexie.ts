@@ -12,7 +12,9 @@ import type {
   GiftCardTransaction,
   KdsOrder,
   LoyaltyReward,
+  MaintenanceTask,
   Membership,
+  OnlineOrder,
   Order,
   PayrollEntry,
   PointTransaction,
@@ -21,11 +23,14 @@ import type {
   PosNotification,
   PosReturn,
   Product,
+  ProductionBatch,
   Promotion,
   PurchaseOrder,
   Quote,
+  Recipe,
   RestaurantTable,
   StockMove,
+  StockTransfer,
   Supplier,
   SyncEntry,
   Store,
@@ -72,6 +77,11 @@ export class PosDatabase extends Dexie {
   audit_logs!: Table<AuditLog, string>
   pos_returns!: Table<PosReturn, string>
   pos_documents!: Table<PosDocument, string>
+  stock_transfers!: Table<StockTransfer, string>
+  recipes!: Table<Recipe, string>
+  production_batches!: Table<ProductionBatch, string>
+  online_orders!: Table<OnlineOrder, string>
+  maintenance_tasks!: Table<MaintenanceTask, string>
 
   constructor() {
     super('pos_manoverde')
@@ -398,6 +408,83 @@ export class PosDatabase extends Dexie {
       pos_documents:
         'id, store_id, type, status, category, created_at, [store_id+type], [store_id+status], [store_id+created_at]',
     })
+
+    // Schema version 11 -- Phase 7: stock transfers, recipes, online orders, maintenance
+    this.version(11).stores({
+      stores: 'id, name, activity, created_at',
+      users:
+        'id, store_id, email, role, pin, is_active, created_at, [store_id+role], [store_id+is_active]',
+      products:
+        'id, store_id, name, category, sku, barcode, is_active, price, created_at, updated_at, [store_id+category], [store_id+is_active], [store_id+barcode], [store_id+expiry_date]',
+      orders:
+        'id, store_id, user_id, device_id, status, payment_method, synced, created_at, updated_at, [store_id+status], [store_id+created_at], [store_id+synced], table_id, customer_id',
+      stock_moves:
+        'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
+      sync_queue:
+        'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
+      restaurant_tables:
+        'id, store_id, number, status, zone, current_order_id, [store_id+status]',
+      customers:
+        'id, store_id, name, phone, email, loyalty_points, [store_id+name], [store_id+phone]',
+      promotions:
+        'id, store_id, type, is_active, start_date, end_date, [store_id+is_active]',
+      appointments:
+        'id, store_id, customer_id, status, date, [store_id+date], [store_id+status]',
+      memberships:
+        'id, store_id, customer_id, status, plan_type, end_date, [store_id+status], [store_id+customer_id]',
+      work_orders:
+        'id, store_id, customer_id, status, priority, [store_id+status]',
+      quotes:
+        'id, store_id, customer_id, status, valid_until, [store_id+status]',
+      cash_sessions:
+        'id, store_id, status, opened_at, [store_id+status]',
+      suppliers:
+        'id, store_id, name, is_active, [store_id+is_active]',
+      purchase_orders:
+        'id, store_id, supplier_id, status, [store_id+status]',
+      pos_invoices:
+        'id, store_id, customer_id, status, due_date, [store_id+status]',
+      deliveries:
+        'id, store_id, order_id, driver_id, status, [store_id+status]',
+      time_entries:
+        'id, store_id, user_id, status, created_at, [store_id+user_id], [store_id+created_at]',
+      loyalty_rewards:
+        'id, store_id, is_active, [store_id+is_active]',
+      point_transactions:
+        'id, store_id, customer_id, type, created_at, [store_id+customer_id], [store_id+type]',
+      kds_orders:
+        'id, store_id, order_id, status, station, created_at, [store_id+status], [store_id+station]',
+      gift_cards:
+        'id, store_id, code, status, customer_id, [store_id+status], [store_id+code]',
+      gift_card_transactions:
+        'id, store_id, gift_card_id, type, created_at, [store_id+gift_card_id]',
+      expenses:
+        'id, store_id, category, status, expense_date, user_id, [store_id+category], [store_id+status], [store_id+expense_date]',
+      campaigns:
+        'id, store_id, type, status, scheduled_at, [store_id+status], [store_id+type]',
+      payroll_entries:
+        'id, store_id, user_id, status, period_start, [store_id+user_id], [store_id+status]',
+      commission_rules:
+        'id, store_id, is_active, [store_id+is_active]',
+      notifications:
+        'id, store_id, type, priority, is_read, user_id, created_at, [store_id+is_read], [store_id+type], [store_id+created_at]',
+      audit_logs:
+        'id, store_id, user_id, action, module, created_at, [store_id+module], [store_id+action], [store_id+created_at]',
+      pos_returns:
+        'id, store_id, order_id, status, customer_id, created_at, [store_id+status], [store_id+created_at]',
+      pos_documents:
+        'id, store_id, type, status, category, created_at, [store_id+type], [store_id+status], [store_id+created_at]',
+      stock_transfers:
+        'id, store_id, from_store_id, to_store_id, status, created_at, [store_id+status], [store_id+created_at]',
+      recipes:
+        'id, store_id, name, category, status, [store_id+status], [store_id+category]',
+      production_batches:
+        'id, store_id, recipe_id, status, planned_date, [store_id+status], [store_id+planned_date]',
+      online_orders:
+        'id, store_id, channel, status, payment_status, created_at, [store_id+status], [store_id+channel], [store_id+created_at]',
+      maintenance_tasks:
+        'id, store_id, status, priority, type, scheduled_date, [store_id+status], [store_id+priority], [store_id+scheduled_date]',
+    })
   }
 
   // ---- Clear all data (useful for store reset / logout) ----
@@ -438,6 +525,11 @@ export class PosDatabase extends Dexie {
         this.audit_logs,
         this.pos_returns,
         this.pos_documents,
+        this.stock_transfers,
+        this.recipes,
+        this.production_batches,
+        this.online_orders,
+        this.maintenance_tasks,
       ],
       async () => {
         await this.stores.clear()
@@ -472,6 +564,11 @@ export class PosDatabase extends Dexie {
         await this.audit_logs.clear()
         await this.pos_returns.clear()
         await this.pos_documents.clear()
+        await this.stock_transfers.clear()
+        await this.recipes.clear()
+        await this.production_batches.clear()
+        await this.online_orders.clear()
+        await this.maintenance_tasks.clear()
       },
     )
   }
