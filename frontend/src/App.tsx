@@ -40,6 +40,10 @@ import GiftCardsPage from './pages/GiftCardsPage'
 import ExpensesPage from './pages/ExpensesPage'
 import CampaignsPage from './pages/CampaignsPage'
 import PayrollPage from './pages/PayrollPage'
+import NotificationsPage from './pages/NotificationsPage'
+import AuditTrailPage from './pages/AuditTrailPage'
+import ReturnsPage from './pages/ReturnsPage'
+import DocumentsPage from './pages/DocumentsPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -135,8 +139,12 @@ function AppContent() {
       case 'gift_cards':    return <GiftCardsPage />
       case 'expenses':      return <ExpensesPage />
       case 'campaigns':     return <CampaignsPage />
-      case 'payroll':       return <PayrollPage />
-      default:              return <DashboardPage />
+      case 'payroll':        return <PayrollPage />
+      case 'notifications':  return <NotificationsPage />
+      case 'audit_trail':    return <AuditTrailPage />
+      case 'returns':        return <ReturnsPage />
+      case 'documents':      return <DocumentsPage />
+      default:               return <DashboardPage />
     }
   }
 

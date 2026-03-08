@@ -102,6 +102,11 @@ export type SidebarSection =
   | 'expenses'        // all activities
   | 'campaigns'       // all activities
   | 'payroll'         // all activities
+  // Phase 6 — notifications, audit trail, returns, documents
+  | 'notifications'   // all activities
+  | 'audit_trail'     // all activities (admin only)
+  | 'returns'         // all activities
+  | 'documents'       // all activities
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -136,6 +141,11 @@ export type PageComponent =
   | 'expenses'
   | 'campaigns'
   | 'payroll'
+  // Phase 6 — notifications, audit trail, returns, documents
+  | 'notifications'
+  | 'audit_trail'
+  | 'returns'
+  | 'documents'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -375,7 +385,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1200,6 +1210,122 @@ export type CommissionRule = {
   min_sales?: number             // minimum sales to qualify
   product_categories?: string[]  // specific categories eligible
   is_active: boolean
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 — Notifications, Audit Trail, Returns & Refunds, Documents
+// ---------------------------------------------------------------------------
+
+// Notifications & Alerts
+export type NotificationType = 'low_stock' | 'new_order' | 'payment_due' | 'appointment_reminder' | 'employee_clock' | 'delivery_update' | 'return_request' | 'system' | 'campaign' | 'custom'
+export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+export type PosNotification = {
+  id: string
+  store_id: string
+  type: NotificationType
+  priority: NotificationPriority
+  title: string
+  message: string
+  is_read: boolean
+  is_dismissed: boolean
+  action_url?: string           // deep-link section e.g. "stock", "orders"
+  action_id?: string            // entity ID for navigation
+  user_id?: string              // target user (null = all users)
+  created_by?: string           // system or user ID
+  read_at?: string
+  expires_at?: string
+  synced: boolean
+  created_at: string
+}
+
+// Audit Trail / Activity Log
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'logout' | 'export' | 'print' | 'approve' | 'reject' | 'refund' | 'void' | 'clock_in' | 'clock_out' | 'settings_change'
+export type AuditModule = 'pos' | 'products' | 'orders' | 'stock' | 'employees' | 'customers' | 'settings' | 'cash_register' | 'suppliers' | 'invoices' | 'deliveries' | 'loyalty' | 'gift_cards' | 'expenses' | 'campaigns' | 'payroll' | 'returns' | 'auth' | 'system'
+
+export type AuditLog = {
+  id: string
+  store_id: string
+  user_id: string
+  user_name: string
+  action: AuditAction
+  module: AuditModule
+  entity_type?: string
+  entity_id?: string
+  description: string
+  old_value?: string            // JSON-stringified previous state
+  new_value?: string            // JSON-stringified new state
+  ip_address?: string
+  device_info?: string
+  created_at: string
+}
+
+// Returns & Refunds
+export type ReturnStatus = 'pending' | 'approved' | 'rejected' | 'processed' | 'refunded'
+export type ReturnReason = 'defective' | 'wrong_item' | 'not_satisfied' | 'expired' | 'damaged' | 'duplicate' | 'other'
+export type RefundMethod = 'original_payment' | 'cash' | 'store_credit' | 'gift_card' | 'exchange'
+
+export type ReturnItem = {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit_price: number
+  total: number
+  reason: ReturnReason
+  condition: 'new' | 'used' | 'damaged'
+  restock: boolean
+}
+
+export type PosReturn = {
+  id: string
+  store_id: string
+  return_number: string         // auto-generated: "RT-YYMMDD-NNN"
+  order_id: string
+  order_number?: string
+  customer_id?: string
+  customer_name?: string
+  items: ReturnItem[]
+  subtotal: number
+  tax_refund: number
+  total_refund: number
+  refund_method: RefundMethod
+  status: ReturnStatus
+  reason_notes?: string
+  processed_by?: string
+  processed_by_name?: string
+  approved_by?: string
+  approved_by_name?: string
+  exchange_order_id?: string    // new order ID if exchanged
+  gift_card_id?: string         // if refunded to gift card
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Documents & File Management
+export type DocumentType = 'receipt' | 'invoice' | 'contract' | 'report' | 'certificate' | 'license' | 'photo' | 'manual' | 'other'
+export type DocumentStatus = 'active' | 'archived' | 'expired'
+
+export type PosDocument = {
+  id: string
+  store_id: string
+  name: string
+  type: DocumentType
+  description?: string
+  file_url?: string             // URL or base64 data
+  file_size?: number            // bytes
+  mime_type?: string
+  category?: string
+  tags?: string[]
+  related_entity_type?: string  // e.g. 'order', 'customer', 'employee'
+  related_entity_id?: string
+  status: DocumentStatus
+  uploaded_by: string
+  uploaded_by_name: string
+  expires_at?: string
   synced: boolean
   created_at: string
   updated_at: string
