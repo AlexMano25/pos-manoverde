@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import {
   Banknote,
   CreditCard,
@@ -8,6 +8,11 @@ import {
   Loader2,
   Columns,
   Trash2,
+  Mail,
+  Share2,
+  FileText,
+  Heart,
+  ShoppingCart,
 } from 'lucide-react'
 import Modal from '../common/Modal'
 import { useCartStore } from '../../stores/cartStore'
@@ -18,7 +23,8 @@ import { useLanguageStore } from '../../stores/languageStore'
 import { useCustomerStore } from '../../stores/customerStore'
 import { usePromotionStore } from '../../stores/promotionStore'
 import { formatCurrency } from '../../utils/currency'
-import type { PaymentMethod, OrderPayment } from '../../types'
+import { exportReceipt, generateReceiptHTML } from '../../utils/pdfExport'
+import type { PaymentMethod, OrderPayment, Order } from '../../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -49,6 +55,8 @@ const AVAILABLE_METHODS: PaymentMethod[] = [
   'cash', 'card', 'momo', 'transfer', 'orange_money', 'mtn_money', 'carte_bancaire', 'paypal',
 ]
 
+const TIP_PRESETS = [0, 5, 10, 15, 20] as const
+
 // ── Props ────────────────────────────────────────────────────────────────
 
 interface PaymentModalProps {
@@ -75,7 +83,17 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const [isSplitMode, setIsSplitMode] = useState(false)
   const [splitPayments, setSplitPayments] = useState<OrderPayment[]>([])
 
-  // i18n fallback for split payment keys
+  // Tips state
+  const [tipPercent, setTipPercent] = useState<number>(0)
+  const [customTip, setCustomTip] = useState('')
+  const [tipMode, setTipMode] = useState<'preset' | 'custom'>('preset')
+
+  // E-receipt state
+  const [receiptEmail, setReceiptEmail] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
+  const lastOrderRef = useRef<Order | null>(null)
+
+  // i18n fallback for keys
   const posLabel = t.pos as Record<string, string>
   const splitL = {
     splitPayment: posLabel.splitPayment || 'Split Payment',
@@ -88,6 +106,25 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     paymentComplete: posLabel.paymentComplete || 'Payment Complete',
     overpayment: posLabel.overpayment || 'Overpayment',
     underpayment: posLabel.underpayment || 'Underpayment',
+  }
+
+  const tipL = {
+    tip: posLabel.tip || 'Tip',
+    addTip: posLabel.addTip || 'Add a tip',
+    tipAmount: posLabel.tipAmount || 'Tip amount',
+    customTip: posLabel.customTip || 'Custom',
+    noTip: posLabel.noTip || 'No tip',
+    tipIncluded: posLabel.tipIncluded || 'Tip included',
+  }
+
+  const receiptL = {
+    sendByEmail: posLabel.sendByEmail || 'Send by email',
+    downloadReceipt: posLabel.downloadReceipt || 'Download PDF',
+    shareReceipt: posLabel.shareReceipt || 'Share',
+    enterEmail: posLabel.enterEmail || 'Email address',
+    newOrder: posLabel.newOrder || 'New order',
+    receiptActions: posLabel.receiptActions || 'Receipt',
+    receiptSent: posLabel.receiptSent || 'Sent!',
   }
 
   const paymentLabels: Record<PaymentMethod, string> = {
@@ -114,18 +151,26 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const tax = Math.round((subtotal - discount) * (taxRate / 100))
   const total = subtotal - discount + tax
 
+  // Tip calculation
+  const tipAmount = useMemo(() => {
+    if (tipMode === 'custom') return Math.max(0, parseFloat(customTip) || 0)
+    return Math.round(total * (tipPercent / 100))
+  }, [tipPercent, customTip, tipMode, total])
+
+  const grandTotalWithTip = total + tipAmount
+
   // Split payment calculations
   const splitTotal = useMemo(() =>
     splitPayments.reduce((sum, p) => sum + p.amount, 0),
   [splitPayments])
 
-  const splitRemaining = total - splitTotal
+  const splitRemaining = grandTotalWithTip - splitTotal
 
   const changeDue = useMemo(() => {
-    if (isSplitMode) return Math.max(0, splitTotal - total)
+    if (isSplitMode) return Math.max(0, splitTotal - grandTotalWithTip)
     const received = parseFloat(amountReceived) || 0
-    return Math.max(0, received - total)
-  }, [amountReceived, total, isSplitMode, splitTotal])
+    return Math.max(0, received - grandTotalWithTip)
+  }, [amountReceived, grandTotalWithTip, isSplitMode, splitTotal])
 
   const canConfirm = useMemo(() => {
     if (isSplitMode) {
@@ -133,10 +178,10 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     }
     if (paymentMethod === 'cash') {
       const received = parseFloat(amountReceived) || 0
-      return received >= total
+      return received >= grandTotalWithTip
     }
     return true
-  }, [paymentMethod, amountReceived, total, isSplitMode, splitPayments, splitRemaining])
+  }, [paymentMethod, amountReceived, grandTotalWithTip, isSplitMode, splitPayments, splitRemaining])
 
   // Split payment handlers
   const addSplitMethod = (method: PaymentMethod) => {
@@ -156,8 +201,7 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
 
   const toggleSplitMode = () => {
     if (!isSplitMode) {
-      // Initialize with current payment method
-      setSplitPayments([{ method: paymentMethod, amount: total }])
+      setSplitPayments([{ method: paymentMethod, amount: grandTotalWithTip }])
       setIsSplitMode(true)
     } else {
       setSplitPayments([])
@@ -173,7 +217,6 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     try {
       const promoNames = promoResult.applied.map(a => a.promotion.name)
 
-      // Determine primary method and payments array
       const primaryMethod = isSplitMode
         ? splitPayments.reduce((a, b) => a.amount >= b.amount ? a : b).method
         : paymentMethod
@@ -186,7 +229,10 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
         promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
         promotion_names: promoNames.length > 0 ? promoNames : undefined,
         payments,
+        tip_amount: tipAmount > 0 ? tipAmount : undefined,
       })
+
+      lastOrderRef.current = order
 
       // Record customer visit + loyalty points
       if (selectedCustomer) {
@@ -198,16 +244,13 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
         incrementUsage(applied.promotion.id).catch(() => {})
       }
 
+      // Pre-fill email from customer
+      if (selectedCustomer?.email) {
+        setReceiptEmail(selectedCustomer.email)
+      }
+
       setSuccess(true)
-      setTimeout(() => {
-        clear()
-        selectCustomer(null)
-        setSuccess(false)
-        setAmountReceived('')
-        setIsSplitMode(false)
-        setSplitPayments([])
-        onClose()
-      }, 1500)
+      // No auto-close — let user interact with receipt actions
     } catch (err) {
       setError(err instanceof Error ? err.message : t.common.error)
     } finally {
@@ -215,14 +258,113 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
     }
   }
 
+  const handleNewOrder = () => {
+    clear()
+    selectCustomer(null)
+    setSuccess(false)
+    setAmountReceived('')
+    setIsSplitMode(false)
+    setSplitPayments([])
+    setTipPercent(0)
+    setCustomTip('')
+    setTipMode('preset')
+    setReceiptEmail('')
+    setEmailSent(false)
+    lastOrderRef.current = null
+    onClose()
+  }
+
   const handleClose = () => {
     if (!loading) {
-      setAmountReceived('')
-      setError('')
-      setSuccess(false)
-      setIsSplitMode(false)
-      setSplitPayments([])
-      onClose()
+      if (success) {
+        handleNewOrder()
+      } else {
+        setAmountReceived('')
+        setError('')
+        setSuccess(false)
+        setIsSplitMode(false)
+        setSplitPayments([])
+        setTipPercent(0)
+        setCustomTip('')
+        setTipMode('preset')
+        onClose()
+      }
+    }
+  }
+
+  // Receipt actions
+  const handleDownloadPDF = () => {
+    const order = lastOrderRef.current
+    if (!order || !currentStore) return
+    exportReceipt(
+      order,
+      currentStore.name,
+      currentStore.address,
+      currentStore.phone,
+      user?.name
+    )
+  }
+
+  const handleSendEmail = () => {
+    const order = lastOrderRef.current
+    if (!order || !currentStore || !receiptEmail) return
+
+    const html = generateReceiptHTML(
+      order,
+      currentStore.name,
+      currentStore.address,
+      currentStore.phone,
+      user?.name,
+      currency
+    )
+
+    // Build plain text fallback for mailto
+    const lines = [
+      `${receiptL.receiptActions} - ${currentStore.name}`,
+      '',
+      `N° ${order.id.slice(0, 8).toUpperCase()}`,
+      `Date: ${new Date(order.created_at).toLocaleString()}`,
+      '',
+      ...order.items.map(it => `${it.name} x${it.qty} — ${formatCurrency(it.price * it.qty, currency)}`),
+      '',
+      `Total: ${formatCurrency(order.total, currency)}`,
+      order.tip_amount ? `${tipL.tip}: ${formatCurrency(order.tip_amount, currency)}` : '',
+      '',
+      currentStore.name,
+    ].filter(Boolean).join('\n')
+
+    const subject = encodeURIComponent(`${receiptL.receiptActions} #${order.id.slice(0, 8).toUpperCase()} - ${currentStore.name}`)
+    const body = encodeURIComponent(lines)
+    window.open(`mailto:${receiptEmail}?subject=${subject}&body=${body}`, '_blank')
+    setEmailSent(true)
+
+    // Also try to copy HTML to clipboard for pasting
+    try {
+      navigator.clipboard.writeText(html).catch(() => {})
+    } catch { /* ignore */ }
+  }
+
+  const handleShare = async () => {
+    const order = lastOrderRef.current
+    if (!order || !currentStore) return
+
+    const text = [
+      `${receiptL.receiptActions} - ${currentStore.name}`,
+      `N° ${order.id.slice(0, 8).toUpperCase()}`,
+      ...order.items.map(it => `${it.name} x${it.qty} — ${formatCurrency(it.price * it.qty, currency)}`),
+      `Total: ${formatCurrency(order.total, currency)}`,
+      order.tip_amount ? `${tipL.tip}: ${formatCurrency(order.tip_amount, currency)}` : '',
+    ].filter(Boolean).join('\n')
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${receiptL.receiptActions} #${order.id.slice(0, 8).toUpperCase()}`, text })
+      } catch { /* user cancelled */ }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(text)
+      } catch { /* ignore */ }
     }
   }
 
@@ -239,27 +381,61 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
   const confirmBtnStyle: React.CSSProperties = { width: '100%', padding: '14px 20px', borderRadius: 10, border: 'none', backgroundColor: canConfirm ? C.primary : '#94a3b8', color: '#ffffff', fontSize: 16, fontWeight: 700, cursor: canConfirm && !loading ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10, transition: 'background-color 0.2s', opacity: loading ? 0.7 : 1 }
   const cancelBtnStyle: React.CSSProperties = { width: '100%', padding: '12px 20px', borderRadius: 10, border: 'none', backgroundColor: 'transparent', color: C.textSecondary, fontSize: 14, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer' }
   const errorStyle: React.CSSProperties = { backgroundColor: '#fef2f2', color: C.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16, textAlign: 'center' }
-  const successOverlayStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center' }
   const splitBtnStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '10px 16px', borderRadius: 10, border: `2px dashed ${isSplitMode ? C.primary : C.border}`, backgroundColor: isSplitMode ? C.primary + '08' : 'transparent', color: isSplitMode ? C.primary : C.textSecondary, fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 16, transition: 'all 0.2s' }
 
+  // ── Success Screen with Receipt Actions ─────────────────────────────────
+
   if (success) {
+    const order = lastOrderRef.current
+    const actionBtnStyle = (color: string): React.CSSProperties => ({
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 6,
+      padding: '12px 8px',
+      borderRadius: 10,
+      border: `1px solid ${color}20`,
+      backgroundColor: color + '08',
+      color,
+      fontSize: 11,
+      fontWeight: 600,
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+    })
+
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title={t.pos.paymentTitle}>
-        <div style={successOverlayStyle}>
-          <CheckCircle2 size={64} color={C.success} />
-          <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: '16px 0 4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 16px', textAlign: 'center' }}>
+          <CheckCircle2 size={56} color={C.success} />
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: '12px 0 4px' }}>
             {t.pos.paymentConfirmed}
           </h3>
-          <p style={{ color: C.textSecondary, fontSize: 14, margin: 0 }}>
+          <p style={{ color: C.textSecondary, fontSize: 14, margin: '0 0 4px' }}>
             {t.pos.orderCreated}
           </p>
+          <p style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: '4px 0' }}>
+            {formatCurrency(order?.total ?? 0, currency)}
+          </p>
+
+          {/* Change due for cash */}
           {!isSplitMode && paymentMethod === 'cash' && changeDue > 0 && (
-            <p style={{ color: C.success, fontSize: 18, fontWeight: 700, marginTop: 12 }}>
+            <p style={{ color: C.success, fontSize: 16, fontWeight: 700, margin: '4px 0' }}>
               {t.pos.changeDue} : {formatCurrency(changeDue, currency)}
             </p>
           )}
+
+          {/* Tip display */}
+          {tipAmount > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, color: '#e11d48', fontSize: 14, fontWeight: 600 }}>
+              <Heart size={16} />
+              {tipL.tip} : {formatCurrency(tipAmount, currency)}
+            </div>
+          )}
+
+          {/* Split payment breakdown */}
           {isSplitMode && (
-            <div style={{ marginTop: 12, fontSize: 13, color: C.textSecondary }}>
+            <div style={{ marginTop: 8, fontSize: 13, color: C.textSecondary }}>
               {splitPayments.map((p, i) => (
                 <div key={i} style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 4 }}>
                   {paymentIcons[p.method]}
@@ -268,8 +444,153 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
               ))}
             </div>
           )}
+
+          {/* Receipt Actions */}
+          <div style={{ width: '100%', marginTop: 20 }}>
+            <p style={{ ...sectionTitleStyle, textAlign: 'center' }}>{receiptL.receiptActions}</p>
+
+            {/* Email input row */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <input
+                type="email"
+                placeholder={receiptL.enterEmail}
+                value={receiptEmail}
+                onChange={(e) => { setReceiptEmail(e.target.value); setEmailSent(false) }}
+                style={{
+                  flex: 1, padding: '10px 12px', borderRadius: 8,
+                  border: `1px solid ${C.border}`, fontSize: 13,
+                  color: C.text, outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleSendEmail}
+                disabled={!receiptEmail || !/\S+@\S+\.\S+/.test(receiptEmail)}
+                style={{
+                  padding: '10px 14px', borderRadius: 8, border: 'none',
+                  backgroundColor: emailSent ? C.success : C.primary,
+                  color: '#fff', fontSize: 13, fontWeight: 600,
+                  cursor: receiptEmail && /\S+@\S+\.\S+/.test(receiptEmail) ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  opacity: receiptEmail && /\S+@\S+\.\S+/.test(receiptEmail) ? 1 : 0.5,
+                  transition: 'all 0.2s', whiteSpace: 'nowrap',
+                }}
+              >
+                <Mail size={14} />
+                {emailSent ? receiptL.receiptSent : receiptL.sendByEmail}
+              </button>
+            </div>
+
+            {/* Action buttons row */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" style={actionBtnStyle(C.primary)} onClick={handleDownloadPDF}>
+                <FileText size={20} />
+                {receiptL.downloadReceipt}
+              </button>
+              <button type="button" style={actionBtnStyle('#8b5cf6')} onClick={handleShare}>
+                <Share2 size={20} />
+                {receiptL.shareReceipt}
+              </button>
+            </div>
+          </div>
+
+          {/* New Order button */}
+          <button
+            type="button"
+            onClick={handleNewOrder}
+            style={{
+              width: '100%', marginTop: 20, padding: '14px 20px', borderRadius: 10,
+              border: 'none', backgroundColor: C.success, color: '#fff',
+              fontSize: 16, fontWeight: 700, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            <ShoppingCart size={18} />
+            {receiptL.newOrder}
+          </button>
         </div>
       </Modal>
+    )
+  }
+
+  // ── Render: Tip Section ─────────────────────────────────────────────────
+
+  const renderTipSection = () => {
+    const tipBtnStyle = (isActive: boolean): React.CSSProperties => ({
+      flex: 1,
+      padding: '8px 4px',
+      borderRadius: 8,
+      border: `2px solid ${isActive ? '#e11d48' : C.border}`,
+      backgroundColor: isActive ? '#e11d4810' : 'transparent',
+      color: isActive ? '#e11d48' : C.textSecondary,
+      fontSize: 13,
+      fontWeight: 600,
+      cursor: 'pointer',
+      textAlign: 'center',
+      transition: 'all 0.2s',
+    })
+
+    return (
+      <div style={{ marginBottom: 16 }}>
+        <p style={sectionTitleStyle}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Heart size={14} /> {tipL.addTip}
+          </span>
+        </p>
+
+        {/* Preset tip buttons */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          {TIP_PRESETS.map(pct => (
+            <button
+              key={pct}
+              type="button"
+              style={tipBtnStyle(tipMode === 'preset' && tipPercent === pct)}
+              onClick={() => { setTipMode('preset'); setTipPercent(pct); setCustomTip('') }}
+            >
+              {pct === 0 ? tipL.noTip : `${pct}%`}
+            </button>
+          ))}
+          <button
+            type="button"
+            style={tipBtnStyle(tipMode === 'custom')}
+            onClick={() => { setTipMode('custom'); setTipPercent(0) }}
+          >
+            {tipL.customTip}
+          </button>
+        </div>
+
+        {/* Custom tip input */}
+        {tipMode === 'custom' && (
+          <input
+            type="number"
+            placeholder={tipL.tipAmount}
+            value={customTip}
+            onChange={(e) => setCustomTip(e.target.value)}
+            min={0}
+            style={{
+              width: '100%', padding: '10px 12px', borderRadius: 8,
+              border: `1px solid #e11d4840`, fontSize: 14, fontWeight: 600,
+              color: C.text, outline: 'none', boxSizing: 'border-box',
+            }}
+          />
+        )}
+
+        {/* Tip amount display */}
+        {tipAmount > 0 && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '8px 12px', borderRadius: 8, marginTop: 8,
+            backgroundColor: '#e11d4808', border: '1px solid #e11d4820',
+          }}>
+            <span style={{ fontSize: 13, color: '#e11d48', fontWeight: 600 }}>
+              {tipL.tipIncluded}
+            </span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#e11d48' }}>
+              +{formatCurrency(tipAmount, currency)}
+            </span>
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -288,7 +609,6 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           {splitL.splitPaymentDesc}
         </p>
 
-        {/* Split payment entries */}
         {splitPayments.map((payment, index) => (
           <div
             key={index}
@@ -334,7 +654,6 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           </div>
         ))}
 
-        {/* Add method button */}
         {availableMethods.length > 0 && splitPayments.length < 4 && (
           <div style={{ position: 'relative', marginBottom: 8 }}>
             <select
@@ -362,7 +681,6 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
           </div>
         )}
 
-        {/* Remaining amount indicator */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '10px 14px', borderRadius: 10, marginTop: 8,
@@ -438,6 +756,25 @@ export default function PaymentModal({ isOpen, onClose, paymentMethod }: Payment
         <span>{t.pos.grandTotal}</span>
         <span>{formatCurrency(total, currency)}</span>
       </div>
+
+      {/* Tip Section */}
+      {renderTipSection()}
+
+      {/* Grand Total with Tip */}
+      {tipAmount > 0 && (
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '10px 14px', borderRadius: 10, marginBottom: 16,
+          backgroundColor: '#e11d4808', border: '1px solid #e11d4820',
+        }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
+            {t.pos.grandTotal} + {tipL.tip}
+          </span>
+          <span style={{ fontSize: 20, fontWeight: 700, color: '#e11d48' }}>
+            {formatCurrency(grandTotalWithTip, currency)}
+          </span>
+        </div>
+      )}
 
       {/* Split Payment Toggle */}
       <button type="button" style={splitBtnStyle} onClick={toggleSplitMode}>

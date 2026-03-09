@@ -586,6 +586,112 @@ export function exportDailySummary(
   doc.save(`${storeName.replace(/\s+/g, '_')}_daily_${todayStr}.pdf`)
 }
 
+// ── Receipt HTML (for email / share) ──────────────────────────────────────
+
+export function generateReceiptHTML(
+  order: Order,
+  storeName: string,
+  storeAddress?: string,
+  storePhone?: string,
+  cashierName?: string,
+  currencyCode?: string,
+): string {
+  const fmt = (n: number) => formatCurrencyPlain(n, currencyCode || 'XAF')
+  const date = new Date(order.created_at).toLocaleString('fr-FR')
+  const orderId = order.id.slice(0, 8).toUpperCase()
+
+  const itemRows = order.items
+    .map(
+      (it) =>
+        `<tr>
+          <td style="padding:6px 8px;border-bottom:1px solid #eee;font-size:13px">${it.name}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center;font-size:13px">${it.qty}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;font-size:13px">${fmt(it.price)}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;font-size:13px;font-weight:600">${fmt(it.price * it.qty)}</td>
+        </tr>`
+    )
+    .join('')
+
+  const discountRow =
+    order.discount && order.discount > 0
+      ? `<tr><td colspan="3" style="padding:4px 8px;text-align:right;color:#dc2626;font-size:13px">Discount</td><td style="padding:4px 8px;text-align:right;color:#dc2626;font-size:13px;font-weight:600">-${fmt(order.discount)}</td></tr>`
+      : ''
+
+  const tipRow =
+    order.tip_amount && order.tip_amount > 0
+      ? `<tr><td colspan="3" style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px">Tip ❤️</td><td style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px;font-weight:600">${fmt(order.tip_amount)}</td></tr>`
+      : ''
+
+  const paymentsInfo = order.payments
+    ? order.payments
+        .map((p) => `${p.method.toUpperCase()}: ${fmt(p.amount)}`)
+        .join(' | ')
+    : order.payment_method.toUpperCase()
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:#f8fafc">
+<div style="max-width:400px;margin:20px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  <!-- Header -->
+  <div style="background:#1e293b;color:#fff;padding:20px;text-align:center">
+    <h2 style="margin:0 0 4px;font-size:18px">${storeName}</h2>
+    ${storeAddress ? `<p style="margin:0;font-size:12px;opacity:0.8">${storeAddress}</p>` : ''}
+    ${storePhone ? `<p style="margin:0;font-size:12px;opacity:0.8">Tel: ${storePhone}</p>` : ''}
+  </div>
+
+  <!-- Order info -->
+  <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:14px;font-weight:700;color:#1e293b">Ticket #${orderId}</span>
+      <span style="font-size:12px;color:#64748b">${date}</span>
+    </div>
+    ${cashierName ? `<p style="margin:4px 0 0;font-size:12px;color:#64748b">Cashier: ${cashierName}</p>` : ''}
+  </div>
+
+  <!-- Items -->
+  <table style="width:100%;border-collapse:collapse;margin:0">
+    <thead>
+      <tr style="background:#f1f5f9">
+        <th style="padding:8px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Item</th>
+        <th style="padding:8px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Qty</th>
+        <th style="padding:8px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase">Price</th>
+        <th style="padding:8px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemRows}
+    </tbody>
+  </table>
+
+  <!-- Totals -->
+  <div style="padding:12px 20px;border-top:2px solid #e2e8f0">
+    <table style="width:100%;border-collapse:collapse">
+      ${discountRow}
+      ${tipRow}
+      <tr>
+        <td colspan="3" style="padding:8px;text-align:right;font-size:16px;font-weight:700;color:#1e293b">TOTAL</td>
+        <td style="padding:8px;text-align:right;font-size:18px;font-weight:700;color:#1e293b">${fmt(order.total)}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Payment -->
+  <div style="padding:10px 20px;background:#f1f5f9;text-align:center">
+    <span style="font-size:12px;color:#64748b">Payment: </span>
+    <span style="font-size:13px;font-weight:600;color:#1e293b">${paymentsInfo}</span>
+  </div>
+
+  <!-- Footer -->
+  <div style="padding:16px;text-align:center;border-top:1px solid #e2e8f0">
+    <p style="margin:0;font-size:12px;color:#64748b">Thank you for your business!</p>
+    <p style="margin:4px 0 0;font-size:10px;color:#94a3b8">POS Mano Verde</p>
+  </div>
+</div>
+</body>
+</html>`
+}
+
 // ── Price Labels with Barcodes ─────────────────────────────────────────────
 
 export function exportPriceLabels(

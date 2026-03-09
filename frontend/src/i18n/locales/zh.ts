@@ -326,6 +326,20 @@ export const zh: TranslationKeys = {
     paymentComplete: '付款完成',
     overpayment: '多付',
     underpayment: '少付',
+    // Tips
+    tip: '小费',
+    addTip: '添加小费',
+    tipAmount: '小费金额',
+    customTip: '自定义',
+    noTip: '无小费',
+    tipIncluded: '已含小费',
+    // E-receipt
+    sendByEmail: '发送',
+    downloadReceipt: '下载PDF',
+    shareReceipt: '分享',
+    enterEmail: '电子邮箱',
+    receiptActions: '收据',
+    receiptSent: '已发送！',
   },
   products: {
     title: '商品',

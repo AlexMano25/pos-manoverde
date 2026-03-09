@@ -330,6 +330,7 @@ export default function StocktakePage() {
           total_variance_cost: totalVarianceCost,
           started_by: userId,
           started_by_name: userName,
+          started_at: new Date().toISOString(),
           notes: formNotes.trim() || undefined,
         })
       }

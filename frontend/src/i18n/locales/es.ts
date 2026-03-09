@@ -326,6 +326,20 @@ export const es: TranslationKeys = {
     paymentComplete: 'Pago completado',
     overpayment: 'Sobrepago',
     underpayment: 'Pago insuficiente',
+    // Tips
+    tip: 'Propina',
+    addTip: 'Agregar propina',
+    tipAmount: 'Monto de propina',
+    customTip: 'Otro',
+    noTip: 'Sin propina',
+    tipIncluded: 'Propina incluida',
+    // E-receipt
+    sendByEmail: 'Enviar',
+    downloadReceipt: 'Descargar PDF',
+    shareReceipt: 'Compartir',
+    enterEmail: 'Correo electrónico',
+    receiptActions: 'Recibo',
+    receiptSent: '¡Enviado!',
   },
   products: {
     title: 'Productos',

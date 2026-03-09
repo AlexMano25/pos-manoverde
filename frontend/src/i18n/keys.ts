@@ -345,6 +345,20 @@ export type TranslationKeys = {
     paymentComplete: string
     overpayment: string
     underpayment: string
+    // Tips
+    tip: string
+    addTip: string
+    tipAmount: string
+    customTip: string
+    noTip: string
+    tipIncluded: string
+    // E-receipt
+    sendByEmail: string
+    downloadReceipt: string
+    shareReceipt: string
+    enterEmail: string
+    receiptActions: string
+    receiptSent: string
   }
 
   // Products

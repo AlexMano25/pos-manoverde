@@ -326,6 +326,20 @@ export const ar: TranslationKeys = {
     paymentComplete: 'اكتمل الدفع',
     overpayment: 'دفع زائد',
     underpayment: 'دفع ناقص',
+    // Tips
+    tip: 'بقشيش',
+    addTip: 'إضافة بقشيش',
+    tipAmount: 'مبلغ البقشيش',
+    customTip: 'مخصص',
+    noTip: 'بدون بقشيش',
+    tipIncluded: 'البقشيش مشمول',
+    // E-receipt
+    sendByEmail: 'إرسال',
+    downloadReceipt: 'تحميل PDF',
+    shareReceipt: 'مشاركة',
+    enterEmail: 'البريد الإلكتروني',
+    receiptActions: 'الإيصال',
+    receiptSent: 'تم الإرسال!',
   },
   products: {
     title: 'المنتجات',

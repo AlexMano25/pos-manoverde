@@ -29,6 +29,7 @@ interface OrderActions {
       promotion_discount?: number
       promotion_names?: string[]
       payments?: OrderPayment[]
+      tip_amount?: number
     }
   ) => Promise<Order>
   getOrdersByDate: (date: string) => Order[]
@@ -105,6 +106,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         promotion_discount?: number
         promotion_names?: string[]
         payments?: OrderPayment[]
+        tip_amount?: number
       }
     ): Promise<Order> => {
       const deviceId = getDeviceId()
@@ -146,6 +148,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
         promotion_names: options?.promotion_names,
         payments: options?.payments,
+        tip_amount: options?.tip_amount,
         created_at: now,
         updated_at: now,
       }

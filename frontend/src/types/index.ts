@@ -388,6 +388,7 @@ export type Order = {
   customer_name?: string  // denormalized for quick display
   promotion_discount?: number // discount from promotions engine
   promotion_names?: string[]  // applied promotion names
+  tip_amount?: number         // tip/gratuity amount (stored separately, not in total)
   created_at: string
   updated_at: string
 }

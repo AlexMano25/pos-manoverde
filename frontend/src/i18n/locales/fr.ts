@@ -329,6 +329,20 @@ export const fr: TranslationKeys = {
     paymentComplete: 'Paiement complet',
     overpayment: 'Trop-perçu',
     underpayment: 'Solde insuffisant',
+    // Tips
+    tip: 'Pourboire',
+    addTip: 'Ajouter un pourboire',
+    tipAmount: 'Montant du pourboire',
+    customTip: 'Perso',
+    noTip: 'Aucun',
+    tipIncluded: 'Pourboire inclus',
+    // E-receipt
+    sendByEmail: 'Envoyer',
+    downloadReceipt: 'Télécharger PDF',
+    shareReceipt: 'Partager',
+    enterEmail: 'Adresse email',
+    receiptActions: 'Reçu',
+    receiptSent: 'Envoyé !',
   },
   products: {
     title: 'Produits',

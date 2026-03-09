@@ -339,6 +339,20 @@ export const en: TranslationKeys = {
     paymentComplete: 'Payment complete',
     overpayment: 'Overpayment',
     underpayment: 'Underpayment',
+    // Tips
+    tip: 'Tip',
+    addTip: 'Add a tip',
+    tipAmount: 'Tip amount',
+    customTip: 'Custom',
+    noTip: 'No tip',
+    tipIncluded: 'Tip included',
+    // E-receipt
+    sendByEmail: 'Send',
+    downloadReceipt: 'Download PDF',
+    shareReceipt: 'Share',
+    enterEmail: 'Email address',
+    receiptActions: 'Receipt',
+    receiptSent: 'Sent!',
   },
 
   // Products

@@ -326,6 +326,20 @@ export const de: TranslationKeys = {
     paymentComplete: 'Zahlung abgeschlossen',
     overpayment: 'Überzahlung',
     underpayment: 'Unterzahlung',
+    // Tips
+    tip: 'Trinkgeld',
+    addTip: 'Trinkgeld hinzufügen',
+    tipAmount: 'Trinkgeldbetrag',
+    customTip: 'Andere',
+    noTip: 'Kein Trinkgeld',
+    tipIncluded: 'Trinkgeld enthalten',
+    // E-receipt
+    sendByEmail: 'Senden',
+    downloadReceipt: 'PDF herunterladen',
+    shareReceipt: 'Teilen',
+    enterEmail: 'E-Mail-Adresse',
+    receiptActions: 'Beleg',
+    receiptSent: 'Gesendet!',
   },
   products: {
     title: 'Produkte',

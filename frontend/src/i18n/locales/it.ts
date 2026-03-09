@@ -326,6 +326,20 @@ export const it: TranslationKeys = {
     paymentComplete: 'Pagamento completato',
     overpayment: 'Pagamento in eccesso',
     underpayment: 'Pagamento insufficiente',
+    // Tips
+    tip: 'Mancia',
+    addTip: 'Aggiungi mancia',
+    tipAmount: 'Importo mancia',
+    customTip: 'Altro',
+    noTip: 'Nessuna mancia',
+    tipIncluded: 'Mancia inclusa',
+    // E-receipt
+    sendByEmail: 'Invia',
+    downloadReceipt: 'Scarica PDF',
+    shareReceipt: 'Condividi',
+    enterEmail: 'Indirizzo email',
+    receiptActions: 'Ricevuta',
+    receiptSent: 'Inviato!',
   },
   products: {
     title: 'Prodotti',
