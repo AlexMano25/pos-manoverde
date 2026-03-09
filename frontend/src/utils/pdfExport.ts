@@ -7,6 +7,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import JsBarcode from 'jsbarcode'
 import type { Product, Order } from '../types'
+import type { EmployeePerformance } from './payrollCalculation'
 import { formatCurrencyPlain } from './currency'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -810,4 +811,90 @@ export function exportPriceLabels(
   }
 
   doc.save(`${storeName.replace(/\s+/g, '_')}_labels.pdf`)
+}
+
+// ── Employee Performance / Payslip ──────────────────────────────────────────
+
+export function exportPayslip(
+  performance: EmployeePerformance,
+  storeName: string,
+  currencyCode: string = 'XAF',
+) {
+  const doc = new jsPDF()
+  const fmt = (n: number) => formatCurrencyPlain(n, currencyCode)
+
+  addHeader(doc, storeName, `Employee Performance Report`)
+
+  let y = 48
+
+  // Employee info
+  doc.setFontSize(13)
+  doc.setFont('helvetica', 'bold')
+  doc.text(performance.userName, 14, y)
+  y += 7
+  doc.setFontSize(10)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Role: ${performance.role}`, 14, y)
+  y += 7
+  doc.text(`Period: Last 30 days`, 14, y)
+  y += 12
+
+  // Sales Performance Table
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Sales Performance', 14, y)
+  y += 6
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Metric', 'Value']],
+    body: [
+      ['Total Sales', fmt(performance.totalSales)],
+      ['Orders Processed', String(performance.orderCount)],
+      ['Average Ticket', fmt(performance.avgTicket)],
+      ['Items Sold', String(performance.itemsSold)],
+      ['Sales Per Hour', fmt(performance.salesPerHour)],
+      ['Top Category', performance.topCategory || '-'],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [37, 99, 235] },
+    styles: { fontSize: 10 },
+    columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+  })
+
+  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12
+
+  // Attendance Table
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Attendance & Hours', 14, y)
+  y += 6
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Metric', 'Value']],
+    body: [
+      ['Total Hours Worked', `${performance.totalHoursWorked}h`],
+      ['Days Present', String(performance.daysPresent)],
+      ['Late Arrivals', String(performance.lateArrivals)],
+      ['Overtime Hours', `${performance.overtimeHours}h`],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [124, 58, 237] },
+    styles: { fontSize: 10 },
+    columnStyles: { 1: { halign: 'right', fontStyle: 'bold' } },
+  })
+
+  // Footer
+  const pageHeight = doc.internal.pageSize.height
+  doc.setFontSize(8)
+  doc.setTextColor(120)
+  doc.text(
+    `Generated on ${new Date().toLocaleDateString('fr-FR')} — POS Mano Verde`,
+    doc.internal.pageSize.width / 2,
+    pageHeight - 10,
+    { align: 'center' }
+  )
+
+  doc.save(`payslip_${performance.userName.replace(/\s+/g, '_')}.pdf`)
 }

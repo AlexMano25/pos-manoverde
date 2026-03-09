@@ -534,6 +534,29 @@ export type TranslationKeys = {
     differentStore: string
     profileCreateFailed: string
     serverError: string
+    // Phase 14: Performance dashboard
+    performanceTab: string
+    listTab: string
+    teamSummary: string
+    activeToday: string
+    totalSalesPeriod: string
+    topPerformer: string
+    salesPerHour: string
+    avgTicket: string
+    ordersCount: string
+    itemsSold: string
+    topCategory: string
+    hoursWorked: string
+    daysPresent: string
+    lateArrivals: string
+    overtimeHours: string
+    noPerformanceData: string
+    totalSales: string
+    employeePerformance: string
+    avgSalesEmployee: string
+    totalHoursToday: string
+    exportPayslip: string
+    salesRanking: string
   }
 
   // Settings

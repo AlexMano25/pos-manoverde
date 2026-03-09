@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Plus,
   Edit2,
@@ -8,16 +8,29 @@ import {
   UserCheck,
   UserX,
   Store as StoreIcon,
+  BarChart3,
+  List,
+  TrendingUp,
+  Clock,
+  DollarSign,
+  Award,
+  FileText,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
+import MiniBarChart from '../components/charts/MiniBarChart'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useOrderStore } from '../stores/orderStore'
+import { useTimeAttendanceStore } from '../stores/timeAttendanceStore'
 import { db } from '../db/dexie'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { useResponsive } from '../hooks/useLayoutMode'
+import { formatCurrency } from '../utils/currency'
+import { computeEmployeePerformance, computeTeamSummary } from '../utils/payrollCalculation'
+import { exportPayslip } from '../utils/pdfExport'
 
 // ── Edge Function helpers ────────────────────────────────────────────────
 
@@ -157,6 +170,53 @@ export default function EmployeesPage() {
   const [saving, setSaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingEmployee, setDeletingEmployee] = useState<User | null>(null)
+  const [activeTab, setActiveTab] = useState<'list' | 'performance'>('list')
+
+  // Stores for performance data
+  const { orders } = useOrderStore()
+  const { entries: timeEntries, loadEntries: loadTimeEntries } = useTimeAttendanceStore()
+  const currency = currentStore?.currency || 'XAF'
+
+  // Load time entries for performance
+  useEffect(() => {
+    if (currentStore?.id) loadTimeEntries(currentStore.id)
+  }, [currentStore?.id, loadTimeEntries])
+
+  // Performance computations
+  const employeePerformance = useMemo(() => {
+    if (employees.length === 0) return []
+    return computeEmployeePerformance(employees, orders, timeEntries, 30)
+  }, [employees, orders, timeEntries])
+
+  const teamSummary = useMemo(() => {
+    return computeTeamSummary(employeePerformance, timeEntries)
+  }, [employeePerformance, timeEntries])
+
+  // Performance labels
+  const perfLabel = {
+    performanceTab: (t.employees as Record<string, string>)?.performanceTab ?? 'Performance',
+    listTab: (t.employees as Record<string, string>)?.listTab ?? 'List',
+    teamSummary: (t.employees as Record<string, string>)?.teamSummary ?? 'Team Summary',
+    activeToday: (t.employees as Record<string, string>)?.activeToday ?? 'Active Today',
+    totalSalesPeriod: (t.employees as Record<string, string>)?.totalSalesPeriod ?? 'Total Sales (30d)',
+    topPerformer: (t.employees as Record<string, string>)?.topPerformer ?? 'Top Performer',
+    salesPerHour: (t.employees as Record<string, string>)?.salesPerHour ?? 'Sales/Hour',
+    avgTicket: (t.employees as Record<string, string>)?.avgTicket ?? 'Avg Ticket',
+    ordersCount: (t.employees as Record<string, string>)?.ordersCount ?? 'Orders',
+    itemsSold: (t.employees as Record<string, string>)?.itemsSold ?? 'Items Sold',
+    topCategory: (t.employees as Record<string, string>)?.topCategory ?? 'Top Category',
+    hoursWorked: (t.employees as Record<string, string>)?.hoursWorked ?? 'Hours Worked',
+    daysPresent: (t.employees as Record<string, string>)?.daysPresent ?? 'Days Present',
+    lateArrivals: (t.employees as Record<string, string>)?.lateArrivals ?? 'Late Arrivals',
+    overtimeHours: (t.employees as Record<string, string>)?.overtimeHours ?? 'Overtime',
+    noPerformanceData: (t.employees as Record<string, string>)?.noPerformanceData ?? 'No performance data for this period',
+    totalSales: (t.employees as Record<string, string>)?.totalSales ?? 'Total Sales',
+    employeePerformance: (t.employees as Record<string, string>)?.employeePerformance ?? 'Employee Performance',
+    avgSalesEmployee: (t.employees as Record<string, string>)?.avgSalesEmployee ?? 'Avg Sales/Employee',
+    totalHoursToday: (t.employees as Record<string, string>)?.totalHoursToday ?? 'Hours Today',
+    exportPayslip: (t.employees as Record<string, string>)?.exportPayslip ?? 'Export Payslip',
+    salesRanking: (t.employees as Record<string, string>)?.salesRanking ?? 'Sales Ranking',
+  }
 
   const roleLabels: Record<UserRole, string> = {
     admin: t.employees.admin,
@@ -578,9 +638,42 @@ export default function EmployeesPage() {
       {/* Header */}
       <div style={headerStyle}>
         <h1 style={titleStyle}>{t.employees.title}</h1>
-        <button style={addBtnStyle} onClick={openAddModal}>
-          <Plus size={16} /> {t.employees.addEmployee}
-        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {activeTab === 'list' && (
+            <button style={addBtnStyle} onClick={openAddModal}>
+              <Plus size={16} /> {t.employees.addEmployee}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16 }}>
+        {([
+          { key: 'list' as const, label: perfLabel.listTab, icon: List },
+          { key: 'performance' as const, label: perfLabel.performanceTab, icon: BarChart3 },
+        ]).map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 8,
+              border: `1px solid ${activeTab === tab.key ? C.primary : C.border}`,
+              backgroundColor: activeTab === tab.key ? C.primary + '10' : C.card,
+              color: activeTab === tab.key ? C.primary : C.textSecondary,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <tab.icon size={15} />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* Store context indicator for admin managing multi-store orgs */}
@@ -613,8 +706,254 @@ export default function EmployeesPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div style={tableCardStyle}>
+      {/* Performance Tab */}
+      {activeTab === 'performance' && (
+        <>
+          {/* Team Summary Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+            gap: rv(8, 12, 16),
+            marginBottom: 20,
+          }}>
+            {[
+              { label: perfLabel.activeToday, value: String(teamSummary.activeToday), icon: Users, color: '#2563eb' },
+              { label: perfLabel.totalSalesPeriod, value: formatCurrency(teamSummary.totalSalesThisPeriod, currency), icon: DollarSign, color: '#16a34a' },
+              { label: perfLabel.avgSalesEmployee, value: formatCurrency(teamSummary.avgSalesPerEmployee, currency), icon: TrendingUp, color: '#7c3aed' },
+              { label: perfLabel.totalHoursToday, value: `${teamSummary.totalHoursToday}h`, icon: Clock, color: '#f59e0b' },
+            ].map((card, i) => (
+              <div key={i} style={{
+                backgroundColor: C.card,
+                borderRadius: 12,
+                padding: rv(12, 16, 16),
+                border: `1px solid ${C.border}`,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    backgroundColor: card.color + '15',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <card.icon size={16} color={card.color} />
+                  </div>
+                </div>
+                <div style={{ fontSize: rv(16, 20, 22), fontWeight: 700, color: C.text }}>{card.value}</div>
+                <div style={{ fontSize: 11, color: C.textSecondary, marginTop: 2 }}>{card.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Top Performer Banner */}
+          {teamSummary.topPerformer && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '12px 16px',
+              marginBottom: 20,
+              backgroundColor: '#fefce8',
+              borderRadius: 10,
+              border: '1px solid #fde68a',
+            }}>
+              <Award size={20} color="#f59e0b" />
+              <div>
+                <span style={{ fontSize: 13, color: '#92400e', fontWeight: 600 }}>
+                  {perfLabel.topPerformer}: {teamSummary.topPerformer.name}
+                </span>
+                <span style={{ fontSize: 12, color: '#a16207', marginLeft: 8 }}>
+                  {formatCurrency(teamSummary.topPerformer.sales, currency)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Sales Ranking Chart */}
+          {employeePerformance.length > 0 && (
+            <div style={{
+              backgroundColor: C.card,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+              padding: rv(12, 16, 20),
+              marginBottom: 20,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            }}>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+                {perfLabel.salesRanking}
+              </h3>
+              <MiniBarChart
+                data={employeePerformance.slice(0, 10).map(p => ({
+                  label: p.userName.split(' ')[0],
+                  value: p.totalSales,
+                }))}
+                height={180}
+                color="#2563eb"
+                currencyCode={currency}
+              />
+            </div>
+          )}
+
+          {/* Employee Performance Cards */}
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+            {perfLabel.employeePerformance}
+          </h3>
+
+          {employeePerformance.length === 0 ? (
+            <div style={{
+              padding: 40,
+              textAlign: 'center',
+              color: C.textSecondary,
+              backgroundColor: C.card,
+              borderRadius: 12,
+              border: `1px solid ${C.border}`,
+            }}>
+              <BarChart3 size={36} color={C.border} style={{ marginBottom: 8 }} />
+              <p style={{ fontSize: 14, margin: 0 }}>{perfLabel.noPerformanceData}</p>
+            </div>
+          ) : (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))',
+              gap: 16,
+            }}>
+              {employeePerformance.map((perf, idx) => (
+                <div key={perf.userId} style={{
+                  backgroundColor: C.card,
+                  borderRadius: 12,
+                  border: `1px solid ${C.border}`,
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                }}>
+                  {/* Card Header */}
+                  <div style={{
+                    padding: '12px 16px',
+                    borderBottom: `1px solid ${C.border}`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        backgroundColor: idx === 0 ? '#fef3c7' : idx === 1 ? '#f1f5f9' : idx === 2 ? '#fef2f2' : '#f8fafc',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 14, fontWeight: 700,
+                        color: idx === 0 ? '#92400e' : idx === 1 ? '#475569' : idx === 2 ? '#9a3412' : C.textSecondary,
+                      }}>
+                        #{idx + 1}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{perf.userName}</div>
+                        <span style={badgeStyle(roleColors[perf.role as UserRole] || C.textSecondary)}>
+                          {roleLabels[perf.role as UserRole] || perf.role}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const emp = employees.find(e => e.id === perf.userId)
+                        if (emp && currentStore) {
+                          exportPayslip(perf, currentStore.name, currency)
+                        }
+                      }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: C.primary, padding: 6, borderRadius: 6,
+                        display: 'flex', alignItems: 'center', gap: 4, fontSize: 12,
+                      }}
+                      title={perfLabel.exportPayslip}
+                    >
+                      <FileText size={14} />
+                    </button>
+                  </div>
+
+                  {/* Card Metrics */}
+                  <div style={{ padding: '12px 16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px' }}>
+                      {/* Total Sales */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.totalSales}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>
+                          {formatCurrency(perf.totalSales, currency)}
+                        </div>
+                      </div>
+                      {/* Orders */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.ordersCount}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>{perf.orderCount}</div>
+                      </div>
+                      {/* Avg Ticket */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.avgTicket}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                          {formatCurrency(perf.avgTicket, currency)}
+                        </div>
+                      </div>
+                      {/* Sales/Hour */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.salesPerHour}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                          {formatCurrency(perf.salesPerHour, currency)}
+                        </div>
+                      </div>
+                      {/* Items Sold */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.itemsSold}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{perf.itemsSold}</div>
+                      </div>
+                      {/* Top Category */}
+                      <div>
+                        <div style={{ fontSize: 11, color: C.textSecondary }}>{perfLabel.topCategory}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{perf.topCategory || '-'}</div>
+                      </div>
+                    </div>
+
+                    {/* Attendance Section */}
+                    <div style={{
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTop: `1px solid ${C.border}`,
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                      gap: 8,
+                    }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{perf.totalHoursWorked}h</div>
+                        <div style={{ fontSize: 10, color: C.textSecondary }}>{perfLabel.hoursWorked}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{perf.daysPresent}</div>
+                        <div style={{ fontSize: 10, color: C.textSecondary }}>{perfLabel.daysPresent}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                          fontSize: 14, fontWeight: 700,
+                          color: perf.lateArrivals > 3 ? C.danger : perf.lateArrivals > 0 ? C.warning : C.success,
+                        }}>
+                          {perf.lateArrivals}
+                        </div>
+                        <div style={{ fontSize: 10, color: C.textSecondary }}>{perfLabel.lateArrivals}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                          fontSize: 14, fontWeight: 700,
+                          color: perf.overtimeHours > 0 ? '#7c3aed' : C.text,
+                        }}>
+                          {perf.overtimeHours}h
+                        </div>
+                        <div style={{ fontSize: 10, color: C.textSecondary }}>{perfLabel.overtimeHours}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Table (List Tab) */}
+      {activeTab === 'list' && <div style={tableCardStyle}>
         {employees.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center', color: C.textSecondary }}>
             <Users size={40} color={C.border} style={{ marginBottom: 12 }} />
@@ -684,7 +1023,7 @@ export default function EmployeesPage() {
           </table>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Add/Edit Modal */}
       <Modal
