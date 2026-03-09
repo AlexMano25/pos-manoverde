@@ -48,6 +48,10 @@ import TransfersPage from './pages/TransfersPage'
 import RecipesPage from './pages/RecipesPage'
 import OnlineOrdersPage from './pages/OnlineOrdersPage'
 import MaintenancePage from './pages/MaintenancePage'
+import SelfCheckoutPage from './pages/SelfCheckoutPage'
+import WarrantyPage from './pages/WarrantyPage'
+import BarcodePage from './pages/BarcodePage'
+import DynamicPricingPage from './pages/DynamicPricingPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -151,8 +155,12 @@ function AppContent() {
       case 'transfers':      return <TransfersPage />
       case 'recipes':        return <RecipesPage />
       case 'online_orders':  return <OnlineOrdersPage />
-      case 'maintenance':    return <MaintenancePage />
-      default:               return <DashboardPage />
+      case 'maintenance':      return <MaintenancePage />
+      case 'self_checkout':    return <SelfCheckoutPage />
+      case 'warranty':         return <WarrantyPage />
+      case 'barcode':          return <BarcodePage />
+      case 'dynamic_pricing':  return <DynamicPricingPage />
+      default:                 return <DashboardPage />
     }
   }
 

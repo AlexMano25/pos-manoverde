@@ -228,6 +228,10 @@ export type TranslationKeys = {
     recipes: string
     onlineOrders: string
     maintenance: string
+    selfCheckout: string
+    warranty: string
+    barcode: string
+    dynamicPricing: string
   }
 
   // Dashboard
@@ -2539,5 +2543,252 @@ export type TranslationKeys = {
     viewHistory: string
     maintenanceLog: string
     equipmentList: string
+  }
+
+  // Phase 8 — Self-Checkout / Kiosk
+  selfCheckout: {
+    title: string
+    subtitle: string
+    // Terminals
+    terminals: string
+    addTerminal: string
+    editTerminal: string
+    terminalName: string
+    terminalLocation: string
+    terminalActive: string
+    terminalInactive: string
+    welcomeMessage: string
+    themeColor: string
+    allowCash: string
+    allowCard: string
+    allowMobile: string
+    idleTimeout: string
+    idleTimeoutSeconds: string
+    // Sessions
+    sessions: string
+    sessionNumber: string
+    activeSessions: string
+    completedSessions: string
+    abandonedSessions: string
+    averageTime: string
+    terminalId: string
+    startedAt: string
+    completedAt: string
+    // Status
+    active: string
+    completed: string
+    abandoned: string
+    cancelled: string
+    allStatuses: string
+    // Stats
+    totalSessions: string
+    todayRevenue: string
+    averageBasket: string
+    conversionRate: string
+    // Actions
+    viewSession: string
+    endSession: string
+    configureTerminal: string
+    launchKiosk: string
+    fullScreenMode: string
+  }
+
+  // Phase 8 — Warranty & SAV
+  warranty: {
+    title: string
+    subtitle: string
+    // Claims
+    claims: string
+    newClaim: string
+    editClaim: string
+    claimNumber: string
+    claimType: string
+    claimStatus: string
+    issueDescription: string
+    diagnosis: string
+    resolution: string
+    // Claim types
+    repair: string
+    replacement: string
+    refund: string
+    exchange: string
+    // Claim statuses
+    submitted: string
+    underReview: string
+    approved: string
+    inRepair: string
+    repaired: string
+    replaced: string
+    rejected: string
+    closed: string
+    allStatuses: string
+    // Warranty info
+    warrantyStatus: string
+    warrantyActive: string
+    warrantyExpired: string
+    warrantyClaimed: string
+    warrantyVoided: string
+    warrantyEndDate: string
+    purchaseDate: string
+    serialNumber: string
+    coveredByWarranty: string
+    // Product info
+    productName: string
+    customerName: string
+    customerPhone: string
+    customerEmail: string
+    // Assignment
+    assignedTo: string
+    assignEmployee: string
+    // Dates
+    receivedAt: string
+    resolvedAt: string
+    estimatedCompletion: string
+    // Costs
+    repairCost: string
+    totalClaims: string
+    // Stats
+    activeClaims: string
+    resolvedThisMonth: string
+    avgResolutionDays: string
+    warrantyRate: string
+    // Actions
+    approveClaim: string
+    rejectClaim: string
+    startRepair: string
+    completeRepair: string
+    closeClaim: string
+    markReplaced: string
+  }
+
+  // Phase 8 — Barcode & Scanning
+  barcode: {
+    title: string
+    subtitle: string
+    // Batches
+    batches: string
+    newBatch: string
+    editBatch: string
+    batchNumber: string
+    batchName: string
+    // Formats
+    format: string
+    formatEAN13: string
+    formatEAN8: string
+    formatUPC: string
+    formatCODE128: string
+    formatCODE39: string
+    formatQR: string
+    // Status
+    pending: string
+    generated: string
+    printed: string
+    applied: string
+    allStatuses: string
+    // Labels
+    totalLabels: string
+    generatedCount: string
+    printedCount: string
+    labelWidth: string
+    labelHeight: string
+    template: string
+    // Items
+    addProducts: string
+    productName: string
+    barcodeValue: string
+    skuValue: string
+    labelQuantity: string
+    // Scan
+    scanLog: string
+    scanType: string
+    scanSale: string
+    scanStockIn: string
+    scanStockOut: string
+    scanInventory: string
+    scanLookup: string
+    lastScanned: string
+    scannedBy: string
+    // Stats
+    totalBatches: string
+    pendingPrint: string
+    totalScansToday: string
+    productsWithBarcode: string
+    // Actions
+    generateBarcodes: string
+    printLabels: string
+    scanBarcode: string
+    downloadPDF: string
+    previewLabel: string
+    autoGenerate: string
+  }
+
+  // Phase 8 — Dynamic Pricing
+  dynamicPricing: {
+    title: string
+    subtitle: string
+    // Rules
+    rules: string
+    newRule: string
+    editRule: string
+    ruleName: string
+    ruleDescription: string
+    rulePriority: string
+    // Types
+    ruleType: string
+    timeBased: string
+    volumeBased: string
+    customerTier: string
+    bundle: string
+    seasonal: string
+    flashSale: string
+    allTypes: string
+    // Status
+    active: string
+    scheduled: string
+    paused: string
+    expired: string
+    draft: string
+    allStatuses: string
+    // Discount
+    discountType: string
+    percentage: string
+    fixedAmount: string
+    newPrice: string
+    discountValue: string
+    // Scope
+    applyTo: string
+    allProducts: string
+    byCategory: string
+    specificProducts: string
+    categoryFilter: string
+    selectProducts: string
+    // Conditions
+    conditions: string
+    minQuantity: string
+    maxQuantity: string
+    minOrderTotal: string
+    loyaltyTier: string
+    // Schedule
+    schedule: string
+    startDate: string
+    endDate: string
+    timeStart: string
+    timeEnd: string
+    daysOfWeek: string
+    happyHour: string
+    // Bundle
+    bundleProducts: string
+    bundlePrice: string
+    // Stats
+    totalRules: string
+    activeRules: string
+    timesApplied: string
+    totalSaved: string
+    // Actions
+    activate: string
+    pause: string
+    duplicate: string
+    previewImpact: string
+    testRule: string
   }
 }

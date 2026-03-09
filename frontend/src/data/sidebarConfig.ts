@@ -17,6 +17,12 @@ const TRANSFERS: SidebarItemConfig = { section: 'transfers', icon: 'ArrowLeftRig
 const ONLINE_ORDERS: SidebarItemConfig = { section: 'online_orders', icon: 'Globe', i18nKey: 'nav.onlineOrders', pageComponent: 'online_orders', allowedRoles: ['admin', 'manager', 'cashier'] }
 const MAINTENANCE: SidebarItemConfig = { section: 'maintenance', icon: 'Wrench', i18nKey: 'nav.maintenance', pageComponent: 'maintenance', serverOnly: true, allowedRoles: ['admin', 'manager'] }
 
+// ── Phase 8 shared items ─────────────────────────────────────────────────
+const SELF_CHECKOUT: SidebarItemConfig = { section: 'self_checkout', icon: 'Monitor', i18nKey: 'nav.selfCheckout', pageComponent: 'self_checkout', serverOnly: true, allowedRoles: ['admin', 'manager'] }
+const WARRANTY: SidebarItemConfig = { section: 'warranty', icon: 'ShieldCheck', i18nKey: 'nav.warranty', pageComponent: 'warranty', allowedRoles: ['admin', 'manager'] }
+const BARCODE: SidebarItemConfig = { section: 'barcode', icon: 'ScanBarcode', i18nKey: 'nav.barcode', pageComponent: 'barcode', serverOnly: true, allowedRoles: ['admin', 'manager', 'stock'] }
+const DYNAMIC_PRICING: SidebarItemConfig = { section: 'dynamic_pricing', icon: 'TrendingUp', i18nKey: 'nav.dynamicPricing', pageComponent: 'dynamic_pricing', serverOnly: true, allowedRoles: ['admin', 'manager'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -24,21 +30,25 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   NOTIFICATIONS,
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.pos', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'cash_register', icon: 'Banknote', i18nKey: 'nav.cashRegister', pageComponent: 'cash_register', allowedRoles: ['admin', 'manager', 'cashier'] },
+  SELF_CHECKOUT,
   EXPENSES,
   { section: 'products', icon: 'Package', i18nKey: 'nav.products', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   RETURNS,
+  WARRANTY,
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   GIFT_CARDS,
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
   TRANSFERS,
+  BARCODE,
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   { section: 'deliveries', icon: 'Bike', i18nKey: 'nav.deliveries', pageComponent: 'deliveries', allowedRoles: ['admin', 'manager', 'cashier'] },
   ONLINE_ORDERS,
   DOCUMENTS,
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -55,6 +65,7 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   NOTIFICATIONS,
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'cash_register', icon: 'Banknote', i18nKey: 'nav.cashRegister', pageComponent: 'cash_register', allowedRoles: ['admin', 'manager', 'cashier'] },
+  SELF_CHECKOUT,
   EXPENSES,
   { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'kds', icon: 'ChefHat', i18nKey: 'nav.kds', pageComponent: 'kds', allowedRoles: ['admin', 'manager', 'cashier'] },
@@ -66,12 +77,14 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   GIFT_CARDS,
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
   TRANSFERS,
+  BARCODE,
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'deliveries', icon: 'Bike', i18nKey: 'nav.deliveries', pageComponent: 'deliveries', allowedRoles: ['admin', 'manager', 'cashier'] },
   ONLINE_ORDERS,
   { section: 'recipes', icon: 'CookingPot', i18nKey: 'nav.recipes', pageComponent: 'recipes', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DOCUMENTS,
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -100,6 +113,7 @@ const SERVICE_POS: SidebarItemConfig[] = [
   DOCUMENTS,
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -115,6 +129,7 @@ const HOTEL: SidebarItemConfig[] = [
   NOTIFICATIONS,
   { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'cash_register', icon: 'Banknote', i18nKey: 'nav.cashRegister', pageComponent: 'cash_register', allowedRoles: ['admin', 'manager', 'cashier'] },
+  SELF_CHECKOUT,
   EXPENSES,
   { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'reservations', icon: 'CalendarCheck', i18nKey: 'nav.reservations', pageComponent: 'appointments', allowedRoles: ['admin', 'manager', 'cashier'] },
@@ -128,6 +143,7 @@ const HOTEL: SidebarItemConfig[] = [
   ONLINE_ORDERS,
   DOCUMENTS,
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -228,6 +244,7 @@ const WELLNESS: SidebarItemConfig[] = [
   ONLINE_ORDERS,
   DOCUMENTS,
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -248,6 +265,7 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'parts', icon: 'Cog', i18nKey: 'nav.parts', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   RETURNS,
+  WARRANTY,
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   GIFT_CARDS,
@@ -255,6 +273,7 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   TRANSFERS,
+  BARCODE,
   DOCUMENTS,
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   CAMPAIGNS,
@@ -283,6 +302,7 @@ const HAIR_SALON: SidebarItemConfig[] = [
   ONLINE_ORDERS,
   DOCUMENTS,
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  DYNAMIC_PRICING,
   CAMPAIGNS,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },

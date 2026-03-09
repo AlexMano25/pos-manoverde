@@ -112,6 +112,11 @@ export type SidebarSection =
   | 'recipes'          // recipe & production management (food)
   | 'online_orders'    // e-commerce / online ordering
   | 'maintenance'      // equipment & facility maintenance
+  // Phase 8 — self-checkout, warranty, barcode, dynamic pricing
+  | 'self_checkout'    // customer-facing kiosk/self-service
+  | 'warranty'         // warranty & after-sales service (SAV)
+  | 'barcode'          // barcode generation & scanning
+  | 'dynamic_pricing'  // time/volume-based pricing rules
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -156,6 +161,11 @@ export type PageComponent =
   | 'recipes'
   | 'online_orders'
   | 'maintenance'
+  // Phase 8 — self-checkout, warranty, barcode, dynamic pricing
+  | 'self_checkout'
+  | 'warranty'
+  | 'barcode'
+  | 'dynamic_pricing'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -395,7 +405,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task' | 'kiosk_session' | 'warranty_claim' | 'barcode_batch' | 'pricing_rule'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1514,6 +1524,193 @@ export type MaintenanceTask = {
   recurrence?: 'none' | 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
   last_maintenance?: string
   next_maintenance?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Phase 8 — Self-Checkout/Kiosk, Warranty/SAV, Barcode, Dynamic Pricing
+// ---------------------------------------------------------------------------
+
+// Self-Checkout / Kiosk Mode
+export type KioskSessionStatus = 'active' | 'completed' | 'abandoned' | 'cancelled'
+
+export type KioskSession = {
+  id: string
+  store_id: string
+  session_number: string
+  terminal_id: string
+  terminal_name: string
+  customer_name?: string
+  customer_phone?: string
+  items: KioskCartItem[]
+  subtotal: number
+  tax: number
+  discount: number
+  total: number
+  payment_method?: PaymentMethod
+  payment_status: 'pending' | 'paid' | 'failed'
+  status: KioskSessionStatus
+  language: string
+  started_at: string
+  completed_at?: string
+  order_id?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type KioskCartItem = {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit_price: number
+  total: number
+  image_url?: string
+}
+
+export type KioskTerminal = {
+  id: string
+  store_id: string
+  name: string
+  location?: string
+  is_active: boolean
+  theme_color?: string
+  welcome_message?: string
+  allow_cash: boolean
+  allow_card: boolean
+  allow_mobile: boolean
+  idle_timeout_seconds: number
+  created_at: string
+  updated_at: string
+}
+
+// Warranty & After-Sales Service (SAV)
+export type WarrantyStatus = 'active' | 'expired' | 'claimed' | 'voided'
+export type ClaimStatus = 'submitted' | 'under_review' | 'approved' | 'in_repair' | 'repaired' | 'replaced' | 'rejected' | 'closed'
+export type ClaimType = 'repair' | 'replacement' | 'refund' | 'exchange'
+
+export type WarrantyClaim = {
+  id: string
+  store_id: string
+  claim_number: string
+  customer_id?: string
+  customer_name: string
+  customer_phone?: string
+  customer_email?: string
+  product_id?: string
+  product_name: string
+  serial_number?: string
+  purchase_date?: string
+  purchase_order_id?: string
+  warranty_end_date?: string
+  warranty_status: WarrantyStatus
+  claim_type: ClaimType
+  claim_status: ClaimStatus
+  issue_description: string
+  diagnosis?: string
+  resolution?: string
+  repair_cost?: number
+  covered_by_warranty: boolean
+  assigned_to?: string
+  assigned_to_name?: string
+  received_at: string
+  resolved_at?: string
+  estimated_completion?: string
+  replacement_product_id?: string
+  replacement_serial?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Barcode & Scanning
+export type BarcodeFormat = 'EAN13' | 'EAN8' | 'UPC' | 'CODE128' | 'CODE39' | 'QR'
+export type BarcodeBatchStatus = 'pending' | 'generated' | 'printed' | 'applied'
+
+export type BarcodeBatch = {
+  id: string
+  store_id: string
+  batch_number: string
+  name: string
+  format: BarcodeFormat
+  items: BarcodeBatchItem[]
+  total_labels: number
+  generated_count: number
+  printed_count: number
+  status: BarcodeBatchStatus
+  template?: string
+  label_width_mm?: number
+  label_height_mm?: number
+  created_by: string
+  created_by_name: string
+  printed_at?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type BarcodeBatchItem = {
+  product_id: string
+  product_name: string
+  barcode: string
+  sku?: string
+  price: number
+  quantity: number
+}
+
+export type ScanLog = {
+  id: string
+  store_id: string
+  barcode: string
+  product_id?: string
+  product_name?: string
+  scan_type: 'sale' | 'stock_in' | 'stock_out' | 'inventory' | 'lookup'
+  quantity?: number
+  scanned_by: string
+  scanned_by_name: string
+  device_info?: string
+  created_at: string
+}
+
+// Dynamic Pricing Rules
+export type PricingRuleType = 'time_based' | 'volume_based' | 'customer_tier' | 'bundle' | 'seasonal' | 'flash_sale'
+export type PricingRuleStatus = 'active' | 'scheduled' | 'paused' | 'expired' | 'draft'
+export type DiscountType = 'percentage' | 'fixed_amount' | 'new_price'
+
+export type PricingRule = {
+  id: string
+  store_id: string
+  name: string
+  description?: string
+  type: PricingRuleType
+  status: PricingRuleStatus
+  discount_type: DiscountType
+  discount_value: number
+  priority: number
+  apply_to: 'all_products' | 'category' | 'specific_products'
+  category_filter?: string
+  product_ids?: string[]
+  min_quantity?: number
+  max_quantity?: number
+  min_order_total?: number
+  customer_tier?: string
+  start_date: string
+  end_date?: string
+  time_start?: string
+  time_end?: string
+  days_of_week?: number[]
+  bundle_products?: string[]
+  bundle_price?: number
+  times_applied: number
+  total_discount_given: number
+  created_by: string
+  created_by_name: string
   notes?: string
   synced: boolean
   created_at: string
