@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { CartItem, Order, OrderPayment, PaymentMethod, SyncEntry } from '../types'
+import type { CartItem, Order, OrderPayment, OrderStatus, PaymentMethod, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { supabase } from '../services/supabase'
@@ -31,8 +31,14 @@ interface OrderActions {
       promotion_names?: string[]
       payments?: OrderPayment[]
       tip_amount?: number
+      status?: OrderStatus
     }
   ) => Promise<Order>
+  updateOrderStatus: (
+    orderId: string,
+    status: OrderStatus,
+    paymentMethod?: PaymentMethod
+  ) => Promise<void>
   getOrdersByDate: (date: string) => Order[]
   getTodayRevenue: () => number
   clearOrders: (
@@ -108,6 +114,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         promotion_names?: string[]
         payments?: OrderPayment[]
         tip_amount?: number
+        status?: OrderStatus
       }
     ): Promise<Order> => {
       const deviceId = getDeviceId()
@@ -140,7 +147,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         tax,
         total: finalTotal,
         payment_method: paymentMethod,
-        status: 'paid',
+        status: options?.status || 'paid',
         synced: false,
         customer_id: options?.customer_id,
         customer_name: options?.customer_name,
@@ -187,8 +194,8 @@ export const useOrderStore = create<OrderState & OrderActions>()(
           orders: [order, ...state.orders],
         }))
 
-        // Deduct credit for pay-as-you-grow billing (non-blocking)
-        if (supabase) {
+        // Deduct credit for pay-as-you-grow billing (non-blocking, skip for pending orders)
+        if (supabase && order.status === 'paid') {
           const appState = useAppStore.getState()
           const orgId = appState.currentStore?.organization_id
           if (orgId) {
@@ -210,6 +217,59 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         return order
       } catch (error) {
         console.error('[orderStore] Failed to create order:', error)
+        throw error
+      }
+    },
+
+    updateOrderStatus: async (
+      orderId: string,
+      status: OrderStatus,
+      paymentMethod?: PaymentMethod
+    ): Promise<void> => {
+      const now = new Date().toISOString()
+
+      try {
+        // Update in IndexedDB
+        const updates: Partial<Order> = {
+          status,
+          updated_at: now,
+        }
+        if (paymentMethod) updates.payment_method = paymentMethod
+
+        await db.orders.update(orderId, updates)
+
+        // Add to sync queue
+        const order = await db.orders.get(orderId)
+        if (order) {
+          await addToSyncQueue('order', orderId, 'update', order, order.store_id)
+
+          // Deduct billing credit when moving to 'paid'
+          if (status === 'paid' && supabase) {
+            const appState = useAppStore.getState()
+            const orgId = appState.currentStore?.organization_id
+            if (orgId) {
+              supabase
+                .rpc('deduct_ticket_credit', {
+                  p_organization_id: orgId,
+                  p_store_id: appState.currentStore?.id,
+                  p_order_id: orderId,
+                  p_activity: appState.activity || 'unknown',
+                })
+                .then(({ error }) => {
+                  if (error) console.error('[orderStore] Credit deduction failed:', error)
+                })
+            }
+          }
+        }
+
+        // Update in-memory state
+        set((state) => ({
+          orders: state.orders.map(o =>
+            o.id === orderId ? { ...o, ...updates } : o
+          ),
+        }))
+      } catch (error) {
+        console.error('[orderStore] Failed to update order status:', error)
         throw error
       }
     },

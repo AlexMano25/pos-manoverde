@@ -236,6 +236,29 @@ export type TranslationKeys = {
     stocktake: string
     tax: string
     feedback: string
+    serverOrders: string
+  }
+
+  // Server order-taking
+  serverOrder: {
+    title: string
+    byTable: string
+    byCustomer: string
+    customerName: string
+    enterCustomerName: string
+    startOrder: string
+    sendOrder: string
+    payNow: string
+    pendingOrders: string
+    noPendingOrders: string
+    orderSent: string
+    orderSentDesc: string
+    orderPaid: string
+    quickOrder: string
+    markAsPaid: string
+    itemsLabel: string
+    pendingLabel: string
+    tableLabel: string
   }
 
   // Dashboard
@@ -1096,6 +1119,8 @@ export type TranslationKeys = {
     paypalVisa: string
     orangeMoney: string
     mtnMomo: string
+    mtnConfirmOnPhone: string
+    mtnPaymentDesc: string
   }
 
   // Legal documents

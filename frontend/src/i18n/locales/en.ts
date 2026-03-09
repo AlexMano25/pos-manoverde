@@ -234,6 +234,28 @@ export const en: TranslationKeys = {
     stocktake: 'Stocktake',
     tax: 'Tax',
     feedback: 'Feedback',
+    serverOrders: 'Order Taking',
+  },
+
+  serverOrder: {
+    title: 'Order Taking',
+    byTable: 'By Table',
+    byCustomer: 'By Customer',
+    customerName: 'Customer Name',
+    enterCustomerName: 'Enter customer name...',
+    startOrder: 'Start Order',
+    sendOrder: 'Send',
+    payNow: 'Pay',
+    pendingOrders: 'Pending Orders',
+    noPendingOrders: 'No pending orders',
+    orderSent: 'Order Sent!',
+    orderSentDesc: 'The order has been transmitted.',
+    orderPaid: 'Payment Confirmed!',
+    quickOrder: 'Quick Order',
+    markAsPaid: 'Collect Payment',
+    itemsLabel: 'items',
+    pendingLabel: 'Pending',
+    tableLabel: 'Table',
   },
 
   // Dashboard
@@ -1073,6 +1095,8 @@ export const en: TranslationKeys = {
     paypalVisa: 'PayPal / Visa',
     orangeMoney: 'Orange Money',
     mtnMomo: 'MTN MoMo',
+    mtnConfirmOnPhone: 'Enter your MTN MoMo PIN to confirm',
+    mtnPaymentDesc: 'Secure payment via MTN MoMo. A USSD prompt will be sent to your phone.',
   },
   legal: {
     lastUpdated: 'Last updated',

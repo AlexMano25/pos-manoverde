@@ -3,13 +3,14 @@ import { CreditCard, Smartphone, Wallet } from 'lucide-react'
 import { useLanguageStore } from '../../stores/languageStore'
 import PayPalButton from './PayPalButton'
 import OrangeMoneyForm from './OrangeMoneyForm'
+import MtnMomoForm from './MtnMomoForm'
 import type { PayPalResult, PaymentGateway, RechargePackage } from '../../types'
 
 // ---------------------------------------------------------------------------
 // Unified payment method selector with 3 tabs:
-// 1. PayPal / Visa  (international)
+// 1. PayPal / Visa  (international) — PayPal account: direction@manovende.com
 // 2. Orange Money   (Cameroon / Central Africa)
-// 3. MTN MoMo       (Cameroon / Central Africa) — Phase 2 placeholder
+// 3. MTN MoMo       (Cameroon / Central Africa) — Y-Note/PayNote integration
 //
 // Used in: BillingPage (recharge modal) and RegistrationPage (step 4)
 // ---------------------------------------------------------------------------
@@ -27,6 +28,7 @@ interface PaymentMethodSelectorProps {
   // Callbacks
   onPayPalSuccess: (result: PayPalResult) => void
   onOrangeMoneySuccess: (transactionId: string) => void
+  onMtnSuccess?: (transactionId: string) => void
   onError: (error: string) => void
 
   // Optional: pre-selected gateway
@@ -48,6 +50,7 @@ export default function PaymentMethodSelector({
   paypalPlanId,
   onPayPalSuccess,
   onOrangeMoneySuccess,
+  onMtnSuccess,
   onError,
   defaultGateway = 'paypal',
 }: PaymentMethodSelectorProps) {
@@ -60,7 +63,7 @@ export default function PaymentMethodSelector({
   const tabs: { id: PaymentGateway; label: string; icon: React.ReactNode; enabled: boolean }[] = [
     { id: 'paypal', label: billing.paypalVisa, icon: <CreditCard size={16} />, enabled: true },
     { id: 'orange_money', label: billing.orangeMoney, icon: <Smartphone size={16} />, enabled: true },
-    { id: 'mtn_momo', label: billing.mtnMomo, icon: <Wallet size={16} />, enabled: false }, // Phase 2
+    { id: 'mtn_momo', label: billing.mtnMomo, icon: <Wallet size={16} />, enabled: true },
   ]
 
   // ── Styles ─────────────────────────────────────────────────────────────
@@ -188,11 +191,23 @@ export default function PaymentMethodSelector({
           </div>
         )}
 
-        {/* ── MTN MoMo (Phase 2) ──────────────────────────────── */}
+        {/* ── MTN MoMo (Y-Note / PayNote) ────────────────────── */}
         {activeTab === 'mtn_momo' && (
-          <div style={comingSoonStyle}>
-            <Wallet size={24} color="#cbd5e1" />
-            <span>{t.common.comingSoon}</span>
+          <div>
+            {selectedPackage || (context === 'subscription') ? (
+              <MtnMomoForm
+                amount={selectedPackage?.amountXAF || 0}
+                amountUSD={selectedPackage?.amountUSD || 0}
+                description={context === 'subscription' ? 'POS Subscription' : `Credit recharge ${selectedPackage?.id || ''}`}
+                onSuccess={onMtnSuccess || onOrangeMoneySuccess}
+                onError={onError}
+              />
+            ) : (
+              <div style={comingSoonStyle}>
+                <Wallet size={24} color="#cbd5e1" />
+                <span>{billing.selectAmount}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

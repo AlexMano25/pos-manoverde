@@ -58,6 +58,7 @@ import StocktakePage from './pages/StocktakePage'
 import TaxPage from './pages/TaxPage'
 import FeedbackPage from './pages/FeedbackPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
+import ServerOrderPage from './pages/ServerOrderPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
@@ -120,11 +121,9 @@ function AppContent() {
 
   const renderPage = () => {
     if (mode === 'client') {
-      // For restaurant/bar/bakery/hotel, use lightweight waiter interface
-      if (TABLE_ACTIVITIES.includes(currentActivity)) {
-        return <WaiterPOSPage />
-      }
-      return <POSPage />
+      // Cross-functional server order-taking interface
+      // Supports tables (for restaurant/bar/hotel) and customer name (all activities)
+      return <ServerOrderPage />
     }
 
     switch (pageKey) {
@@ -170,6 +169,7 @@ function AppContent() {
       case 'stocktake':        return <StocktakePage />
       case 'tax':              return <TaxPage />
       case 'feedback':         return <FeedbackPage />
+      case 'server_orders':    return <ServerOrderPage />
       default:                 return <DashboardPage />
     }
   }
