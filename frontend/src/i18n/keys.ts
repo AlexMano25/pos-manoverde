@@ -1211,6 +1211,36 @@ export type TranslationKeys = {
     addNote: string
     allCustomers: string
     deleteConfirm: string
+    // Analytics (Phase 12)
+    analytics: string
+    spendingHistory: string
+    favoriteProducts: string
+    churnRisk: string
+    churnLow: string
+    churnMedium: string
+    churnHigh: string
+    churnCritical: string
+    daysSinceVisit: string
+    avgBetweenVisits: string
+    days: string
+    clv: string
+    avgOrder: string
+    frequency: string
+    perMonth: string
+    segment: string
+    rfmOverview: string
+    champion: string
+    loyal: string
+    potential_loyal: string
+    new_customer: string
+    promising: string
+    needs_attention: string
+    about_to_sleep: string
+    at_risk: string
+    lost: string
+    qty: string
+    noFavorites: string
+    overdue: string
   }
 
   // Promotions

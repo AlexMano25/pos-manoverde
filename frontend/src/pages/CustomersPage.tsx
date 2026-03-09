@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import Modal from '../components/common/Modal'
+import MiniLineChart from '../components/charts/MiniLineChart'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useCustomerStore } from '../stores/customerStore'
@@ -7,6 +8,16 @@ import { useOrderStore } from '../stores/orderStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
 import { exportCustomersCSV } from '../utils/csvExport'
+import {
+  computeRFM,
+  computeRFMDistribution,
+  computeCLV,
+  computeChurnRisk,
+  computeSpendingHistory,
+  computeFavoriteProducts,
+  getSegmentMeta,
+} from '../utils/customerAnalytics'
+import type { RFMSegment } from '../utils/customerAnalytics'
 import type { Customer } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -129,6 +140,36 @@ export default function CustomersPage() {
     loading: tCommon.loading || 'Loading...',
     add: tCommon.add || 'Add',
     error: tCommon.error || 'Error',
+    // Analytics (Phase 12)
+    analytics: tc.analytics || 'Analytics',
+    spendingHistory: tc.spendingHistory || 'Spending History',
+    favoriteProducts: tc.favoriteProducts || 'Favorite Products',
+    churnRisk: tc.churnRisk || 'Churn Risk',
+    churnLow: tc.churnLow || 'Low',
+    churnMedium: tc.churnMedium || 'Medium',
+    churnHigh: tc.churnHigh || 'High',
+    churnCritical: tc.churnCritical || 'Critical',
+    daysSinceVisit: tc.daysSinceVisit || 'days since last visit',
+    avgBetweenVisits: tc.avgBetweenVisits || 'Avg between visits',
+    days: tc.days || 'days',
+    clv: tc.clv || 'Lifetime Value',
+    avgOrder: tc.avgOrder || 'Avg Order',
+    frequency: tc.frequency || 'Frequency',
+    perMonth: tc.perMonth || '/month',
+    segment: tc.segment || 'Segment',
+    rfmOverview: tc.rfmOverview || 'Customer Segments',
+    champion: tc.champion || 'Champions',
+    loyal: tc.loyal || 'Loyal',
+    potential_loyal: tc.potential_loyal || 'Potential Loyal',
+    new_customer: tc.new_customer || 'New Customers',
+    promising: tc.promising || 'Promising',
+    needs_attention: tc.needs_attention || 'Need Attention',
+    about_to_sleep: tc.about_to_sleep || 'About to Sleep',
+    at_risk: tc.at_risk || 'At Risk',
+    lost: tc.lost || 'Lost',
+    qty: tc.qty || 'qty',
+    noFavorites: tc.noFavorites || 'Not enough purchase data',
+    overdue: tc.overdue || 'Overdue',
   }
 
   // ── Load customers on mount ─────────────────────────────────────────────
@@ -158,6 +199,34 @@ export default function CustomersPage() {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
   }, [orders, selectedCustomer])
+
+  // ── RFM analysis (whole customer base) ────────────────────────────────
+  const rfmScores = useMemo(
+    () => computeRFM(customers, orders),
+    [customers, orders]
+  )
+
+  const rfmDistribution = useMemo(
+    () => computeRFMDistribution(rfmScores),
+    [rfmScores]
+  )
+
+  // ── Selected customer analytics ───────────────────────────────────────
+  const selectedAnalytics = useMemo(() => {
+    if (!selectedCustomer) return null
+    return {
+      clv: computeCLV(selectedCustomer, orders),
+      churn: computeChurnRisk(selectedCustomer, orders),
+      spending: computeSpendingHistory(selectedCustomer.id, orders, 6),
+      favorites: computeFavoriteProducts(selectedCustomer.id, orders, 5),
+      rfm: rfmScores.get(selectedCustomer.id) || null,
+    }
+  }, [selectedCustomer, orders, rfmScores])
+
+  // RFM segment label helper
+  const segmentLabel = (seg: RFMSegment): string => {
+    return (label as Record<string, string>)[seg] || getSegmentMeta(seg).label
+  }
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
@@ -657,6 +726,72 @@ export default function CustomersPage() {
         />
       </div>
 
+      {/* RFM Segment Distribution */}
+      {customers.length >= 3 && rfmDistribution.length > 0 && (
+        <div style={{
+          background: C.card,
+          borderRadius: 16,
+          border: `1px solid ${C.borderLight}`,
+          padding: rv(14, 18, 20),
+          marginBottom: 20,
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+        }}>
+          <div style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: C.text,
+            marginBottom: 14,
+          }}>
+            {label.rfmOverview}
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+          }}>
+            {rfmDistribution.map((d) => (
+              <div key={d.segment} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '6px 12px',
+                borderRadius: 10,
+                background: d.color + '10',
+                border: `1px solid ${d.color}25`,
+              }}>
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: d.color,
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: d.color,
+                }}>
+                  {segmentLabel(d.segment)}
+                </span>
+                <span style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: C.text,
+                }}>
+                  {d.count}
+                </span>
+                <span style={{
+                  fontSize: 11,
+                  color: C.textSecondary,
+                }}>
+                  ({d.percentage.toFixed(0)}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Customer Grid */}
       {filteredCustomers.length === 0 ? (
         <div style={emptyStateStyle}>
@@ -695,7 +830,7 @@ export default function CustomersPage() {
                   '0 1px 4px rgba(0,0,0,0.04)'
               }}
             >
-              {/* Name & VIP */}
+              {/* Name & VIP & RFM badge */}
               <div style={cardNameStyle}>
                 <span>{customer.name}</span>
                 {isVip(customer) && (
@@ -703,6 +838,24 @@ export default function CustomersPage() {
                     <span>&#11088;</span> {label.vip}
                   </span>
                 )}
+                {(() => {
+                  const rfm = rfmScores.get(customer.id)
+                  if (!rfm) return null
+                  const meta = getSegmentMeta(rfm.segment)
+                  return (
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: meta.color,
+                      backgroundColor: meta.color + '15',
+                      padding: '2px 7px',
+                      borderRadius: 8,
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {segmentLabel(rfm.segment)}
+                    </span>
+                  )
+                })()}
               </div>
 
               {/* Contact Info */}
@@ -949,6 +1102,261 @@ export default function CustomersPage() {
                 <div style={detailStatLabelStyle}>{label.memberSince}</div>
               </div>
             </div>
+
+            {/* ── Analytics Section ─────────────────────────────────── */}
+            {selectedAnalytics && (
+              <div style={{ marginBottom: 20 }}>
+                {/* Row: RFM segment + Churn Risk + CLV */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                  gap: 10,
+                  marginBottom: 16,
+                }}>
+                  {/* RFM Segment */}
+                  {selectedAnalytics.rfm && (() => {
+                    const meta = getSegmentMeta(selectedAnalytics.rfm!.segment)
+                    return (
+                      <div style={{
+                        padding: 14,
+                        borderRadius: 12,
+                        background: meta.color + '08',
+                        border: `1px solid ${meta.color}25`,
+                        textAlign: 'center',
+                      }}>
+                        <div style={{
+                          fontSize: 11,
+                          fontWeight: 500,
+                          color: C.textSecondary,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          marginBottom: 6,
+                        }}>{label.segment}</div>
+                        <div style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: meta.color,
+                        }}>
+                          {segmentLabel(selectedAnalytics.rfm!.segment)}
+                        </div>
+                        <div style={{
+                          fontSize: 11,
+                          color: C.textSecondary,
+                          marginTop: 4,
+                        }}>
+                          R:{selectedAnalytics.rfm!.recency} F:{selectedAnalytics.rfm!.frequency} M:{selectedAnalytics.rfm!.monetary}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Churn Risk */}
+                  <div style={{
+                    padding: 14,
+                    borderRadius: 12,
+                    background: selectedAnalytics.churn.risk === 'critical' ? '#fef2f2'
+                      : selectedAnalytics.churn.risk === 'high' ? '#fff7ed'
+                      : selectedAnalytics.churn.risk === 'medium' ? '#fffbeb'
+                      : '#f0fdf4',
+                    border: `1px solid ${
+                      selectedAnalytics.churn.risk === 'critical' ? '#fecaca'
+                      : selectedAnalytics.churn.risk === 'high' ? '#fed7aa'
+                      : selectedAnalytics.churn.risk === 'medium' ? '#fde68a'
+                      : '#bbf7d0'
+                    }`,
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: C.textSecondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      marginBottom: 6,
+                    }}>{label.churnRisk}</div>
+                    <div style={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: selectedAnalytics.churn.risk === 'critical' ? '#dc2626'
+                        : selectedAnalytics.churn.risk === 'high' ? '#ea580c'
+                        : selectedAnalytics.churn.risk === 'medium' ? '#d97706'
+                        : '#16a34a',
+                    }}>
+                      {selectedAnalytics.churn.risk === 'critical' ? label.churnCritical
+                        : selectedAnalytics.churn.risk === 'high' ? label.churnHigh
+                        : selectedAnalytics.churn.risk === 'medium' ? label.churnMedium
+                        : label.churnLow}
+                      {selectedAnalytics.churn.isOverdue && (
+                        <span style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          marginLeft: 6,
+                          padding: '1px 6px',
+                          borderRadius: 6,
+                          background: '#dc262615',
+                          color: '#dc2626',
+                        }}>
+                          {label.overdue}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      color: C.textSecondary,
+                      marginTop: 4,
+                    }}>
+                      {selectedAnalytics.churn.daysSinceLastVisit} {label.daysSinceVisit}
+                    </div>
+                  </div>
+
+                  {/* CLV */}
+                  <div style={{
+                    padding: 14,
+                    borderRadius: 12,
+                    background: '#f0f9ff',
+                    border: '1px solid #bae6fd',
+                    textAlign: 'center',
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: C.textSecondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      marginBottom: 6,
+                    }}>{label.clv}</div>
+                    <div style={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: '#0369a1',
+                    }}>
+                      {formatCurrency(selectedAnalytics.clv.estimatedCLV, currency)}
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      color: C.textSecondary,
+                      marginTop: 4,
+                    }}>
+                      {label.avgOrder}: {formatCurrency(selectedAnalytics.clv.avgOrderValue, currency)} &middot; {selectedAnalytics.clv.purchaseFrequency.toFixed(1)}{label.perMonth}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Spending History Chart */}
+                {selectedAnalytics.spending.some(s => s.revenue > 0) && (
+                  <div style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    marginBottom: 14,
+                  }}>
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: C.text,
+                      marginBottom: 10,
+                    }}>
+                      {label.spendingHistory}
+                    </div>
+                    <MiniLineChart
+                      data={selectedAnalytics.spending.map(s => ({
+                        label: s.label,
+                        value: s.revenue,
+                      }))}
+                      height={140}
+                      color="#22c55e"
+                      currencyCode={currency}
+                      isCurrency
+                    />
+                  </div>
+                )}
+
+                {/* Favorite Products */}
+                {selectedAnalytics.favorites.length > 0 && (
+                  <div style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    marginBottom: 14,
+                  }}>
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: C.text,
+                      marginBottom: 10,
+                    }}>
+                      {label.favoriteProducts}
+                    </div>
+                    {selectedAnalytics.favorites.map((fav, i) => {
+                      const maxQty = selectedAnalytics.favorites[0]?.totalQty || 1
+                      const pct = (fav.totalQty / maxQty) * 100
+                      return (
+                        <div key={fav.productId} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          marginBottom: 8,
+                        }}>
+                          <span style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: C.textSecondary,
+                            width: 18,
+                            textAlign: 'right',
+                            flexShrink: 0,
+                          }}>
+                            #{i + 1}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              marginBottom: 3,
+                            }}>
+                              <span style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: C.text,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {fav.name}
+                              </span>
+                              <span style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: C.primary,
+                                flexShrink: 0,
+                                marginLeft: 8,
+                              }}>
+                                {fav.totalQty} {label.qty} &middot; {formatCurrency(fav.totalSpent, currency)}
+                              </span>
+                            </div>
+                            <div style={{
+                              height: 4,
+                              borderRadius: 2,
+                              background: '#e2e8f0',
+                              overflow: 'hidden',
+                            }}>
+                              <div style={{
+                                height: '100%',
+                                width: `${pct}%`,
+                                borderRadius: 2,
+                                background: C.primary,
+                                transition: 'width 0.3s',
+                              }} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Tags */}
             {selectedCustomer.tags && selectedCustomer.tags.length > 0 && (
