@@ -6,11 +6,22 @@ import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
+import MiniBarChart from '../components/charts/MiniBarChart'
+import MiniDonutChart from '../components/charts/MiniDonutChart'
+import InventoryValuationReport from '../components/reports/InventoryValuationReport'
+import TaxSummaryReport from '../components/reports/TaxSummaryReport'
+import CategoryAnalysis from '../components/reports/CategoryAnalysis'
+import {
+  computeInventoryValuation,
+  computeTaxSummary,
+  computeCategoryRevenue,
+} from '../utils/reportEngine'
 import type { Order, PaymentMethod } from '../types'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type PeriodKey = 'today' | 'week' | 'month' | 'custom'
+type ReportTab = 'sales' | 'inventory' | 'tax' | 'categories'
 
 interface TopProduct {
   product_id: string
@@ -125,10 +136,11 @@ export default function ReportsPage() {
   const currencyCode = currentStore?.currency || 'XAF'
   const isAdmin = user?.role === 'admin'
 
-  // ── Period state ───────────────────────────────────────────────────────
+  // ── Period & tab state ─────────────────────────────────────────────────
   const [period, setPeriod] = useState<PeriodKey>('today')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
+  const [activeTab, setActiveTab] = useState<ReportTab>('sales')
 
   // Translation helpers with fallbacks
   const tr = useMemo(() => {
@@ -159,6 +171,36 @@ export default function ReportsPage() {
       from: r?.from || 'From',
       to: r?.to || 'To',
       vsLastPeriod: r?.vsLastPeriod || 'vs last period',
+      // Tab names
+      salesTab: r?.salesTab || 'Sales',
+      inventoryTab: r?.inventoryTab || 'Inventory',
+      taxTab: r?.taxTab || 'Taxes',
+      categoryTab: r?.categoryTab || 'Categories',
+      // Inventory report labels
+      totalAtCost: r?.totalAtCost || 'Value at Cost',
+      totalAtPrice: r?.totalAtPrice || 'Value at Price',
+      potentialMargin: r?.potentialMargin || 'Potential Margin',
+      // Tax report labels
+      grossRevenue: r?.grossRevenue || 'Gross Revenue',
+      netRevenue: r?.netRevenue || 'Net Revenue',
+      taxCollected: r?.taxCollected || 'Tax Collected',
+      taxRate: r?.taxRate || 'Tax Rate',
+      taxableAmount: r?.taxableAmount || 'Taxable Amount',
+      taxAmount: r?.taxAmount || 'Tax Amount',
+      // Category report labels
+      unitsSold: r?.unitsSold || 'Units Sold',
+      revenueShare: r?.revenueShare || 'Revenue Share',
+      avgPrice: r?.avgPrice || 'Avg Price',
+      // Common report labels
+      costValue: r?.costValue || 'Cost Value',
+      retailValue: r?.retailValue || 'Retail Value',
+      margin: r?.margin || 'Margin',
+      category: r?.category || 'Category',
+      products: r?.products || 'Products',
+      units: r?.units || 'Units',
+      orders: r?.orders || 'Orders',
+      method: r?.method || 'Method',
+      totalLabel: r?.totalLabel || 'Total',
     }
   }, [t])
 
@@ -169,6 +211,9 @@ export default function ReportsPage() {
   // ── Filtered orders ────────────────────────────────────────────────────
   const filteredOrders = useMemo(() => filterOrders(orders, storeId, from, to), [orders, storeId, from, to])
   const prevOrders = useMemo(() => filterOrders(orders, storeId, prevFrom, prevTo), [orders, storeId, prevFrom, prevTo])
+
+  // Store products filtered
+  const storeProducts = useMemo(() => products.filter(p => p.store_id === storeId), [products, storeId])
 
   // ── Stat computations ─────────────────────────────────────────────────
 
@@ -215,7 +260,6 @@ export default function ReportsPage() {
 
   const chartBars = useMemo(() => {
     if (period === 'today') {
-      // 24-hour buckets
       const buckets: { label: string; value: number }[] = []
       for (let h = 0; h < 24; h++) {
         const label = `${h.toString().padStart(2, '0')}h`
@@ -227,7 +271,6 @@ export default function ReportsPage() {
       return buckets
     }
 
-    // Day buckets
     const buckets: { label: string; value: number }[] = []
     const cursor = new Date(from)
     while (cursor < to) {
@@ -248,8 +291,6 @@ export default function ReportsPage() {
     }
     return buckets
   }, [filteredOrders, period, from, to])
-
-  const chartMax = useMemo(() => Math.max(...chartBars.map((b) => b.value), 1), [chartBars])
 
   // ── Top products ──────────────────────────────────────────────────────
 
@@ -296,19 +337,6 @@ export default function ReportsPage() {
     }))
   }, [filteredOrders])
 
-  // Build conic-gradient for donut
-  const donutGradient = useMemo(() => {
-    if (paymentBreakdown.length === 0) return 'conic-gradient(#e2e8f0 0deg 360deg)'
-    let cumDeg = 0
-    const stops: string[] = []
-    for (const entry of paymentBreakdown) {
-      const deg = (entry.percentage / 100) * 360
-      stops.push(`${entry.color} ${cumDeg}deg ${cumDeg + deg}deg`)
-      cumDeg += deg
-    }
-    return `conic-gradient(${stops.join(', ')})`
-  }, [paymentBreakdown])
-
   // ── Employee performance (admin only) ─────────────────────────────────
 
   const employeePerf = useMemo((): EmployeePerf[] => {
@@ -322,21 +350,18 @@ export default function ReportsPage() {
       } else {
         map.set(order.user_id, {
           user_id: order.user_id,
-          name: order.user_id, // fallback
+          name: order.user_id,
           transactions: 1,
           revenue: order.total,
           avgTicket: 0,
         })
       }
     }
-    // Try to resolve names from orders (customer_name fallback) or just use user_id
     const result = Array.from(map.values())
     for (const emp of result) {
       emp.avgTicket = emp.transactions > 0 ? emp.revenue / emp.transactions : 0
-      // Attempt to find a readable name
       const sampleOrder = filteredOrders.find((o) => o.user_id === emp.user_id)
       if (sampleOrder) {
-        // Use user_id short form if we don't have names
         emp.name = emp.user_id.length > 12 ? emp.user_id.slice(0, 8) + '...' : emp.user_id
       }
     }
@@ -348,19 +373,38 @@ export default function ReportsPage() {
     [employeePerf]
   )
 
+  // ── Report data for other tabs ────────────────────────────────────────
+
+  const inventoryData = useMemo(
+    () => computeInventoryValuation(storeProducts),
+    [storeProducts]
+  )
+
+  const storeTaxRate = currentStore?.tax_rate ?? 0
+  const taxData = useMemo(
+    () => computeTaxSummary(filteredOrders, storeTaxRate),
+    [filteredOrders, storeTaxRate]
+  )
+
+  const categoryData = useMemo(
+    () => computeCategoryRevenue(filteredOrders, products),
+    [filteredOrders, products]
+  )
+
   // ── CSV Export ─────────────────────────────────────────────────────────
 
   const handleExportCSV = useCallback(() => {
+    const BOM = '\uFEFF'
     const headers = ['Date', 'Order ID', 'Items', 'Total', 'Payment Method', 'Status']
     const rows = filteredOrders.map((o) => [
       o.created_at.slice(0, 10),
-      o.id,
+      o.receipt_number || o.id,
       o.items.map((i) => `${i.name} x${i.qty}`).join('; '),
       o.total.toString(),
       o.payment_method,
       o.status,
     ])
-    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(',')).join('\n')
+    const csv = BOM + [headers, ...rows].map((r) => r.map((c) => `"${c}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -370,10 +414,9 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url)
   }, [filteredOrders, period])
 
-  // ── PDF Export (simple) ───────────────────────────────────────────────
+  // ── PDF Export ─────────────────────────────────────────────────────────
 
   const handleExportPDF = useCallback(() => {
-    // Simple text-based printable report
     const w = window.open('', '_blank')
     if (!w) return
     const html = `
@@ -440,7 +483,7 @@ export default function ReportsPage() {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: '12px',
-      marginBottom: '24px',
+      marginBottom: '20px',
     } as React.CSSProperties,
     title: {
       fontSize: rv('22px', '26px', '30px'),
@@ -482,6 +525,31 @@ export default function ReportsPage() {
         gap: '6px',
         boxShadow: '0 2px 6px rgba(0,0,0,0.12)',
         transition: 'all 0.2s',
+      }) as React.CSSProperties,
+    tabBar: {
+      display: 'flex',
+      gap: '4px',
+      marginBottom: '20px',
+      background: '#ffffff',
+      borderRadius: '12px',
+      padding: '4px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      overflowX: 'auto' as const,
+    } as React.CSSProperties,
+    tabBtn: (active: boolean) =>
+      ({
+        padding: '10px 20px',
+        borderRadius: '10px',
+        border: 'none',
+        fontSize: '13px',
+        fontWeight: 600,
+        cursor: 'pointer',
+        background: active ? '#1e293b' : 'transparent',
+        color: active ? '#ffffff' : '#64748b',
+        transition: 'all 0.2s',
+        whiteSpace: 'nowrap' as const,
+        flex: isMobile ? 1 : undefined,
+        textAlign: 'center' as const,
       }) as React.CSSProperties,
     statsGrid: {
       display: 'grid',
@@ -579,176 +647,25 @@ export default function ReportsPage() {
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────
+  // ── Tab content renderers ─────────────────────────────────────────────
 
-  return (
-    <div style={S.container}>
-      {/* Header */}
-      <div style={S.header}>
-        <h1 style={S.title}>{tr.title}</h1>
-
-        <div style={S.periodBar}>
-          {(['today', 'week', 'month', 'custom'] as PeriodKey[]).map((p) => (
-            <button
-              key={p}
-              style={S.periodBtn(period === p)}
-              onClick={() => setPeriod(p)}
-            >
-              {p === 'today'
-                ? tr.today
-                : p === 'week'
-                  ? tr.thisWeek
-                  : p === 'month'
-                    ? tr.thisMonth
-                    : tr.custom}
-            </button>
-          ))}
-
-          {period === 'custom' && (
-            <div style={S.customDates}>
-              <input
-                type="date"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                style={S.dateInput}
-              />
-              <span style={{ color: '#64748b', fontSize: '13px' }}>{tr.to}</span>
-              <input
-                type="date"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-                style={S.dateInput}
-              />
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button style={S.exportBtn('#3b82f6')} onClick={handleExportPDF}>
-            <span role="img" aria-label="pdf">
-              \ud83d\udcc4
-            </span>{' '}
-            {tr.exportPDF}
-          </button>
-          <button style={S.exportBtn('#16a34a')} onClick={handleExportCSV}>
-            <span role="img" aria-label="csv">
-              \ud83d\udcca
-            </span>{' '}
-            {tr.exportCSV}
-          </button>
-        </div>
-      </div>
-
-      {/* Stat Cards */}
-      <div style={S.statsGrid}>
-        <StatCardLocal
-          label={tr.totalRevenue}
-          value={formatCurrency(totalRevenue, currencyCode)}
-          gradient="linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
-          comparison={revComp}
-        />
-        <StatCardLocal
-          label={tr.transactions}
-          value={txCount.toString()}
-          gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
-          comparison={txComp}
-        />
-        <StatCardLocal
-          label={tr.averageTicket}
-          value={formatCurrency(avgTicket, currencyCode)}
-          gradient="linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)"
-          comparison={avgComp}
-        />
-        <StatCardLocal
-          label={tr.grossMargin}
-          value={`${grossMarginData.margin.toFixed(1)}%`}
-          gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-          comparison={marginComp}
-        />
-      </div>
-
-      {/* Revenue Chart */}
+  const renderSalesTab = () => (
+    <>
+      {/* Revenue Chart (SVG) */}
       <div style={S.card}>
         <h2 style={S.cardTitle}>{tr.revenueChart}</h2>
         {filteredOrders.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              padding: '40px',
-              color: '#94a3b8',
-              fontSize: '14px',
-            }}
-          >
+          <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8', fontSize: '14px' }}>
             {tr.noData}
           </div>
         ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'flex-end',
-              gap: isMobile ? '2px' : '6px',
-              height: rv('160px', '200px', '240px'),
-              padding: '0 4px',
-              overflowX: chartBars.length > 15 ? 'auto' : 'visible',
-            }}
-          >
-            {chartBars.map((bar, idx) => {
-              const heightPct = chartMax > 0 ? (bar.value / chartMax) * 100 : 0
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    flex: chartBars.length <= 15 ? 1 : 'none',
-                    minWidth: chartBars.length > 15 ? '28px' : undefined,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    height: '100%',
-                    justifyContent: 'flex-end',
-                  }}
-                >
-                  {/* Tooltip value on hover */}
-                  <div
-                    style={{
-                      fontSize: '10px',
-                      color: '#64748b',
-                      fontWeight: 600,
-                      marginBottom: '4px',
-                      whiteSpace: 'nowrap',
-                      opacity: bar.value > 0 ? 1 : 0,
-                    }}
-                  >
-                    {formatCurrency(bar.value, currencyCode)}
-                  </div>
-                  {/* Bar */}
-                  <div
-                    style={{
-                      width: '100%',
-                      maxWidth: '48px',
-                      height: `${Math.max(heightPct, bar.value > 0 ? 3 : 0)}%`,
-                      background: 'linear-gradient(180deg, #22c55e 0%, #10b981 100%)',
-                      borderRadius: '6px 6px 0 0',
-                      transition: 'height 0.4s ease',
-                      minHeight: bar.value > 0 ? '4px' : '0px',
-                    }}
-                    title={`${bar.label}: ${formatCurrency(bar.value, currencyCode)}`}
-                  />
-                  {/* X-axis label */}
-                  <div
-                    style={{
-                      fontSize: rv('9px', '10px', '11px'),
-                      color: '#94a3b8',
-                      marginTop: '6px',
-                      fontWeight: 500,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {bar.label}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <MiniBarChart
+            data={chartBars}
+            height={220}
+            color="#22c55e"
+            currencyCode={currencyCode}
+            isCurrency
+          />
         )}
       </div>
 
@@ -770,13 +687,7 @@ export default function ReportsPage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '13px',
-                }}
-              >
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr>
                     {[tr.rank, tr.product, tr.qtySold, tr.revenue].map((h, i) => (
@@ -835,25 +746,10 @@ export default function ReportsPage() {
                             />
                           </div>
                         </td>
-                        <td
-                          style={{
-                            padding: '10px',
-                            textAlign: 'right',
-                            color: '#64748b',
-                            fontWeight: 500,
-                          }}
-                        >
+                        <td style={{ padding: '10px', textAlign: 'right', color: '#64748b', fontWeight: 500 }}>
                           {p.qty}
                         </td>
-                        <td
-                          style={{
-                            padding: '10px',
-                            textAlign: 'right',
-                            fontWeight: 700,
-                            color: '#1e293b',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
                           {formatCurrency(p.revenue, currencyCode)}
                         </td>
                       </tr>
@@ -865,7 +761,7 @@ export default function ReportsPage() {
           )}
         </div>
 
-        {/* Payment Breakdown Donut */}
+        {/* Payment Breakdown - SVG Donut */}
         <div style={S.card}>
           <h2 style={S.cardTitle}>{tr.paymentBreakdown}</h2>
           {paymentBreakdown.length === 0 ? (
@@ -873,91 +769,17 @@ export default function ReportsPage() {
               {tr.noData}
             </div>
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: isMobile ? 'column' : 'row',
-                alignItems: 'center',
-                gap: '24px',
-              }}
-            >
-              {/* Donut */}
-              <div
-                style={{
-                  width: rv('140px', '160px', '180px'),
-                  height: rv('140px', '160px', '180px'),
-                  borderRadius: '50%',
-                  background: donutGradient,
-                  position: 'relative',
-                  flexShrink: 0,
-                }}
-              >
-                {/* Inner circle to make it a donut */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '60%',
-                    height: '60%',
-                    borderRadius: '50%',
-                    background: '#ffffff',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 500 }}>Total</div>
-                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#1e293b' }}>
-                    {formatCurrency(totalRevenue, currencyCode)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
-                {paymentBreakdown.map((entry) => (
-                  <div
-                    key={entry.method}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      fontSize: '13px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '12px',
-                        height: '12px',
-                        borderRadius: '50%',
-                        background: entry.color,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div style={{ flex: 1, fontWeight: 500, color: '#475569' }}>
-                      {PAYMENT_LABELS[entry.method]}
-                    </div>
-                    <div style={{ fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}>
-                      {formatCurrency(entry.amount, currencyCode)}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '11px',
-                        color: '#94a3b8',
-                        fontWeight: 600,
-                        minWidth: '42px',
-                        textAlign: 'right',
-                      }}
-                    >
-                      {entry.percentage.toFixed(1)}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MiniDonutChart
+              segments={paymentBreakdown.map((entry) => ({
+                label: PAYMENT_LABELS[entry.method],
+                value: entry.amount,
+                color: entry.color,
+              }))}
+              size={isMobile ? 140 : 160}
+              thickness={20}
+              centerValue={formatCurrency(totalRevenue, currencyCode)}
+              centerLabel="Total"
+            />
           )}
         </div>
       </div>
@@ -972,13 +794,7 @@ export default function ReportsPage() {
             </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: '13px',
-                }}
-              >
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
                   <tr>
                     {[tr.employee, tr.transactions, tr.revenue, tr.avgTicket].map((h, i) => (
@@ -1001,34 +817,17 @@ export default function ReportsPage() {
                 </thead>
                 <tbody>
                   {employeePerf.map((emp) => {
-                    const barWidth =
-                      employeeMaxRevenue > 0
-                        ? (emp.revenue / employeeMaxRevenue) * 100
-                        : 0
+                    const barWidth = employeeMaxRevenue > 0 ? (emp.revenue / employeeMaxRevenue) * 100 : 0
                     return (
                       <tr key={emp.user_id}>
                         <td style={{ padding: '10px', fontWeight: 600, color: '#1e293b' }}>
                           {emp.name}
                         </td>
-                        <td
-                          style={{
-                            padding: '10px',
-                            textAlign: 'right',
-                            color: '#64748b',
-                            fontWeight: 500,
-                          }}
-                        >
+                        <td style={{ padding: '10px', textAlign: 'right', color: '#64748b', fontWeight: 500 }}>
                           {emp.transactions}
                         </td>
                         <td style={{ padding: '10px', textAlign: 'right' }}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'flex-end',
-                              gap: '8px',
-                            }}
-                          >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
                             <div
                               style={{
                                 width: rv('60px', '80px', '120px'),
@@ -1053,15 +852,7 @@ export default function ReportsPage() {
                             </span>
                           </div>
                         </td>
-                        <td
-                          style={{
-                            padding: '10px',
-                            textAlign: 'right',
-                            fontWeight: 600,
-                            color: '#475569',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <td style={{ padding: '10px', textAlign: 'right', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
                           {formatCurrency(emp.avgTicket, currencyCode)}
                         </td>
                       </tr>
@@ -1073,6 +864,182 @@ export default function ReportsPage() {
           )}
         </div>
       )}
+    </>
+  )
+
+  const renderInventoryTab = () => (
+    <div style={S.card}>
+      <h2 style={S.cardTitle}>{tr.inventoryTab}</h2>
+      <InventoryValuationReport
+        {...inventoryData}
+        currencyCode={currencyCode}
+        labels={{
+          title: tr.inventoryTab,
+          totalAtCost: tr.totalAtCost,
+          totalAtPrice: tr.totalAtPrice,
+          potentialMargin: tr.potentialMargin,
+          category: tr.category,
+          products: tr.products,
+          units: tr.units,
+          costValue: tr.costValue,
+          retailValue: tr.retailValue,
+          margin: tr.margin,
+          noData: tr.noData,
+        }}
+      />
+    </div>
+  )
+
+  const renderTaxTab = () => (
+    <div style={S.card}>
+      <h2 style={S.cardTitle}>{tr.taxTab}</h2>
+      <TaxSummaryReport
+        {...taxData}
+        currencyCode={currencyCode}
+        labels={{
+          title: tr.taxTab,
+          grossRevenue: tr.grossRevenue,
+          netRevenue: tr.netRevenue,
+          taxCollected: tr.taxCollected,
+          taxRate: tr.taxRate,
+          taxableAmount: tr.taxableAmount,
+          taxAmount: tr.taxAmount,
+          orders: tr.orders,
+          noData: tr.noData,
+          totalLabel: tr.totalLabel,
+        }}
+      />
+    </div>
+  )
+
+  const renderCategoryTab = () => (
+    <div style={S.card}>
+      <h2 style={S.cardTitle}>{tr.categoryTab}</h2>
+      <CategoryAnalysis
+        items={categoryData}
+        currencyCode={currencyCode}
+        labels={{
+          title: tr.categoryTab,
+          category: tr.category,
+          revenue: tr.revenue,
+          unitsSold: tr.unitsSold,
+          revenueShare: tr.revenueShare,
+          avgPrice: tr.avgPrice,
+          orders: tr.orders,
+          noData: tr.noData,
+          totalLabel: tr.totalLabel,
+        }}
+      />
+    </div>
+  )
+
+  // ── Render ─────────────────────────────────────────────────────────────
+
+  const tabs: { key: ReportTab; label: string }[] = [
+    { key: 'sales', label: tr.salesTab },
+    { key: 'inventory', label: tr.inventoryTab },
+    { key: 'tax', label: tr.taxTab },
+    { key: 'categories', label: tr.categoryTab },
+  ]
+
+  return (
+    <div style={S.container}>
+      {/* Header */}
+      <div style={S.header}>
+        <h1 style={S.title}>{tr.title}</h1>
+
+        <div style={S.periodBar}>
+          {(['today', 'week', 'month', 'custom'] as PeriodKey[]).map((p) => (
+            <button
+              key={p}
+              style={S.periodBtn(period === p)}
+              onClick={() => setPeriod(p)}
+            >
+              {p === 'today'
+                ? tr.today
+                : p === 'week'
+                  ? tr.thisWeek
+                  : p === 'month'
+                    ? tr.thisMonth
+                    : tr.custom}
+            </button>
+          ))}
+
+          {period === 'custom' && (
+            <div style={S.customDates}>
+              <input
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                style={S.dateInput}
+              />
+              <span style={{ color: '#64748b', fontSize: '13px' }}>{tr.to}</span>
+              <input
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                style={S.dateInput}
+              />
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button style={S.exportBtn('#3b82f6')} onClick={handleExportPDF}>
+            <span role="img" aria-label="pdf">\ud83d\udcc4</span> {tr.exportPDF}
+          </button>
+          <button style={S.exportBtn('#16a34a')} onClick={handleExportCSV}>
+            <span role="img" aria-label="csv">\ud83d\udcca</span> {tr.exportCSV}
+          </button>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div style={S.statsGrid}>
+        <StatCardLocal
+          label={tr.totalRevenue}
+          value={formatCurrency(totalRevenue, currencyCode)}
+          gradient="linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+          comparison={revComp}
+        />
+        <StatCardLocal
+          label={tr.transactions}
+          value={txCount.toString()}
+          gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
+          comparison={txComp}
+        />
+        <StatCardLocal
+          label={tr.averageTicket}
+          value={formatCurrency(avgTicket, currencyCode)}
+          gradient="linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)"
+          comparison={avgComp}
+        />
+        <StatCardLocal
+          label={tr.grossMargin}
+          value={`${grossMarginData.margin.toFixed(1)}%`}
+          gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+          comparison={marginComp}
+        />
+      </div>
+
+      {/* Tab Bar */}
+      <div style={S.tabBar}>
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            style={S.tabBtn(activeTab === tab.key)}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'sales' && renderSalesTab()}
+      {activeTab === 'inventory' && renderInventoryTab()}
+      {activeTab === 'tax' && renderTaxTab()}
+      {activeTab === 'categories' && renderCategoryTab()}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { useCustomerStore } from '../stores/customerStore'
 import { useOrderStore } from '../stores/orderStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
+import { exportCustomersCSV } from '../utils/csvExport'
 import type { Customer } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -604,18 +605,36 @@ export default function CustomersPage() {
           <h1 style={titleStyle}>{label.title}</h1>
           <span style={badgeCountStyle}>{customers.length}</span>
         </div>
-        <button
-          style={addBtnStyle}
-          onClick={openAddModal}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-          }}
-        >
-          <span style={{ fontSize: 16 }}>+</span> {label.addCustomer}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            style={{
+              ...addBtnStyle,
+              padding: '8px 14px',
+              fontSize: 12,
+            }}
+            onClick={() => exportCustomersCSV(customers)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            CSV
+          </button>
+          <button
+            style={addBtnStyle}
+            onClick={openAddModal}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.35)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            <span style={{ fontSize: 16 }}>+</span> {label.addCustomer}
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}

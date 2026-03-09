@@ -17,6 +17,7 @@ import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportInventoryReport } from '../utils/pdfExport'
+import { exportInventoryCSV } from '../utils/csvExport'
 import { db, getDeviceId } from '../db/dexie'
 import type { Product, StockMove, StockMoveType } from '../types'
 import { generateUUID } from '../utils/uuid'
@@ -388,7 +389,7 @@ export default function StockPage() {
             label={t.stock.inventoryReport}
             items={[
               {
-                label: t.stock.inventoryReport,
+                label: t.stock.inventoryReport + ' (PDF)',
                 icon: <Download size={14} color="#8b5cf6" />,
                 onClick: () => exportInventoryReport(products, currentStore?.name || 'POS', {
                   product: t.stock.product,
@@ -398,6 +399,15 @@ export default function StockPage() {
                   status: t.stock.stockStatus,
                   price: t.common.price,
                 }),
+              },
+              {
+                label: t.stock.inventoryReport + ' (CSV)',
+                icon: <Download size={14} color="#16a34a" />,
+                onClick: () => exportInventoryCSV(
+                  products,
+                  currentStore?.currency || 'XAF',
+                ),
+                divider: true,
               },
             ]}
           />

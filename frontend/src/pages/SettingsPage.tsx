@@ -27,6 +27,7 @@ import { getDeviceId } from '../db/dexie'
 import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
 import DataManagementSection from '../components/settings/DataManagementSection'
+import SyncStatusPanel from '../components/settings/SyncStatusPanel'
 import { WORLD_CURRENCIES } from '../utils/currency'
 import { getReceiptCounterState, resetReceiptCounter } from '../utils/receiptCounter'
 
@@ -716,6 +717,27 @@ export default function SettingsPage() {
               <><RefreshCw size={16} /> {t.settings.syncNow}</>
             )}
           </button>
+        </div>
+
+        {/* Sync Status Panel (detailed) */}
+        <div style={{ marginTop: 16 }}>
+          <SyncStatusPanel
+            labels={{
+              syncStatusPanel: (t.sync as Record<string, string>).syncStatusPanel || 'Sync Details',
+              lastSync: (t.sync as Record<string, string>).lastSync || t.settings.lastSync,
+              neverSynced: (t.sync as Record<string, string>).neverSynced || t.settings.never,
+              pending: t.sync.pending,
+              failed: (t.sync as Record<string, string>).failed || 'Failed',
+              retryAll: (t.sync as Record<string, string>).retryAll || 'Retry All',
+              retryOne: (t.sync as Record<string, string>).retryOne || 'Retry',
+              clearFailed: (t.sync as Record<string, string>).clearFailed || 'Clear',
+              ordersSync: (t.sync as Record<string, string>).ordersSync || 'Orders',
+              productsSync: (t.sync as Record<string, string>).productsSync || 'Products',
+              stockMovesSync: (t.sync as Record<string, string>).stockMovesSync || 'Stock Moves',
+              noFailedItems: (t.sync as Record<string, string>).noFailedItems || 'No failed items',
+              retryCount: (t.sync as Record<string, string>).retryCount || 'Retries',
+            }}
+          />
         </div>
       </div>
 

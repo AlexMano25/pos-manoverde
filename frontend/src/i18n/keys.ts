@@ -581,6 +581,21 @@ export type TranslationKeys = {
     online: string
     offline: string
     localOnly: string
+    // Phase 11 — Sync Status Panel
+    status: string
+    failed: string
+    retryAll: string
+    retryOne: string
+    clearFailed: string
+    neverSynced: string
+    ordersSync: string
+    productsSync: string
+    stockMovesSync: string
+    failedDetail: string
+    retryCount: string
+    conflictDetected: string
+    noFailedItems: string
+    syncStatusPanel: string
   }
 
   // Help
@@ -1258,6 +1273,32 @@ export type TranslationKeys = {
     product: string
     employee: string
     method: string
+    // Phase 11 — Advanced Reports
+    salesTab: string
+    inventoryTab: string
+    taxTab: string
+    categoryTab: string
+    totalAtCost: string
+    totalAtPrice: string
+    potentialMargin: string
+    grossRevenue: string
+    netRevenue: string
+    taxCollected: string
+    taxRate: string
+    taxableAmount: string
+    taxAmount: string
+    unitsSold: string
+    revenueShare: string
+    avgPrice: string
+    costValue: string
+    retailValue: string
+    margin: string
+    category: string
+    products: string
+    units: string
+    orders: string
+    totalLabel: string
+    profitMargin: string
   }
 
   // Appointments (hair salon, hotel, travel, education, etc.)

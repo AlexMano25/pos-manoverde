@@ -15,11 +15,32 @@ interface SyncState {
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 
+export interface SyncEntityCount {
+  orders: number
+  products: number
+  stock_moves: number
+  users: number
+}
+
+export interface FailedSyncEntry {
+  id: string
+  entity_type: string
+  entity_id: string
+  operation: string
+  retries: number
+  created_at: string
+  error?: string
+}
+
 interface SyncActions {
   countPending: () => Promise<void>
   syncToServer: () => Promise<void>
   syncFromServer: () => Promise<void>
   markSynced: (ids: string[]) => Promise<void>
+  getFailedEntries: () => Promise<FailedSyncEntry[]>
+  retryEntry: (id: string) => Promise<void>
+  clearFailed: () => Promise<void>
+  getPendingByEntity: () => Promise<SyncEntityCount>
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -479,6 +500,65 @@ export const useSyncStore = create<SyncState & SyncActions>()((set, get) => ({
     } catch (error) {
       console.error('[syncStore] Failed to mark entries as synced:', error)
       throw error
+    }
+  },
+
+  getFailedEntries: async (): Promise<FailedSyncEntry[]> => {
+    try {
+      const all = await db.sync_queue.toArray()
+      return all
+        .filter(e => !e.synced_at && e.retries >= 3)
+        .map(e => ({
+          id: e.id,
+          entity_type: e.entity_type,
+          entity_id: e.entity_id,
+          operation: e.operation,
+          retries: e.retries,
+          created_at: e.created_at,
+        }))
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    } catch (error) {
+      console.error('[syncStore] Failed to get failed entries:', error)
+      return []
+    }
+  },
+
+  retryEntry: async (id: string) => {
+    try {
+      // Reset retries to 0 so next sync picks it up
+      await db.sync_queue.update(id, { retries: 0 })
+      // Trigger sync
+      await get().syncToServer()
+    } catch (error) {
+      console.error('[syncStore] Failed to retry entry:', error)
+    }
+  },
+
+  clearFailed: async () => {
+    try {
+      const all = await db.sync_queue.toArray()
+      const failedIds = all.filter(e => !e.synced_at && e.retries >= 3).map(e => e.id)
+      if (failedIds.length > 0) {
+        await db.sync_queue.bulkDelete(failedIds)
+      }
+      await get().countPending()
+    } catch (error) {
+      console.error('[syncStore] Failed to clear failed entries:', error)
+    }
+  },
+
+  getPendingByEntity: async (): Promise<SyncEntityCount> => {
+    try {
+      const all = await db.sync_queue.toArray()
+      const pending = all.filter(e => !e.synced_at)
+      return {
+        orders: pending.filter(e => e.entity_type === 'order').length,
+        products: pending.filter(e => e.entity_type === 'product').length,
+        stock_moves: pending.filter(e => e.entity_type === 'stock_move').length,
+        users: pending.filter(e => e.entity_type === 'user').length,
+      }
+    } catch {
+      return { orders: 0, products: 0, stock_moves: 0, users: 0 }
     }
   },
 }))
