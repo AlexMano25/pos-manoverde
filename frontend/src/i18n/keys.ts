@@ -610,6 +610,19 @@ export type TranslationKeys = {
     receiptCounter: string
     resetCounter: string
     receiptResetConfirm: string
+    // Phase 15: Receipt templates & Accounting
+    receiptTemplate: string
+    templateClassic: string
+    templateModern: string
+    templateMinimal: string
+    templateProfessional: string
+    accountingExport: string
+    accountingExportDesc: string
+    journalEntries: string
+    exportQuickBooks: string
+    exportSAGE: string
+    exportJournal: string
+    noOrdersToExport: string
   }
 
   // Sync

@@ -30,6 +30,9 @@ import DataManagementSection from '../components/settings/DataManagementSection'
 import SyncStatusPanel from '../components/settings/SyncStatusPanel'
 import { WORLD_CURRENCIES } from '../utils/currency'
 import { getReceiptCounterState, resetReceiptCounter } from '../utils/receiptCounter'
+import { RECEIPT_TEMPLATES, type ReceiptTemplate } from '../utils/receiptTemplates'
+import { generateJournalEntries, exportJournalCSV, exportQuickBooksCSV, exportSAGECSV } from '../utils/accountingExport'
+import { useOrderStore } from '../stores/orderStore'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -68,6 +71,7 @@ export default function SettingsPage() {
 
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
+  const { orders } = useOrderStore()
 
   // Store info form
   const [storeName, setStoreName] = useState(currentStore?.name || '')
@@ -78,6 +82,9 @@ export default function SettingsPage() {
   // Receipt settings
   const [receiptPrefix, setReceiptPrefix] = useState(currentStore?.receipt_prefix || 'MV')
   const [receiptSaved, setReceiptSaved] = useState(false)
+  const [receiptTemplate, setReceiptTemplate] = useState<ReceiptTemplate>(
+    () => (localStorage.getItem('receipt_template') as ReceiptTemplate) || 'classic'
+  )
 
   // Currency
   const [storeCurrency, setStoreCurrency] = useState(currentStore?.currency || 'XAF')
@@ -818,7 +825,104 @@ export default function SettingsPage() {
               <RefreshCw size={12} /> {(t.settings as Record<string, string>).resetCounter || 'Réinitialiser'}
             </button>
           </div>
+
+          {/* Receipt Template Selector */}
+          <div style={{ paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 8, display: 'block' }}>
+              {(t.settings as Record<string, string>).receiptTemplate || 'Template reçu'}
+            </label>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+              gap: 8,
+            }}>
+              {RECEIPT_TEMPLATES.map(tmpl => (
+                <button
+                  key={tmpl.id}
+                  onClick={() => {
+                    setReceiptTemplate(tmpl.id)
+                    localStorage.setItem('receipt_template', tmpl.id)
+                  }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: `2px solid ${receiptTemplate === tmpl.id ? C.primary : C.border}`,
+                    backgroundColor: receiptTemplate === tmpl.id ? C.primary + '08' : C.card,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: receiptTemplate === tmpl.id ? C.primary : C.text,
+                    marginBottom: 2,
+                  }}>
+                    {(t.settings as Record<string, string>)?.[`template${tmpl.id.charAt(0).toUpperCase() + tmpl.id.slice(1)}`] || tmpl.name}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.textSecondary }}>
+                    {tmpl.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* ── Accounting Export ────────────────────────────────────── */}
+      <div style={sectionCardStyle}>
+        <div style={sectionHeaderStyle}>
+          <div style={sectionIconStyle('#059669')}>
+            <DollarSign size={18} color="#059669" />
+          </div>
+          <div>
+            <h3 style={sectionTitleStyle}>
+              {(t.settings as Record<string, string>).accountingExport || 'Export comptable'}
+            </h3>
+            <p style={sectionDescStyle}>
+              {(t.settings as Record<string, string>).accountingExportDesc || 'Exportez vos écritures comptables'}
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <button
+            style={{ ...outlineBtnStyle, flex: '1 1 auto' }}
+            onClick={() => {
+              if (!currentStore || orders.length === 0) return
+              const entries = generateJournalEntries(orders, currentStore)
+              exportJournalCSV(entries, currentStore.name)
+            }}
+          >
+            {(t.settings as Record<string, string>).exportJournal || 'Journal CSV'}
+          </button>
+          <button
+            style={{ ...outlineBtnStyle, flex: '1 1 auto' }}
+            onClick={() => {
+              if (!currentStore || orders.length === 0) return
+              const entries = generateJournalEntries(orders, currentStore)
+              exportQuickBooksCSV(entries, currentStore.name)
+            }}
+          >
+            {(t.settings as Record<string, string>).exportQuickBooks || 'QuickBooks CSV'}
+          </button>
+          <button
+            style={{ ...outlineBtnStyle, flex: '1 1 auto' }}
+            onClick={() => {
+              if (!currentStore || orders.length === 0) return
+              const entries = generateJournalEntries(orders, currentStore)
+              exportSAGECSV(entries, currentStore.name)
+            }}
+          >
+            {(t.settings as Record<string, string>).exportSAGE || 'SAGE CSV'}
+          </button>
+        </div>
+        {orders.filter(o => o.status === 'paid').length === 0 && (
+          <p style={{ fontSize: 12, color: C.textSecondary, margin: '8px 0 0' }}>
+            {(t.settings as Record<string, string>).noOrdersToExport || 'Aucune commande à exporter'}
+          </p>
+        )}
       </div>
 
       {/* ── Data Management (Admin only) ─────────────────────────── */}

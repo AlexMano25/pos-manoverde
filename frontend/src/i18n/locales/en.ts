@@ -601,6 +601,19 @@ export const en: TranslationKeys = {
     receiptCounter: 'Today\'s counter',
     resetCounter: 'Reset',
     receiptResetConfirm: 'Reset receipt counter?',
+    // Phase 15: Receipt templates & Accounting
+    receiptTemplate: 'Receipt Template',
+    templateClassic: 'Classic',
+    templateModern: 'Modern',
+    templateMinimal: 'Minimal',
+    templateProfessional: 'Professional',
+    accountingExport: 'Accounting Export',
+    accountingExportDesc: 'Export your accounting entries (Journal, QuickBooks, SAGE)',
+    journalEntries: 'Journal Entries',
+    exportQuickBooks: 'QuickBooks CSV',
+    exportSAGE: 'SAGE CSV',
+    exportJournal: 'Journal CSV',
+    noOrdersToExport: 'No paid orders to export',
   },
 
   // Sync
