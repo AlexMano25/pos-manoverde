@@ -476,6 +476,25 @@ export type TranslationKeys = {
     critical: string
     outOfStock: string
     inventoryReport: string
+    // Phase 13: Reorder & ABC
+    reorderSuggestions: string
+    suggestedQty: string
+    daysUntilStockout: string
+    velocity: string
+    perDay: string
+    urgencyCritical: string
+    urgencyHigh: string
+    urgencyMedium: string
+    urgencyLow: string
+    noSuggestions: string
+    estimatedCost: string
+    abcAnalysis: string
+    classA: string
+    classB: string
+    classC: string
+    hidePanel: string
+    showPanel: string
+    items: string
   }
 
   // Employees
@@ -1637,6 +1656,17 @@ export type TranslationKeys = {
     receiveQuantity: string
     supplierTab: string
     ordersTab: string
+    // Phase 13: Performance
+    performanceTab: string
+    totalOrders: string
+    completedOrders: string
+    avgDelivery: string
+    onTimeRate: string
+    totalSpentLabel: string
+    avgOrderValue: string
+    lastOrder: string
+    daysLabel: string
+    noPerformanceData: string
   }
 
   // POS Invoices

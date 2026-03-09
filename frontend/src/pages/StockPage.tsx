@@ -18,6 +18,10 @@ import { useLanguageStore } from '../stores/languageStore'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportInventoryReport } from '../utils/pdfExport'
 import { exportInventoryCSV } from '../utils/csvExport'
+import { computeReorderSuggestions, computeABCAnalysis } from '../utils/inventoryAnalysis'
+import { useOrderStore } from '../stores/orderStore'
+import { useSupplierStore } from '../stores/supplierStore'
+import { formatCurrency } from '../utils/currency'
 import { db, getDeviceId } from '../db/dexie'
 import type { Product, StockMove, StockMoveType } from '../types'
 import { generateUUID } from '../utils/uuid'
@@ -54,6 +58,8 @@ export default function StockPage() {
   const { user } = useAuthStore()
   const { currentStore } = useAppStore()
   const { t, language } = useLanguageStore()
+  const { orders } = useOrderStore()
+  const { suppliers } = useSupplierStore()
   const { isMobile, rv } = useResponsive()
 
   const [showAdjustModal, setShowAdjustModal] = useState(false)
@@ -113,6 +119,65 @@ export default function StockPage() {
     () => products.filter((p) => p.stock === 0),
     [products]
   )
+
+  // Reorder suggestions & ABC analysis
+  const [showReorderPanel, setShowReorderPanel] = useState(true)
+
+  const reorderSuggestions = useMemo(
+    () => computeReorderSuggestions(products, orders, suppliers),
+    [products, orders, suppliers]
+  )
+
+  const abcAnalysis = useMemo(
+    () => computeABCAnalysis(products, orders),
+    [products, orders]
+  )
+
+  const abcSummary = useMemo(() => {
+    const a = abcAnalysis.filter(i => i.abcClass === 'A').length
+    const b = abcAnalysis.filter(i => i.abcClass === 'B').length
+    const c = abcAnalysis.filter(i => i.abcClass === 'C').length
+    return { a, b, c }
+  }, [abcAnalysis])
+
+  const currency = currentStore?.currency || 'XAF'
+
+  // Translation helpers for reorder panel
+  const ts = (t as Record<string, any>).stock || {}
+  const reorderLabels = {
+    reorderSuggestions: ts.reorderSuggestions || 'Reorder Suggestions',
+    suggestedQty: ts.suggestedQty || 'Suggested Qty',
+    daysUntilStockout: ts.daysUntilStockout || 'Days until stockout',
+    velocity: ts.velocity || 'Velocity',
+    perDay: ts.perDay || '/day',
+    urgencyCritical: ts.urgencyCritical || 'Critical',
+    urgencyHigh: ts.urgencyHigh || 'High',
+    urgencyMedium: ts.urgencyMedium || 'Medium',
+    urgencyLow: ts.urgencyLow || 'Low',
+    noSuggestions: ts.noSuggestions || 'All stock levels are healthy',
+    estimatedCost: ts.estimatedCost || 'Est. Cost',
+    abcAnalysis: ts.abcAnalysis || 'ABC Analysis',
+    classA: ts.classA || 'Class A (80% revenue)',
+    classB: ts.classB || 'Class B (15% revenue)',
+    classC: ts.classC || 'Class C (5% revenue)',
+    hidePanel: ts.hidePanel || 'Hide',
+    showPanel: ts.showPanel || 'Show',
+    items: ts.items || 'items',
+  }
+
+  const urgencyColors: Record<string, string> = {
+    critical: '#dc2626',
+    high: '#ea580c',
+    medium: '#d97706',
+    low: '#16a34a',
+  }
+
+  const urgencyLabels: Record<string, string> = {
+    critical: reorderLabels.urgencyCritical,
+    high: reorderLabels.urgencyHigh,
+    medium: reorderLabels.urgencyMedium,
+    low: reorderLabels.urgencyLow,
+  }
 
   const getStockStatus = (product: Product): { label: string; color: string } => {
     if (product.stock === 0) return { label: t.stock.outOfStock, color: C.danger }
@@ -444,6 +509,181 @@ export default function StockPage() {
             {outOfStockProducts.length}
           </p>
         </div>
+      </div>
+
+      {/* Reorder Suggestions Panel */}
+      <div style={{ ...sectionStyle, marginBottom: 20 }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h3 style={{ ...sectionTitleStyle, margin: 0 }}>
+              {reorderLabels.reorderSuggestions}
+            </h3>
+            {reorderSuggestions.length > 0 && (
+              <span style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: '#ffffff',
+                backgroundColor: C.warning,
+                padding: '2px 10px',
+                borderRadius: 12,
+              }}>
+                {reorderSuggestions.length}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* ABC Summary chips */}
+            {abcAnalysis.length > 0 && (
+              <div style={{ display: 'flex', gap: 4 }}>
+                {[
+                  { cls: 'A', count: abcSummary.a, color: '#16a34a' },
+                  { cls: 'B', count: abcSummary.b, color: '#f59e0b' },
+                  { cls: 'C', count: abcSummary.c, color: '#94a3b8' },
+                ].map(abc => (
+                  <span key={abc.cls} title={`Class ${abc.cls}: ${abc.count} ${reorderLabels.items}`} style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: abc.color,
+                    backgroundColor: abc.color + '15',
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    cursor: 'default',
+                  }}>
+                    {abc.cls}: {abc.count}
+                  </span>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => setShowReorderPanel(!showReorderPanel)}
+              style={{
+                padding: '4px 12px',
+                borderRadius: 6,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.textSecondary,
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              {showReorderPanel ? reorderLabels.hidePanel : reorderLabels.showPanel}
+            </button>
+          </div>
+        </div>
+
+        {showReorderPanel && (
+          <div style={{
+            backgroundColor: C.card,
+            borderRadius: 12,
+            border: `1px solid ${C.border}`,
+            overflow: 'hidden',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+          }}>
+            {reorderSuggestions.length === 0 ? (
+              <div style={{
+                padding: 30,
+                textAlign: 'center',
+                color: C.success,
+                fontSize: 14,
+                fontWeight: 500,
+              }}>
+                &#10003; {reorderLabels.noSuggestions}
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <th style={thStyle}>{t.stock.product}</th>
+                      <th style={thStyle}>{t.stock.currentStock}</th>
+                      <th style={thStyle}>{reorderLabels.suggestedQty}</th>
+                      <th style={thStyle}>{reorderLabels.velocity}</th>
+                      <th style={thStyle}>{reorderLabels.daysUntilStockout}</th>
+                      {!isMobile && <th style={thStyle}>{reorderLabels.estimatedCost}</th>}
+                      <th style={thStyle}>{t.common.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reorderSuggestions.slice(0, 15).map((s) => (
+                      <tr key={s.productId}>
+                        <td style={{ ...tdStyle, fontWeight: 600 }}>
+                          {s.name}
+                          <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 400 }}>
+                            {s.category}
+                            {s.supplierName && ` · ${s.supplierName}`}
+                          </div>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 700,
+                            color: s.currentStock === 0 ? C.danger : s.currentStock <= s.minStock ? C.warning : C.text,
+                          }}>
+                            {s.currentStock}
+                          </span>
+                          <span style={{ color: C.textSecondary, fontSize: 12 }}> / {s.minStock}</span>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 700,
+                            color: C.primary,
+                            backgroundColor: C.primary + '10',
+                            padding: '3px 10px',
+                            borderRadius: 6,
+                            fontSize: 13,
+                          }}>
+                            +{s.suggestedQty}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{ fontWeight: 500 }}>
+                            {s.dailyVelocity.toFixed(1)}{reorderLabels.perDay}
+                          </span>
+                        </td>
+                        <td style={tdStyle}>
+                          <span style={{
+                            fontWeight: 600,
+                            color: s.daysUntilStockout <= 7 ? C.danger
+                              : s.daysUntilStockout <= 14 ? C.warning
+                              : C.text,
+                          }}>
+                            {s.daysUntilStockout >= 999 ? '—' : `${s.daysUntilStockout}j`}
+                          </span>
+                        </td>
+                        {!isMobile && (
+                          <td style={tdStyle}>
+                            {s.estimatedCost
+                              ? formatCurrency(s.estimatedCost, currency)
+                              : '—'
+                            }
+                          </td>
+                        )}
+                        <td style={tdStyle}>
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '3px 10px',
+                            borderRadius: 20,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: urgencyColors[s.urgency],
+                            backgroundColor: urgencyColors[s.urgency] + '15',
+                          }}>
+                            {urgencyLabels[s.urgency]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Stock Table */}

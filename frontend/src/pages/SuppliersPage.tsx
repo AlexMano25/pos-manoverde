@@ -21,6 +21,7 @@ import { useLanguageStore } from '../stores/languageStore'
 import { useSupplierStore } from '../stores/supplierStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
+import { computeSupplierPerformance } from '../utils/inventoryAnalysis'
 import type { Supplier, PurchaseOrder, PurchaseOrderStatus, PurchaseOrderItem } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ const emptyPOForm: POForm = {
 export default function SuppliersPage() {
   const { currentStore } = useAppStore()
   const { t } = useLanguageStore()
-  const { isMobile, rv } = useResponsive()
+  const { isMobile, isTablet, rv } = useResponsive()
   const {
     suppliers,
     purchaseOrders,
@@ -191,7 +192,7 @@ export default function SuppliersPage() {
 
   // ── Local state ─────────────────────────────────────────────────────
 
-  const [activeTab, setActiveTab] = useState<'suppliers' | 'purchase_orders'>('suppliers')
+  const [activeTab, setActiveTab] = useState<'suppliers' | 'purchase_orders' | 'performance'>('suppliers')
   const [searchQuery, setSearchQuery] = useState('')
   const [poStatusFilter, setPoStatusFilter] = useState<PurchaseOrderStatus | 'all'>('all')
 
@@ -262,6 +263,26 @@ export default function SuppliersPage() {
   const pendingPOCount = useMemo(() =>
     purchaseOrders.filter((po) => po.status === 'draft' || po.status === 'sent' || po.status === 'partial').length,
   [purchaseOrders])
+
+  // Supplier performance analytics
+  const supplierPerformance = useMemo(
+    () => computeSupplierPerformance(suppliers, purchaseOrders),
+    [suppliers, purchaseOrders]
+  )
+
+  // Performance tab labels
+  const perfLabel = {
+    performanceTab: (L as Record<string, string>).performanceTab || 'Performance',
+    totalOrders: (L as Record<string, string>).totalOrders || 'Total Orders',
+    completedOrders: (L as Record<string, string>).completedOrders || 'Completed',
+    avgDelivery: (L as Record<string, string>).avgDelivery || 'Avg Delivery',
+    onTimeRate: (L as Record<string, string>).onTimeRate || 'On-Time Rate',
+    totalSpentLabel: (L as Record<string, string>).totalSpentLabel || 'Total Spent',
+    avgOrderValue: (L as Record<string, string>).avgOrderValue || 'Avg Order',
+    lastOrder: (L as Record<string, string>).lastOrder || 'Last Order',
+    daysLabel: (L as Record<string, string>).daysLabel || 'days',
+    noPerformanceData: (L as Record<string, string>).noPerformanceData || 'No supplier performance data yet',
+  }
 
   // ── Compute PO form totals ────────────────────────────────────────
 
@@ -997,13 +1018,15 @@ export default function SuppliersPage() {
             <span style={statBadgeStyle}>{pendingPOCount} {L.purchaseOrdersTab}</span>
           </div>
         </div>
-        <button
-          style={addBtnStyle}
-          onClick={activeTab === 'suppliers' ? openAddSupplier : openAddPO}
-        >
-          <Plus size={16} />
-          {activeTab === 'suppliers' ? L.addSupplier : L.addPO}
-        </button>
+        {activeTab !== 'performance' && (
+          <button
+            style={addBtnStyle}
+            onClick={activeTab === 'suppliers' ? openAddSupplier : openAddPO}
+          >
+            <Plus size={16} />
+            {activeTab === 'suppliers' ? L.addSupplier : L.addPO}
+          </button>
+        )}
       </div>
 
       {/* Main tabs */}
@@ -1026,6 +1049,15 @@ export default function SuppliersPage() {
             {L.purchaseOrdersTab}
           </span>
         </button>
+        <button
+          style={mainTabStyle(activeTab === 'performance')}
+          onClick={() => { setActiveTab('performance'); setSearchQuery('') }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Truck size={16} />
+            {perfLabel.performanceTab}
+          </span>
+        </button>
       </div>
 
       {/* PO status filter tabs (only for PO tab) */}
@@ -1043,16 +1075,18 @@ export default function SuppliersPage() {
         </div>
       )}
 
-      {/* Search */}
-      <div style={searchContainerStyle}>
-        <Search size={18} style={searchIconStyle} />
-        <input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={activeTab === 'suppliers' ? L.searchSuppliers : L.searchPO}
-          style={searchInputStyle}
-        />
-      </div>
+      {/* Search (not shown on performance tab) */}
+      {activeTab !== 'performance' && (
+        <div style={searchContainerStyle}>
+          <Search size={18} style={searchIconStyle} />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={activeTab === 'suppliers' ? L.searchSuppliers : L.searchPO}
+            style={searchInputStyle}
+          />
+        </div>
+      )}
 
       {/* Content */}
       {activeTab === 'suppliers' ? (
@@ -1061,10 +1095,172 @@ export default function SuppliersPage() {
             {filteredSuppliers.map(renderSupplierCard)}
           </div>
         )
-      ) : (
+      ) : activeTab === 'purchase_orders' ? (
         filteredPOs.length === 0 ? renderEmptyPOs() : (
           <div style={gridStyle}>
             {filteredPOs.map(renderPOCard)}
+          </div>
+        )
+      ) : (
+        /* Performance Tab */
+        supplierPerformance.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: 60,
+            color: C.textSecondary,
+          }}>
+            <Truck size={40} color={C.border} style={{ marginBottom: 12 }} />
+            <p style={{ fontSize: 14, margin: 0 }}>{perfLabel.noPerformanceData}</p>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(2, 1fr)',
+            gap: 16,
+          }}>
+            {supplierPerformance.map((perf) => (
+              <div key={perf.supplierId} style={{
+                backgroundColor: C.card,
+                borderRadius: 14,
+                border: `1px solid ${C.border}`,
+                padding: 20,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}>
+                {/* Supplier name */}
+                <div style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: C.text,
+                  marginBottom: 14,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: C.primary + '15',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <Building2 size={18} color={C.primary} />
+                  </div>
+                  {perf.supplierName}
+                </div>
+
+                {/* Stats grid */}
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: 10,
+                }}>
+                  {/* Total orders */}
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    background: '#f8fafc',
+                    border: `1px solid ${C.border}`,
+                  }}>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500, marginBottom: 4 }}>
+                      {perfLabel.totalOrders}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: C.text }}>
+                      {perf.totalOrders}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.success, fontWeight: 500 }}>
+                      {perf.completedOrders} {perfLabel.completedOrders.toLowerCase()}
+                    </div>
+                  </div>
+
+                  {/* Avg delivery */}
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    background: '#f8fafc',
+                    border: `1px solid ${C.border}`,
+                  }}>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500, marginBottom: 4 }}>
+                      {perfLabel.avgDelivery}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: perf.avgDeliveryDays > 14 ? C.danger : perf.avgDeliveryDays > 7 ? C.warning : C.success }}>
+                      {perf.avgDeliveryDays || '—'}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500 }}>
+                      {perf.avgDeliveryDays > 0 ? perfLabel.daysLabel : ''}
+                    </div>
+                  </div>
+
+                  {/* On-time rate */}
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    background: '#f8fafc',
+                    border: `1px solid ${C.border}`,
+                  }}>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500, marginBottom: 4 }}>
+                      {perfLabel.onTimeRate}
+                    </div>
+                    <div style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: perf.onTimeRate >= 80 ? C.success : perf.onTimeRate >= 50 ? C.warning : C.danger,
+                    }}>
+                      {perf.completedOrders > 0 ? `${perf.onTimeRate}%` : '—'}
+                    </div>
+                    {/* Progress bar */}
+                    {perf.completedOrders > 0 && (
+                      <div style={{
+                        height: 4,
+                        borderRadius: 2,
+                        background: '#e2e8f0',
+                        marginTop: 6,
+                        overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${perf.onTimeRate}%`,
+                          borderRadius: 2,
+                          background: perf.onTimeRate >= 80 ? C.success : perf.onTimeRate >= 50 ? C.warning : C.danger,
+                        }} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Total spent */}
+                  <div style={{
+                    padding: 12,
+                    borderRadius: 10,
+                    background: '#f8fafc',
+                    border: `1px solid ${C.border}`,
+                  }}>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500, marginBottom: 4 }}>
+                      {perfLabel.totalSpentLabel}
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
+                      {formatCurrency(perf.totalSpent, currency)}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textSecondary, fontWeight: 500 }}>
+                      {perfLabel.avgOrderValue}: {formatCurrency(perf.avgOrderValue, currency)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Last order date */}
+                {perf.lastOrderDate && (
+                  <div style={{
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: C.textSecondary,
+                    textAlign: 'right',
+                  }}>
+                    {perfLabel.lastOrder}: {new Date(perf.lastOrderDate).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )
       )}
