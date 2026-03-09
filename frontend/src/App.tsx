@@ -7,6 +7,7 @@ import { useSyncStore } from './stores/syncStore'
 import { useLanguageStore } from './stores/languageStore'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useSync } from './hooks/useSync'
+import { useInventoryAlerts } from './hooks/useInventoryAlerts'
 import Layout from './components/layout/Layout'
 import HelpButton from './components/common/HelpButton'
 import LandingPage from './pages/LandingPage'
@@ -71,6 +72,7 @@ function AppContent() {
 
   useOnlineStatus()
   useSync()
+  useInventoryAlerts()
 
   // Client mode: force POS section
   useEffect(() => {

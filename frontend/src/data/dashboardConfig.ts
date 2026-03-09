@@ -42,6 +42,8 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_check', 'food_cost', 'products'],
     quickActions: QA_STANDARD_POS,
     widgets: [
+      { type: 'revenue_chart' },
+      { type: 'sales_trend' },
       { type: 'category_breakdown' },
       { type: 'peak_hours' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
@@ -52,6 +54,8 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_check', 'beverage_cost', 'products'],
     quickActions: QA_STANDARD_POS,
     widgets: [
+      { type: 'revenue_chart' },
+      { type: 'sales_trend' },
       { type: 'category_breakdown' },
       { type: 'peak_hours' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
@@ -62,7 +66,10 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'food_cost', 'expiring_items', 'products'],
     quickActions: QA_EXPIRY_CHECK,
     widgets: [
+      { type: 'revenue_chart' },
+      { type: 'sales_trend' },
       { type: 'category_breakdown' },
+      { type: 'expiry_alerts' },
       { type: 'alerts_panel', alertTypes: ['low_stock', 'expiring_soon'] },
     ],
   },
@@ -75,7 +82,10 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_order', 'gross_margin', 'expiring_items'],
     quickActions: QA_EXPIRY_CHECK,
     widgets: [
+      { type: 'revenue_chart' },
+      { type: 'sales_trend' },
       { type: 'category_breakdown' },
+      { type: 'expiry_alerts' },
       { type: 'alerts_panel', alertTypes: ['low_stock', 'expiring_soon'] },
     ],
   },
@@ -84,7 +94,9 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'gross_margin', 'expiring_items', 'low_stock'],
     quickActions: QA_EXPIRY_CHECK,
     widgets: [
+      { type: 'revenue_chart' },
       { type: 'category_breakdown' },
+      { type: 'expiry_alerts' },
       { type: 'alerts_panel', alertTypes: ['low_stock', 'expiring_soon'] },
     ],
   },
@@ -93,6 +105,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_order', 'gross_margin', 'products'],
     quickActions: QA_STANDARD_POS,
     widgets: [
+      { type: 'revenue_chart' },
       { type: 'category_breakdown' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
     ],
@@ -102,6 +115,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
     statCards: ['revenue', 'orders', 'avg_order', 'gross_margin', 'low_stock'],
     quickActions: QA_STANDARD_POS,
     widgets: [
+      { type: 'revenue_chart' },
       { type: 'category_breakdown' },
       { type: 'alerts_panel', alertTypes: ['low_stock'] },
     ],
@@ -262,6 +276,7 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
       { i18nKey: 'dashboard.viewAll', icon: 'ClipboardList', targetSection: 'orders' },
     ],
     widgets: [
+      { type: 'revenue_chart' },
       { type: 'category_breakdown' },
       { type: 'contract_shortcuts', templates: ['fiche_client', 'facture_sejour'] },
       { type: 'alerts_panel', alertTypes: ['pending_bookings'] },

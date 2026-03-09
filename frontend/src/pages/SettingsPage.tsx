@@ -15,6 +15,7 @@ import {
   BluetoothSearching,
   DollarSign,
   AlertTriangle,
+  Receipt,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
@@ -27,6 +28,7 @@ import { isServerReachable } from '../services/api'
 import QRCodeDisplay from '../components/common/QRCodeDisplay'
 import DataManagementSection from '../components/settings/DataManagementSection'
 import { WORLD_CURRENCIES } from '../utils/currency'
+import { getReceiptCounterState, resetReceiptCounter } from '../utils/receiptCounter'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -71,6 +73,10 @@ export default function SettingsPage() {
   const [storeAddress, setStoreAddress] = useState(currentStore?.address || '')
   const [storePhone, setStorePhone] = useState(currentStore?.phone || '')
   const [storeSaved, setStoreSaved] = useState(false)
+
+  // Receipt settings
+  const [receiptPrefix, setReceiptPrefix] = useState(currentStore?.receipt_prefix || 'MV')
+  const [receiptSaved, setReceiptSaved] = useState(false)
 
   // Currency
   const [storeCurrency, setStoreCurrency] = useState(currentStore?.currency || 'XAF')
@@ -710,6 +716,86 @@ export default function SettingsPage() {
               <><RefreshCw size={16} /> {t.settings.syncNow}</>
             )}
           </button>
+        </div>
+      </div>
+
+      {/* ── Receipt Settings ────────────────────────────────────── */}
+      <div style={sectionCardStyle}>
+        <div style={sectionHeaderStyle}>
+          <div style={sectionIconStyle('#7c3aed')}>
+            <Receipt size={18} color="#7c3aed" />
+          </div>
+          <div>
+            <h3 style={sectionTitleStyle}>
+              {(t.settings as Record<string, string>).receiptSettings || 'Paramètres reçu'}
+            </h3>
+            <p style={sectionDescStyle}>
+              {(t.settings as Record<string, string>).receiptSettingsDesc || 'Préfixe et numérotation des tickets'}
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 4, display: 'block' }}>
+              {(t.settings as Record<string, string>).receiptPrefix || 'Préfixe reçu'}
+            </label>
+            <div style={inputRowStyle}>
+              <input
+                style={{ ...inputStyle, maxWidth: 120 }}
+                value={receiptPrefix}
+                onChange={e => setReceiptPrefix(e.target.value.toUpperCase().slice(0, 6))}
+                placeholder="MV"
+                maxLength={6}
+              />
+              <button
+                style={receiptSaved ? successBtnStyle : primaryBtnStyle}
+                onClick={() => {
+                  if (currentStore) {
+                    setCurrentStore({ ...currentStore, receipt_prefix: receiptPrefix })
+                    setReceiptSaved(true)
+                    setTimeout(() => setReceiptSaved(false), 2000)
+                  }
+                }}
+              >
+                {receiptSaved ? (
+                  <><CheckCircle2 size={16} /> {t.common.success}</>
+                ) : (
+                  <><Save size={16} /> {t.common.save}</>
+                )}
+              </button>
+            </div>
+            <p style={{ fontSize: 12, color: C.textSecondary, margin: '4px 0 0' }}>
+              {(t.settings as Record<string, string>).receiptPrefixHint || `Format: ${receiptPrefix || 'MV'}-20260309-0001`}
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderTop: `1px solid ${C.border}` }}>
+            <div>
+              <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>
+                {(t.settings as Record<string, string>).receiptCounter || 'Compteur du jour'}
+              </span>
+              <span style={{ fontSize: 13, color: C.textSecondary, marginLeft: 8 }}>
+                {currentStore?.id ? (() => {
+                  const state = getReceiptCounterState(currentStore.id)
+                  return state ? `#${state.seq}` : '#0'
+                })() : '#0'}
+              </span>
+            </div>
+            <button
+              style={{ ...outlineBtnStyle, padding: '6px 12px', fontSize: 12 }}
+              onClick={() => {
+                if (currentStore?.id && confirm((t.settings as Record<string, string>).receiptResetConfirm || 'Réinitialiser le compteur ?')) {
+                  resetReceiptCounter(currentStore.id)
+                  // Force re-render
+                  setReceiptSaved(prev => !prev)
+                  setTimeout(() => setReceiptSaved(false), 100)
+                }
+              }}
+            >
+              <RefreshCw size={12} /> {(t.settings as Record<string, string>).resetCounter || 'Réinitialiser'}
+            </button>
+          </div>
         </div>
       </div>
 

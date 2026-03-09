@@ -262,3 +262,112 @@ export function computeAlerts(
 
   return alerts
 }
+
+// -- computeWeeklyTrend -------------------------------------------------------
+// Returns an array of 7 daily revenue values (last 7 days) for sparkline display
+
+export function computeWeeklyTrend(allOrders: Order[]): number[] {
+  const today = new Date()
+  const result: number[] = []
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().slice(0, 10)
+    const dayRevenue = allOrders
+      .filter(o => o.status === 'paid' && o.created_at.slice(0, 10) === dateStr)
+      .reduce((s, o) => s + o.total, 0)
+    result.push(dayRevenue)
+  }
+
+  return result
+}
+
+// -- computeSalesTrend --------------------------------------------------------
+// Returns daily sales data for line chart display
+
+export type SalesTrendItem = {
+  label: string
+  value: number
+  date: string
+}
+
+export function computeSalesTrend(
+  allOrders: Order[],
+  days: number = 7,
+): SalesTrendItem[] {
+  const today = new Date()
+  const result: SalesTrendItem[] = []
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().slice(0, 10)
+    const dayRevenue = allOrders
+      .filter(o => o.status === 'paid' && o.created_at.slice(0, 10) === dateStr)
+      .reduce((s, o) => s + o.total, 0)
+    result.push({
+      label: `${d.getDate()}/${d.getMonth() + 1}`,
+      value: dayRevenue,
+      date: dateStr,
+    })
+  }
+
+  return result
+}
+
+// -- computeHourlyHeatmap -----------------------------------------------------
+// Returns a 7×24 grid of order counts for the last 7 days
+
+export type HeatmapCell = {
+  day: number    // 0-6 (0 = 6 days ago, 6 = today)
+  hour: number   // 0-23
+  count: number
+  dayLabel: string
+}
+
+export function computeHourlyHeatmap(allOrders: Order[]): HeatmapCell[] {
+  const today = new Date()
+  const cells: HeatmapCell[] = []
+  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+
+  for (let d = 0; d < 7; d++) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - (6 - d))
+    const dateStr = date.toISOString().slice(0, 10)
+
+    for (let h = 0; h < 24; h++) {
+      const count = allOrders.filter(o => {
+        if (o.created_at.slice(0, 10) !== dateStr) return false
+        return new Date(o.created_at).getHours() === h
+      }).length
+
+      cells.push({
+        day: d,
+        hour: h,
+        count,
+        dayLabel: dayNames[date.getDay()],
+      })
+    }
+  }
+
+  return cells
+}
+
+// -- computeOrdersTrend -------------------------------------------------------
+// Returns 7-day order count trend for sparkline
+
+export function computeOrdersTrend(allOrders: Order[]): number[] {
+  const today = new Date()
+  const result: number[] = []
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateStr = d.toISOString().slice(0, 10)
+    const dayCount = allOrders.filter(o => o.created_at.slice(0, 10) === dateStr).length
+    result.push(dayCount)
+  }
+
+  return result
+}

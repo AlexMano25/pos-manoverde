@@ -36,7 +36,7 @@ import { exportDailySummary } from '../utils/pdfExport'
 import { DASHBOARD_CONFIG } from '../data/dashboardConfig'
 import { getSidebarItems } from '../data/sidebarConfig'
 import { getTemplatesForActivity } from '../data/contractTemplates'
-import { computeStatValue, getStatCardMeta } from '../utils/dashboardComputations'
+import { computeStatValue, getStatCardMeta, computeWeeklyTrend, computeOrdersTrend } from '../utils/dashboardComputations'
 import { seedSampleProducts } from '../utils/seedProducts'
 import StatCard from '../components/dashboard/StatCard'
 import QuickActions from '../components/dashboard/QuickActions'
@@ -158,6 +158,10 @@ export default function DashboardPage() {
   )
 
   const hasData = orders.length > 0 || products.length > 0
+
+  // Sparkline trends (7-day)
+  const revenueTrend = useMemo(() => computeWeeklyTrend(orders), [orders])
+  const ordersTrend = useMemo(() => computeOrdersTrend(orders), [orders])
 
   // ── Activity-specific config ──────────────────────────────────────────
 
@@ -441,6 +445,10 @@ export default function DashboardPage() {
               const { variant, value, meta } = card
               const IconComponent = LUCIDE_ICONS[meta.icon] || DollarSign
               const label = (t.dashboard as Record<string, string>)[meta.labelKey.replace('dashboard.', '')] || meta.labelKey
+              // Assign sparkline based on variant
+              const sparkline = variant === 'revenue' ? revenueTrend
+                : variant === 'orders' ? ordersTrend
+                : undefined
               return (
                 <StatCard
                   key={variant}
@@ -451,6 +459,7 @@ export default function DashboardPage() {
                   isCurrency={meta.isCurrency}
                   isPercentage={meta.isPercentage}
                   currencyCode={currentStore?.currency}
+                  sparkline={sparkline}
                 />
               )
             })}
@@ -488,6 +497,8 @@ export default function DashboardPage() {
               total: t.common.total,
               paymentMethod: t.orders.paymentMethod,
               status: t.common.status,
+              revenueChart: (t.dashboard as Record<string, string>).revenueChart || 'Revenus (7 jours)',
+              salesTrend: (t.dashboard as Record<string, string>).salesTrend || 'Tendance des ventes',
             }}
             paymentLabels={paymentLabels}
             statusLabels={statusLabels}

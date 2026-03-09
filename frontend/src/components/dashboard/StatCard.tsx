@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { formatCurrency } from '../../utils/currency'
+import SparkLine from '../charts/SparkLine'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -13,6 +14,8 @@ type StatCardProps = {
   isCurrency?: boolean
   isPercentage?: boolean
   currencyCode?: string
+  /** 7-day trend data for sparkline display */
+  sparkline?: number[]
 }
 
 // ---------------------------------------------------------------------------
@@ -57,6 +60,7 @@ const StatCard = ({
   isCurrency,
   isPercentage,
   currencyCode,
+  sparkline,
 }: StatCardProps) => {
   return (
     <div
@@ -107,17 +111,22 @@ const StatCard = ({
         </span>
       </div>
 
-      {/* Value */}
-      <span
-        style={{
-          fontSize: 24,
-          fontWeight: 700,
-          color: colors.text,
-          lineHeight: 1.2,
-        }}
-      >
-        {formatValue(value, isCurrency, isPercentage, currencyCode)}
-      </span>
+      {/* Value + Sparkline */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8 }}>
+        <span
+          style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color: colors.text,
+            lineHeight: 1.2,
+          }}
+        >
+          {formatValue(value, isCurrency, isPercentage, currencyCode)}
+        </span>
+        {sparkline && sparkline.length > 1 && (
+          <SparkLine values={sparkline} color={color} width={72} height={28} />
+        )}
+      </div>
     </div>
   )
 }

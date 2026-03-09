@@ -1,17 +1,21 @@
 import { useMemo } from 'react'
 import { useResponsive } from '../../hooks/useLayoutMode'
 import type { Order, Product, ActivityDashboardConfig } from '../../types'
-import type { CategoryBreakdownItem, PeakHourItem, AlertItem } from '../../utils/dashboardComputations'
+import type { CategoryBreakdownItem, PeakHourItem, AlertItem, SalesTrendItem } from '../../utils/dashboardComputations'
 import {
   computeCategoryBreakdown,
   computePeakHours,
   computeAlerts,
+  computeSalesTrend,
 } from '../../utils/dashboardComputations'
 import CategoryBreakdown from './CategoryBreakdown'
 import PeakHoursWidget from './PeakHoursWidget'
 import AlertsPanel from './AlertsPanel'
 import ContractShortcuts from './ContractShortcuts'
 import RecentItemsTable from './RecentItemsTable'
+import RevenueChartWidget from './RevenueChartWidget'
+import SalesTrendWidget from './SalesTrendWidget'
+import ExpiryAlertWidget from './ExpiryAlertWidget'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,6 +40,8 @@ type WidgetRendererProps = {
     total: string
     paymentMethod: string
     status: string
+    revenueChart?: string
+    salesTrend?: string
   }
   paymentLabels: Record<string, string>
   statusLabels: Record<string, string>
@@ -87,6 +93,11 @@ const WidgetRenderer = ({
     return map
   }, [config.widgets, products, allOrders])
 
+  const salesTrendData: SalesTrendItem[] = useMemo(
+    () => computeSalesTrend(allOrders, 7),
+    [allOrders],
+  )
+
   const recentOrders = useMemo(
     () =>
       [...allOrders]
@@ -131,6 +142,32 @@ const WidgetRenderer = ({
             templates={contractTemplates}
             title={labels.contracts}
             onSelectTemplate={onSelectContract}
+          />
+        )
+      case 'revenue_chart':
+        return (
+          <RevenueChartWidget
+            key={`widget-${idx}`}
+            data={salesTrendData}
+            title={labels.revenueChart || 'Revenus (7j)'}
+            currencyCode={currencyCode}
+          />
+        )
+      case 'sales_trend':
+        return (
+          <SalesTrendWidget
+            key={`widget-${idx}`}
+            data={salesTrendData}
+            title={labels.salesTrend || 'Tendance ventes'}
+            currencyCode={currencyCode}
+          />
+        )
+      case 'expiry_alerts':
+        return (
+          <ExpiryAlertWidget
+            key={`widget-${idx}`}
+            products={products}
+            title={labels.alerts}
           />
         )
       case 'recent_items':

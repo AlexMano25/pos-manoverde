@@ -200,6 +200,7 @@ export type Store = {
   tax_id?: string
   currency: string // default 'XAF' (FCFA)
   tax_rate: number // percentage, e.g. 19.25
+  receipt_prefix?: string // prefix for sequential receipt numbers (e.g., 'MV')
   created_at: string
   updated_at: string
 }
@@ -389,6 +390,7 @@ export type Order = {
   promotion_discount?: number // discount from promotions engine
   promotion_names?: string[]  // applied promotion names
   tip_amount?: number         // tip/gratuity amount (stored separately, not in total)
+  receipt_number?: string     // sequential receipt number (e.g., MV-20260309-0042)
   created_at: string
   updated_at: string
 }
@@ -623,6 +625,9 @@ export type WidgetType =
   | 'alerts_panel'
   | 'contract_shortcuts'
   | 'peak_hours'
+  | 'revenue_chart'
+  | 'sales_trend'
+  | 'expiry_alerts'
 
 export type AlertVariant =
   | 'low_stock'

@@ -4,6 +4,7 @@ import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { supabase } from '../services/supabase'
 import { useAppStore } from './appStore'
+import { getNextReceiptNumber } from '../utils/receiptCounter'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         promotion_names: options?.promotion_names,
         payments: options?.payments,
         tip_amount: options?.tip_amount,
+        receipt_number: getNextReceiptNumber(storeId, useAppStore.getState().currentStore?.receipt_prefix),
         created_at: now,
         updated_at: now,
       }

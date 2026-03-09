@@ -289,6 +289,10 @@ export const en: TranslationKeys = {
     markAttendance: 'Mark attendance',
     generatePdf: 'Generate PDF',
     loadExamples: 'Load sample products',
+    revenueChart: 'Revenue (7 days)',
+    salesTrend: 'Sales trend',
+    noChartData: 'No data',
+    expiryAlerts: 'Expiring products',
   },
 
   // POS
@@ -547,6 +551,13 @@ export const en: TranslationKeys = {
     enterPin: 'Enter your admin PIN',
     dateFrom: 'Start date',
     dateTo: 'End date',
+    receiptSettings: 'Receipt settings',
+    receiptSettingsDesc: 'Ticket prefix and numbering',
+    receiptPrefix: 'Receipt prefix',
+    receiptPrefixHint: 'Format: {prefix}-20260309-0001',
+    receiptCounter: 'Today\'s counter',
+    resetCounter: 'Reset',
+    receiptResetConfirm: 'Reset receipt counter?',
   },
 
   // Sync

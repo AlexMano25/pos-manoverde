@@ -294,6 +294,11 @@ export type TranslationKeys = {
     markAttendance: string
     generatePdf: string
     loadExamples: string
+    // Chart widgets
+    revenueChart: string
+    salesTrend: string
+    noChartData: string
+    expiryAlerts: string
   }
 
   // POS
@@ -555,6 +560,14 @@ export type TranslationKeys = {
     enterPin: string
     dateFrom: string
     dateTo: string
+    // Receipt settings
+    receiptSettings: string
+    receiptSettingsDesc: string
+    receiptPrefix: string
+    receiptPrefixHint: string
+    receiptCounter: string
+    resetCounter: string
+    receiptResetConfirm: string
   }
 
   // Sync

@@ -214,7 +214,7 @@ export function exportInvoice(
 
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`N° ${order.id.slice(0, 8).toUpperCase()}`, doc.internal.pageSize.width - 14, 28, { align: 'right' })
+  doc.text(`N° ${order.receipt_number || order.id.slice(0, 8).toUpperCase()}`, doc.internal.pageSize.width - 14, 28, { align: 'right' })
   doc.text(`Date: ${new Date(order.created_at).toLocaleString('fr-FR')}`, doc.internal.pageSize.width - 14, 34, { align: 'right' })
   if (cashierName) {
     doc.text(`Cashier: ${cashierName}`, doc.internal.pageSize.width - 14, 40, { align: 'right' })
@@ -306,7 +306,7 @@ export function exportReceipt(
 
   // Order info
   doc.setFontSize(8)
-  doc.text(`Ticket #${order.id.slice(0, 8).toUpperCase()}`, 10, y)
+  doc.text(`Ticket #${order.receipt_number || order.id.slice(0, 8).toUpperCase()}`, 10, y)
   y += 10
   doc.text(`Date: ${new Date(order.created_at).toLocaleString('fr-FR')}`, 10, y)
   y += 10
@@ -598,7 +598,7 @@ export function generateReceiptHTML(
 ): string {
   const fmt = (n: number) => formatCurrencyPlain(n, currencyCode || 'XAF')
   const date = new Date(order.created_at).toLocaleString('fr-FR')
-  const orderId = order.id.slice(0, 8).toUpperCase()
+  const orderId = order.receipt_number || order.id.slice(0, 8).toUpperCase()
 
   const itemRows = order.items
     .map(
