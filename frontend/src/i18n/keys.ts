@@ -232,6 +232,10 @@ export type TranslationKeys = {
     warranty: string
     barcode: string
     dynamicPricing: string
+    wasteLoss: string
+    stocktake: string
+    tax: string
+    feedback: string
   }
 
   // Dashboard
@@ -2790,5 +2794,206 @@ export type TranslationKeys = {
     duplicate: string
     previewImpact: string
     testRule: string
+  }
+
+  // Phase 9 — Waste & Loss
+  wasteLoss: {
+    title: string
+    subtitle: string
+    // Entries
+    entries: string
+    newEntry: string
+    editEntry: string
+    entryNumber: string
+    // Categories
+    category: string
+    foodWaste: string
+    spoilage: string
+    breakage: string
+    theft: string
+    spillage: string
+    expired: string
+    damaged: string
+    other: string
+    allCategories: string
+    // Details
+    productName: string
+    quantity: string
+    unitCost: string
+    totalCost: string
+    reason: string
+    wasteDate: string
+    reportedBy: string
+    approvedBy: string
+    notes: string
+    // Stats
+    totalEntries: string
+    totalLoss: string
+    thisMonth: string
+    topCategory: string
+    avgDailyLoss: string
+    // Actions
+    approve: string
+    viewDetails: string
+    exportReport: string
+    trendAnalysis: string
+  }
+
+  // Phase 9 — Inventory Count / Stocktake
+  stocktake: {
+    title: string
+    subtitle: string
+    // Counts
+    counts: string
+    newCount: string
+    editCount: string
+    countNumber: string
+    countName: string
+    // Status
+    status: string
+    draft: string
+    inProgress: string
+    completed: string
+    cancelled: string
+    allStatuses: string
+    // Items
+    expectedQty: string
+    countedQty: string
+    variance: string
+    varianceCost: string
+    categoryFilter: string
+    // Details
+    startedBy: string
+    completedBy: string
+    startedAt: string
+    completedAt: string
+    totalProducts: string
+    countedProducts: string
+    totalVariance: string
+    totalVarianceCost: string
+    notes: string
+    // Stats
+    totalCounts: string
+    openCounts: string
+    avgVariance: string
+    lastCount: string
+    // Actions
+    startCount: string
+    completeCount: string
+    cancelCount: string
+    applyAdjustments: string
+    printCountSheet: string
+    scanProduct: string
+    viewDetails: string
+  }
+
+  // Phase 9 — Tax Management
+  tax: {
+    title: string
+    subtitle: string
+    // Rates
+    rates: string
+    newRate: string
+    editRate: string
+    rateName: string
+    rateCode: string
+    rateValue: string
+    // Types
+    taxType: string
+    vat: string
+    salesTax: string
+    gst: string
+    serviceTax: string
+    excise: string
+    customTax: string
+    allTypes: string
+    // Status
+    status: string
+    active: string
+    inactive: string
+    scheduled: string
+    allStatuses: string
+    // Settings
+    isCompound: string
+    isInclusive: string
+    applyTo: string
+    allProducts: string
+    byCategory: string
+    specificProducts: string
+    effectiveFrom: string
+    effectiveUntil: string
+    description: string
+    // Stats
+    totalRates: string
+    activeRates: string
+    avgRate: string
+    taxCollected: string
+    // Actions
+    activate: string
+    deactivate: string
+    viewDetails: string
+    taxReport: string
+    exportTaxData: string
+  }
+
+  // Phase 9 — Customer Feedback
+  feedback: {
+    title: string
+    subtitle: string
+    // Entries
+    feedbacks: string
+    newFeedback: string
+    editFeedback: string
+    feedbackNumber: string
+    // Rating
+    rating: string
+    star1: string
+    star2: string
+    star3: string
+    star4: string
+    star5: string
+    avgRating: string
+    // Channel
+    channel: string
+    inStore: string
+    online: string
+    phone: string
+    emailChannel: string
+    socialMedia: string
+    allChannels: string
+    // Status
+    status: string
+    new: string
+    reviewed: string
+    responded: string
+    resolved: string
+    archived: string
+    allStatuses: string
+    // Details
+    customerName: string
+    customerEmail: string
+    customerPhone: string
+    category: string
+    feedbackTitle: string
+    comment: string
+    response: string
+    respondedBy: string
+    tags: string
+    featured: string
+    orderId: string
+    // Stats
+    totalFeedbacks: string
+    averageRating: string
+    responseRate: string
+    npsScore: string
+    positiveRate: string
+    // Actions
+    respond: string
+    markReviewed: string
+    markResolved: string
+    archive: string
+    feature: string
+    viewDetails: string
+    exportFeedback: string
   }
 }

@@ -52,6 +52,10 @@ import SelfCheckoutPage from './pages/SelfCheckoutPage'
 import WarrantyPage from './pages/WarrantyPage'
 import BarcodePage from './pages/BarcodePage'
 import DynamicPricingPage from './pages/DynamicPricingPage'
+import WasteLossPage from './pages/WasteLossPage'
+import StocktakePage from './pages/StocktakePage'
+import TaxPage from './pages/TaxPage'
+import FeedbackPage from './pages/FeedbackPage'
 import WaiterPOSPage from './pages/WaiterPOSPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -160,6 +164,10 @@ function AppContent() {
       case 'warranty':         return <WarrantyPage />
       case 'barcode':          return <BarcodePage />
       case 'dynamic_pricing':  return <DynamicPricingPage />
+      case 'waste_loss':       return <WasteLossPage />
+      case 'stocktake':        return <StocktakePage />
+      case 'tax':              return <TaxPage />
+      case 'feedback':         return <FeedbackPage />
       default:                 return <DashboardPage />
     }
   }

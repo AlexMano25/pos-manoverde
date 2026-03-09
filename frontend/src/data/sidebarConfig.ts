@@ -23,6 +23,12 @@ const WARRANTY: SidebarItemConfig = { section: 'warranty', icon: 'ShieldCheck', 
 const BARCODE: SidebarItemConfig = { section: 'barcode', icon: 'ScanBarcode', i18nKey: 'nav.barcode', pageComponent: 'barcode', serverOnly: true, allowedRoles: ['admin', 'manager', 'stock'] }
 const DYNAMIC_PRICING: SidebarItemConfig = { section: 'dynamic_pricing', icon: 'TrendingUp', i18nKey: 'nav.dynamicPricing', pageComponent: 'dynamic_pricing', serverOnly: true, allowedRoles: ['admin', 'manager'] }
 
+// ── Phase 9 shared items ─────────────────────────────────────────────────
+const WASTE_LOSS: SidebarItemConfig = { section: 'waste_loss', icon: 'Trash2', i18nKey: 'nav.wasteLoss', pageComponent: 'waste_loss', serverOnly: true, allowedRoles: ['admin', 'manager'] }
+const STOCKTAKE: SidebarItemConfig = { section: 'stocktake', icon: 'ClipboardCheck', i18nKey: 'nav.stocktake', pageComponent: 'stocktake', serverOnly: true, allowedRoles: ['admin', 'manager', 'stock'] }
+const TAX: SidebarItemConfig = { section: 'tax', icon: 'Receipt', i18nKey: 'nav.tax', pageComponent: 'tax', serverOnly: true, allowedRoles: ['admin'] }
+const FEEDBACK: SidebarItemConfig = { section: 'feedback', icon: 'MessageSquareHeart', i18nKey: 'nav.feedback', pageComponent: 'feedback', allowedRoles: ['admin', 'manager'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -40,6 +46,8 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   GIFT_CARDS,
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
+  STOCKTAKE,
+  WASTE_LOSS,
   TRANSFERS,
   BARCODE,
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
@@ -50,12 +58,14 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
@@ -76,6 +86,8 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   GIFT_CARDS,
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
+  STOCKTAKE,
+  WASTE_LOSS,
   TRANSFERS,
   BARCODE,
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
@@ -86,12 +98,14 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -115,12 +129,14 @@ const SERVICE_POS: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -145,12 +161,14 @@ const HOTEL: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -168,12 +186,14 @@ const REAL_ESTATE: SidebarItemConfig[] = [
   DOCUMENTS,
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -190,6 +210,7 @@ const EDUCATION: SidebarItemConfig[] = [
   GIFT_CARDS,
   DOCUMENTS,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -197,6 +218,7 @@ const EDUCATION: SidebarItemConfig[] = [
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -217,6 +239,7 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
@@ -224,6 +247,7 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -246,12 +270,14 @@ const WELLNESS: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -270,6 +296,8 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
   GIFT_CARDS,
   { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
+  STOCKTAKE,
+  WASTE_LOSS,
   { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
   { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
   TRANSFERS,
@@ -277,12 +305,14 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   DOCUMENTS,
   { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
@@ -304,12 +334,14 @@ const HAIR_SALON: SidebarItemConfig[] = [
   { section: 'promotions', icon: 'Tag', i18nKey: 'nav.promotions', pageComponent: 'promotions', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   DYNAMIC_PRICING,
   CAMPAIGNS,
+  FEEDBACK,
   { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
   MAINTENANCE,
   AUDIT_TRAIL,
+  TAX,
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 

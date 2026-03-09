@@ -117,6 +117,11 @@ export type SidebarSection =
   | 'warranty'         // warranty & after-sales service (SAV)
   | 'barcode'          // barcode generation & scanning
   | 'dynamic_pricing'  // time/volume-based pricing rules
+  // Phase 9 — waste & loss, stocktake, tax, feedback
+  | 'waste_loss'       // waste, shrinkage & loss tracking
+  | 'stocktake'        // physical inventory counting
+  | 'tax'              // tax rates, rules & reports
+  | 'feedback'         // customer feedback & reviews
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -166,6 +171,11 @@ export type PageComponent =
   | 'warranty'
   | 'barcode'
   | 'dynamic_pricing'
+  // Phase 9 — waste & loss, stocktake, tax, feedback
+  | 'waste_loss'
+  | 'stocktake'
+  | 'tax'
+  | 'feedback'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -405,7 +415,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task' | 'kiosk_session' | 'warranty_claim' | 'barcode_batch' | 'pricing_rule'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task' | 'kiosk_session' | 'warranty_claim' | 'barcode_batch' | 'pricing_rule' | 'waste_entry' | 'stocktake' | 'tax_rate' | 'customer_feedback'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1712,6 +1722,130 @@ export type PricingRule = {
   created_by: string
   created_by_name: string
   notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// Phase 9 — Waste & Loss, Stocktake, Tax Management, Customer Feedback
+// ---------------------------------------------------------------------------
+
+// Waste & Loss Tracking
+export type WasteCategory = 'food_waste' | 'spoilage' | 'breakage' | 'theft' | 'spillage' | 'expired' | 'damaged' | 'other'
+
+export type WasteEntry = {
+  id: string
+  store_id: string
+  entry_number: string
+  product_id?: string
+  product_name: string
+  category: WasteCategory
+  quantity: number
+  unit_cost: number
+  total_cost: number
+  reason: string
+  notes?: string
+  reported_by: string
+  reported_by_name: string
+  approved_by?: string
+  approved_by_name?: string
+  waste_date: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Inventory Count / Stocktake
+export type StocktakeStatus = 'draft' | 'in_progress' | 'completed' | 'cancelled'
+
+export type StocktakeItem = {
+  product_id: string
+  product_name: string
+  sku?: string
+  category?: string
+  expected_qty: number
+  counted_qty: number
+  variance: number
+  variance_cost: number
+  unit_cost: number
+  notes?: string
+}
+
+export type Stocktake = {
+  id: string
+  store_id: string
+  count_number: string
+  name: string
+  status: StocktakeStatus
+  category_filter?: string
+  items: StocktakeItem[]
+  total_products: number
+  counted_products: number
+  total_variance: number
+  total_variance_cost: number
+  started_by: string
+  started_by_name: string
+  completed_by?: string
+  completed_by_name?: string
+  started_at: string
+  completed_at?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Tax Management
+export type TaxType = 'vat' | 'sales_tax' | 'gst' | 'service_tax' | 'excise' | 'custom'
+export type TaxRateStatus = 'active' | 'inactive' | 'scheduled'
+
+export type TaxRate = {
+  id: string
+  store_id: string
+  name: string
+  code: string
+  type: TaxType
+  rate: number
+  is_compound: boolean
+  is_inclusive: boolean
+  apply_to: 'all_products' | 'category' | 'specific_products'
+  category_filter?: string
+  product_ids?: string[]
+  effective_from: string
+  effective_until?: string
+  status: TaxRateStatus
+  description?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Customer Feedback
+export type FeedbackRating = 1 | 2 | 3 | 4 | 5
+export type FeedbackChannel = 'in_store' | 'online' | 'phone' | 'email' | 'social_media'
+export type FeedbackStatus = 'new' | 'reviewed' | 'responded' | 'resolved' | 'archived'
+
+export type CustomerFeedback = {
+  id: string
+  store_id: string
+  feedback_number: string
+  customer_id?: string
+  customer_name: string
+  customer_email?: string
+  customer_phone?: string
+  order_id?: string
+  rating: FeedbackRating
+  category: string
+  title: string
+  comment: string
+  response?: string
+  responded_by?: string
+  responded_by_name?: string
+  channel: FeedbackChannel
+  status: FeedbackStatus
+  tags?: string[]
+  is_featured: boolean
   synced: boolean
   created_at: string
   updated_at: string
