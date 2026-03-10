@@ -71,6 +71,7 @@ import VinDecoderPage from './pages/VinDecoderPage'
 import VehicleHistoryPage from './pages/VehicleHistoryPage'
 import PartsCatalogPage from './pages/PartsCatalogPage'
 import MultiStoreDashboardPage from './pages/MultiStoreDashboardPage'
+import WebhooksPage from './pages/WebhooksPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
@@ -192,6 +193,7 @@ function AppContent() {
       case 'vehicle_history':  return <VehicleHistoryPage />
       case 'parts_catalog':    return <PartsCatalogPage />
       case 'multi_store':      return <MultiStoreDashboardPage />
+      case 'webhooks':         return <WebhooksPage />
       default:                 return <DashboardPage />
     }
   }

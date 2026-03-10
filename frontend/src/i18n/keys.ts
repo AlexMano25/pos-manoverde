@@ -250,6 +250,7 @@ export type TranslationKeys = {
     vehicleHistory: string
     partsCatalog: string
     multiStore: string
+    webhooks: string
   }
 
   // Multi-store consolidated
@@ -3268,5 +3269,51 @@ export type TranslationKeys = {
     feature: string
     viewDetails: string
     exportFeedback: string
+  }
+
+  // LT-5 — Webhooks & API
+  webhooks: {
+    title: string
+    subtitle: string
+    webhooksTab: string
+    apiKeysTab: string
+    deliveriesTab: string
+    addEndpoint: string
+    endpointName: string
+    endpointUrl: string
+    selectEvents: string
+    noEndpoints: string
+    secret: string
+    test: string
+    testing: string
+    testSuccess: string
+    testFailed: string
+    active: string
+    paused: string
+    deliveries: string
+    noDeliveries: string
+    clearLog: string
+    retryFailed: string
+    sent: string
+    failed: string
+    pending: string
+    event: string
+    status: string
+    timestamp: string
+    response: string
+    addApiKey: string
+    keyName: string
+    scopes: string
+    noApiKeys: string
+    rateLimit: string
+    requestsPerMin: string
+    totalRequests: string
+    lastUsed: string
+    never: string
+    copyKey: string
+    keyCopied: string
+    keyCreated: string
+    revoke: string
+    revoked: string
   }
 }

@@ -49,6 +49,9 @@ const PARTS_CATALOG: SidebarItemConfig = { section: 'parts_catalog', icon: 'Cog'
 // ── LT-4/6 BI & Multi-store ──────────────────────────────────────────────
 const MULTI_STORE: SidebarItemConfig = { section: 'multi_store', icon: 'Building2', i18nKey: 'nav.multiStore', pageComponent: 'multi_store', serverOnly: true, allowedRoles: ['admin'] }
 
+// ── LT-5 API & Integrations ─────────────────────────────────────────────
+const WEBHOOKS: SidebarItemConfig = { section: 'webhooks', icon: 'Webhook', i18nKey: 'nav.webhooks', pageComponent: 'webhooks', serverOnly: true, allowedRoles: ['admin'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -446,13 +449,16 @@ export function getSidebarItems(activity: Activity | string | undefined | null):
     items = SIDEBAR_CONFIG.restaurant // safe default
   }
 
-  // Auto-append Multi-Store item if not already present
-  if (!items.find(i => i.section === 'multi_store')) {
-    const settingsIdx = items.findIndex(i => i.section === 'settings')
-    if (settingsIdx >= 0) {
-      items = [...items.slice(0, settingsIdx), MULTI_STORE, ...items.slice(settingsIdx)]
-    } else {
-      items = [...items, MULTI_STORE]
+  // Auto-append Multi-Store and Webhooks items if not already present
+  const autoItems = [MULTI_STORE, WEBHOOKS]
+  for (const item of autoItems) {
+    if (!items.find(i => i.section === item.section)) {
+      const settingsIdx = items.findIndex(i => i.section === 'settings')
+      if (settingsIdx >= 0) {
+        items = [...items.slice(0, settingsIdx), item, ...items.slice(settingsIdx)]
+      } else {
+        items = [...items, item]
+      }
     }
   }
 

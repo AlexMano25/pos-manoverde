@@ -138,6 +138,8 @@ export type SidebarSection =
   | 'server_orders'    // cross-functional server order-taking
   // LT-4/6 — BI & Multi-store
   | 'multi_store'      // consolidated multi-store dashboard
+  // LT-5 — API & Integrations
+  | 'webhooks'         // webhook endpoints & API keys management
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -207,6 +209,7 @@ export type PageComponent =
   | 'parts_catalog'
   | 'server_orders'
   | 'multi_store'
+  | 'webhooks'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {

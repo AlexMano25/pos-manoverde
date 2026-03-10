@@ -5,6 +5,7 @@ import { generateUUID } from '../utils/uuid'
 import { supabase } from '../services/supabase'
 import { useAppStore } from './appStore'
 import { getNextReceiptNumber } from '../utils/receiptCounter'
+import { triggerWebhookEvent } from '../utils/webhookEngine'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -214,6 +215,16 @@ export const useOrderStore = create<OrderState & OrderActions>()(
           }
         }
 
+        // Fire webhook events (non-blocking)
+        try {
+          triggerWebhookEvent(storeId, 'order.created', { order })
+          if (order.status === 'paid') {
+            triggerWebhookEvent(storeId, 'order.paid', { order })
+          }
+        } catch (e) {
+          console.error('[orderStore] Webhook trigger error:', e)
+        }
+
         return order
       } catch (error) {
         console.error('[orderStore] Failed to create order:', error)
@@ -259,6 +270,19 @@ export const useOrderStore = create<OrderState & OrderActions>()(
                   if (error) console.error('[orderStore] Credit deduction failed:', error)
                 })
             }
+          }
+        }
+
+        // Fire webhook events (non-blocking)
+        if (order) {
+          try {
+            const updatedOrder = { ...order, ...updates }
+            triggerWebhookEvent(order.store_id, 'order.updated', { order: updatedOrder, previous_status: order.status })
+            if (status === 'paid') triggerWebhookEvent(order.store_id, 'order.paid', { order: updatedOrder })
+            if (status === 'refunded') triggerWebhookEvent(order.store_id, 'order.refunded', { order: updatedOrder })
+            if (status === 'cancelled') triggerWebhookEvent(order.store_id, 'order.cancelled', { order: updatedOrder })
+          } catch (e) {
+            console.error('[orderStore] Webhook trigger error:', e)
           }
         }
 

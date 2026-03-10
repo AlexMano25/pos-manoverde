@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Product, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
+import { triggerWebhookEvent } from '../utils/webhookEngine'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -101,6 +102,9 @@ export const useProductStore = create<ProductState & ProductActions>()(
           products: updated,
           categories: deriveCategories(updated),
         })
+
+        // Fire webhook (non-blocking)
+        try { triggerWebhookEvent(product.store_id, 'product.created', { product }) } catch {}
       } catch (error) {
         console.error('[productStore] Failed to add product:', error)
         throw error
@@ -131,6 +135,11 @@ export const useProductStore = create<ProductState & ProductActions>()(
           products: updated,
           categories: deriveCategories(updated),
         })
+
+        // Fire webhook (non-blocking)
+        if (updatedProduct) {
+          try { triggerWebhookEvent(updatedProduct.store_id, 'product.updated', { product: updatedProduct }) } catch {}
+        }
       } catch (error) {
         console.error('[productStore] Failed to update product:', error)
         throw error
@@ -154,6 +163,9 @@ export const useProductStore = create<ProductState & ProductActions>()(
           product,
           product.store_id
         )
+
+        // Fire webhook (non-blocking)
+        try { triggerWebhookEvent(product.store_id, 'product.deleted', { product }) } catch {}
 
         const current = get().products
         const updated = current.filter((p) => p.id !== id)
