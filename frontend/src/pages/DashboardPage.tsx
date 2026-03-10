@@ -41,6 +41,7 @@ import { seedSampleProducts } from '../utils/seedProducts'
 import StatCard from '../components/dashboard/StatCard'
 import QuickActions from '../components/dashboard/QuickActions'
 import WidgetRenderer from '../components/dashboard/WidgetRenderer'
+import AIInsightsWidget from '../components/dashboard/AIInsightsWidget'
 import ContractModal from '../components/dashboard/ContractModal'
 import { useResponsive } from '../hooks/useLayoutMode'
 import InstallTutorial from '../components/common/InstallTutorial'
@@ -476,6 +477,22 @@ export default function DashboardPage() {
               title={t.dashboard.quickActions}
             />
           </div>
+
+          {/* ── AI Insights Widget ─────────────────────────────────── */}
+          <AIInsightsWidget
+            orders={orders}
+            products={products}
+            labels={{
+              aiInsights: ((t as unknown as Record<string, any>).ai?.insights) || 'AI Insights',
+              viewAll: t.dashboard.viewAll,
+              rising: ((t as unknown as Record<string, any>).ai?.rising) || 'Rising',
+              atRisk: ((t as unknown as Record<string, any>).ai?.atRisk) || 'At Risk',
+              anomalies: ((t as unknown as Record<string, any>).ai?.anomalies) || 'Anomalies',
+              stockoutWarning: ((t as unknown as Record<string, any>).ai?.stockoutWarning) || 'Stockout Risk (< 14 days)',
+              topTrending: ((t as unknown as Record<string, any>).ai?.topTrending) || 'Top Trending',
+            }}
+            onNavigate={setSection}
+          />
 
           {/* ── Activity-specific Widgets + Recent Orders ─────────────── */}
           <WidgetRenderer

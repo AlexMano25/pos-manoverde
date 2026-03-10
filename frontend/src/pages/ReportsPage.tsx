@@ -11,6 +11,7 @@ import MiniDonutChart from '../components/charts/MiniDonutChart'
 import InventoryValuationReport from '../components/reports/InventoryValuationReport'
 import TaxSummaryReport from '../components/reports/TaxSummaryReport'
 import CategoryAnalysis from '../components/reports/CategoryAnalysis'
+import ForecastReport from '../components/reports/ForecastReport'
 import {
   computeInventoryValuation,
   computeTaxSummary,
@@ -21,7 +22,7 @@ import type { Order, PaymentMethod } from '../types'
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type PeriodKey = 'today' | 'week' | 'month' | 'custom'
-type ReportTab = 'sales' | 'inventory' | 'tax' | 'categories'
+type ReportTab = 'sales' | 'inventory' | 'tax' | 'categories' | 'ai'
 
 interface TopProduct {
   product_id: string
@@ -176,6 +177,7 @@ export default function ReportsPage() {
       inventoryTab: r?.inventoryTab || 'Inventory',
       taxTab: r?.taxTab || 'Taxes',
       categoryTab: r?.categoryTab || 'Categories',
+      aiTab: r?.aiTab || 'AI / Forecast',
       // Inventory report labels
       totalAtCost: r?.totalAtCost || 'Value at Cost',
       totalAtPrice: r?.totalAtPrice || 'Value at Price',
@@ -940,6 +942,7 @@ export default function ReportsPage() {
     { key: 'inventory', label: tr.inventoryTab },
     { key: 'tax', label: tr.taxTab },
     { key: 'categories', label: tr.categoryTab },
+    { key: 'ai', label: tr.aiTab },
   ]
 
   return (
@@ -1040,6 +1043,20 @@ export default function ReportsPage() {
       {activeTab === 'inventory' && renderInventoryTab()}
       {activeTab === 'tax' && renderTaxTab()}
       {activeTab === 'categories' && renderCategoryTab()}
+      {activeTab === 'ai' && (
+        <ForecastReport
+          orders={orders.filter(o => o.store_id === storeId)}
+          products={storeProducts}
+          currencyCode={currencyCode}
+          labels={{
+            product: tr.product,
+            units: tr.units,
+            stock: (t as Record<string, any>).stock?.currentStock || 'Stock',
+            date: (t as Record<string, any>).common?.date || 'Date',
+            ...((t as Record<string, any>).ai || {}),
+          }}
+        />
+      )}
     </div>
   )
 }

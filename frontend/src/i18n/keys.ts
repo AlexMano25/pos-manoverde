@@ -1421,6 +1421,57 @@ export type TranslationKeys = {
     orders: string
     totalLabel: string
     profitMargin: string
+    aiTab: string
+  }
+
+  // AI / Machine Learning
+  ai: {
+    insights: string
+    rising: string
+    atRisk: string
+    anomalies: string
+    stockoutWarning: string
+    topTrending: string
+    forecastedProducts: string
+    atRiskStockout: string
+    trendingUp: string
+    anomaliesDetected: string
+    topMovers: string
+    avgDaily: string
+    trend: string
+    forecast7d: string
+    stockDays: string
+    sparkline: string
+    demandIncreasing: string
+    demandDecreasing: string
+    reorderSuggestions: string
+    critical: string
+    high: string
+    medium: string
+    low: string
+    reorderQty: string
+    estimatedCost: string
+    urgency: string
+    totalEstimatedCost: string
+    remaining: string
+    anomalyDetection: string
+    riskScore: string
+    highSeverity: string
+    mediumSeverity: string
+    lowSeverity: string
+    anomalyRate: string
+    score: string
+    severity: string
+    seasonalPatterns: string
+    seasonalDesc: string
+    noForecastData: string
+    anomaly_unusual_amount: string
+    anomaly_unusual_hour: string
+    anomaly_rapid_succession: string
+    anomaly_high_discount: string
+    anomaly_high_refund_rate: string
+    anomaly_round_amount: string
+    anomaly_unusual_volume: string
   }
 
   // Appointments (hair salon, hotel, travel, education, etc.)
