@@ -52,7 +52,7 @@ export default function MtnMomoForm({ amount, amountUSD, description, onSuccess,
       if (supabase) {
         const { data, error } = await supabase.functions.invoke('mtn-momo-pay', {
           body: {
-            phone: `237${cleanPhone}`,  // full international format
+            phone: cleanPhone,  // local 9-digit format (edge function handles prefix)
             amount,
             currency: 'XAF',
             amountUSD,
