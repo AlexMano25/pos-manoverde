@@ -235,6 +235,18 @@ export const en: TranslationKeys = {
     tax: 'Tax',
     feedback: 'Feedback',
     serverOrders: 'Order Taking',
+    roomManagement: 'Room Management',
+    housekeeping: 'Housekeeping',
+    minibar: 'Minibar',
+    studentEnrollment: 'Enrollment',
+    attendance: 'Attendance',
+    grades: 'Grades',
+    travelPackages: 'Travel Packages',
+    itineraries: 'Itineraries',
+    bookingCalendar: 'Booking Calendar',
+    vinDecoder: 'VIN Decoder',
+    vehicleHistory: 'Vehicle History',
+    partsCatalog: 'Parts Catalog',
   },
 
   serverOrder: {

@@ -32,6 +32,20 @@ const FEEDBACK: SidebarItemConfig = { section: 'feedback', icon: 'MessageSquareH
 // ── Cross-functional server order-taking ─────────────────────────────────
 const SERVER_ORDERS: SidebarItemConfig = { section: 'server_orders', icon: 'ClipboardList', i18nKey: 'nav.serverOrders', pageComponent: 'server_orders', allowedRoles: ['admin', 'manager', 'cashier'] }
 
+// ── LT-1 Deep Business Module items ─────────────────────────────────────
+const ROOM_MANAGEMENT: SidebarItemConfig = { section: 'room_management', icon: 'BedDouble', i18nKey: 'nav.roomManagement', pageComponent: 'room_management', allowedRoles: ['admin', 'manager'] }
+const HOUSEKEEPING: SidebarItemConfig = { section: 'housekeeping', icon: 'Sparkles', i18nKey: 'nav.housekeeping', pageComponent: 'housekeeping', allowedRoles: ['admin', 'manager', 'cashier'] }
+const MINIBAR: SidebarItemConfig = { section: 'minibar', icon: 'Wine', i18nKey: 'nav.minibar', pageComponent: 'minibar', allowedRoles: ['admin', 'manager'] }
+const STUDENT_ENROLLMENT: SidebarItemConfig = { section: 'student_enrollment', icon: 'GraduationCap', i18nKey: 'nav.studentEnrollment', pageComponent: 'student_enrollment', allowedRoles: ['admin', 'manager'] }
+const ATTENDANCE_PAGE: SidebarItemConfig = { section: 'attendance', icon: 'ListChecks', i18nKey: 'nav.attendance', pageComponent: 'attendance', allowedRoles: ['admin', 'manager'] }
+const GRADES: SidebarItemConfig = { section: 'grades', icon: 'FileSpreadsheet', i18nKey: 'nav.grades', pageComponent: 'grades', allowedRoles: ['admin', 'manager'] }
+const TRAVEL_PACKAGES: SidebarItemConfig = { section: 'travel_packages', icon: 'Map', i18nKey: 'nav.travelPackages', pageComponent: 'travel_packages', allowedRoles: ['admin', 'manager'] }
+const ITINERARIES: SidebarItemConfig = { section: 'itineraries', icon: 'Route', i18nKey: 'nav.itineraries', pageComponent: 'itineraries', allowedRoles: ['admin', 'manager'] }
+const BOOKING_CALENDAR: SidebarItemConfig = { section: 'booking_calendar', icon: 'CalendarRange', i18nKey: 'nav.bookingCalendar', pageComponent: 'booking_calendar', allowedRoles: ['admin', 'manager', 'cashier'] }
+const VIN_DECODER: SidebarItemConfig = { section: 'vin_decoder', icon: 'ScanSearch', i18nKey: 'nav.vinDecoder', pageComponent: 'vin_decoder', allowedRoles: ['admin', 'manager'] }
+const VEHICLE_HISTORY: SidebarItemConfig = { section: 'vehicle_history', icon: 'CarFront', i18nKey: 'nav.vehicleHistory', pageComponent: 'vehicle_history', allowedRoles: ['admin', 'manager'] }
+const PARTS_CATALOG: SidebarItemConfig = { section: 'parts_catalog', icon: 'Cog', i18nKey: 'nav.partsCatalog', pageComponent: 'parts_catalog', allowedRoles: ['admin', 'manager', 'stock'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -154,6 +168,9 @@ const HOTEL: SidebarItemConfig[] = [
   SERVER_ORDERS,
   SELF_CHECKOUT,
   EXPENSES,
+  ROOM_MANAGEMENT,
+  HOUSEKEEPING,
+  MINIBAR,
   { section: 'tables', icon: 'Grid3X3', i18nKey: 'nav.tables', pageComponent: 'tables', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'reservations', icon: 'CalendarCheck', i18nKey: 'nav.reservations', pageComponent: 'appointments', allowedRoles: ['admin', 'manager', 'cashier'] },
   { section: 'rooms', icon: 'BedDouble', i18nKey: 'nav.rooms', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
@@ -213,6 +230,9 @@ const EDUCATION: SidebarItemConfig[] = [
   SERVER_ORDERS,
   EXPENSES,
   { section: 'enrollments', icon: 'GraduationCap', i18nKey: 'nav.enrollments', pageComponent: 'appointments', allowedRoles: ['admin', 'manager'] },
+  STUDENT_ENROLLMENT,
+  ATTENDANCE_PAGE,
+  GRADES,
   { section: 'services', icon: 'BookOpen', i18nKey: 'nav.services', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.customers', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
   { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
@@ -239,6 +259,9 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   SERVER_ORDERS,
   EXPENSES,
   { section: 'bookings', icon: 'Plane', i18nKey: 'nav.bookings', pageComponent: 'appointments', allowedRoles: ['admin', 'manager', 'cashier'] },
+  TRAVEL_PACKAGES,
+  ITINERARIES,
+  BOOKING_CALENDAR,
   { section: 'packages', icon: 'Globe', i18nKey: 'nav.packages', pageComponent: 'products', allowedRoles: ['admin', 'manager'] },
   { section: 'clients', icon: 'Users', i18nKey: 'nav.clients', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
   RETURNS,
@@ -300,6 +323,9 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   SERVER_ORDERS,
   EXPENSES,
   { section: 'workshop', icon: 'Wrench', i18nKey: 'nav.workshop', pageComponent: 'work_orders', allowedRoles: ['admin', 'manager', 'cashier'] },
+  VIN_DECODER,
+  VEHICLE_HISTORY,
+  PARTS_CATALOG,
   { section: 'parts', icon: 'Cog', i18nKey: 'nav.parts', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
   { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
   RETURNS,

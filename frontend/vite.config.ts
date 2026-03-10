@@ -48,7 +48,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MB — legacy bundle exceeds default 2 MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB — legacy bundle with LT-1 modules
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {

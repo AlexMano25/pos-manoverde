@@ -122,6 +122,20 @@ export type SidebarSection =
   | 'stocktake'        // physical inventory counting
   | 'tax'              // tax rates, rules & reports
   | 'feedback'         // customer feedback & reviews
+  // LT-1 — Deep business modules
+  | 'room_management'  // hotel PMS room grid
+  | 'housekeeping'     // hotel housekeeping tasks
+  | 'minibar'          // hotel minibar charges
+  | 'student_enrollment' // school student management
+  | 'attendance'       // school attendance tracking
+  | 'grades'           // school grades & report cards
+  | 'travel_packages'  // travel agency packages
+  | 'itineraries'      // travel itinerary builder
+  | 'booking_calendar' // travel booking calendar
+  | 'vin_decoder'      // garage VIN lookup
+  | 'vehicle_history'  // garage vehicle maintenance history
+  | 'parts_catalog'    // garage parts catalog
+  | 'server_orders'    // cross-functional server order-taking
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -176,6 +190,20 @@ export type PageComponent =
   | 'stocktake'
   | 'tax'
   | 'feedback'
+  // LT-1 — Deep business modules
+  | 'room_management'
+  | 'housekeeping'
+  | 'minibar'
+  | 'student_enrollment'
+  | 'attendance'
+  | 'grades'
+  | 'travel_packages'
+  | 'itineraries'
+  | 'booking_calendar'
+  | 'vin_decoder'
+  | 'vehicle_history'
+  | 'parts_catalog'
+  | 'server_orders'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -418,7 +446,7 @@ export type SyncOperation = 'create' | 'update' | 'delete'
 
 export type SyncEntry = {
   id: string
-  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task' | 'kiosk_session' | 'warranty_claim' | 'barcode_batch' | 'pricing_rule' | 'waste_entry' | 'stocktake' | 'tax_rate' | 'customer_feedback'
+  entity_type: 'product' | 'order' | 'stock_move' | 'user' | 'customer' | 'promotion' | 'appointment' | 'membership' | 'work_order' | 'quote' | 'cash_session' | 'supplier' | 'purchase_order' | 'pos_invoice' | 'delivery' | 'time_entry' | 'loyalty_reward' | 'point_transaction' | 'kds_order' | 'gift_card' | 'gift_card_transaction' | 'expense' | 'campaign' | 'payroll_entry' | 'commission_rule' | 'notification' | 'audit_log' | 'pos_return' | 'pos_document' | 'stock_transfer' | 'recipe' | 'production_batch' | 'online_order' | 'maintenance_task' | 'kiosk_session' | 'warranty_claim' | 'barcode_batch' | 'pricing_rule' | 'waste_entry' | 'stocktake' | 'tax_rate' | 'customer_feedback' | 'hotel_room' | 'housekeeping_task' | 'minibar_charge' | 'student' | 'school_class' | 'attendance_record' | 'grade_entry' | 'travel_package' | 'itinerary' | 'travel_booking' | 'vehicle' | 'vehicle_service_record'
   entity_id: string
   operation: SyncOperation
   data: string // JSON-stringified entity payload
@@ -1852,6 +1880,305 @@ export type CustomerFeedback = {
   status: FeedbackStatus
   tags?: string[]
   is_featured: boolean
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ---------------------------------------------------------------------------
+// LT-1 — Deep Business Modules: Hotel PMS, School SIS, Travel GDS, Garage VIN
+// ---------------------------------------------------------------------------
+
+// ── Hotel PMS ──────────────────────────────────────────────────────────────
+
+export type RoomStatus = 'available' | 'occupied' | 'cleaning' | 'maintenance' | 'out_of_order'
+export type RoomType = 'single' | 'double' | 'twin' | 'suite' | 'apartment' | 'studio' | 'penthouse'
+
+export type HotelRoom = {
+  id: string
+  store_id: string
+  number: string          // "101", "A-3"
+  floor: number
+  type: RoomType
+  status: RoomStatus
+  price_per_night: number
+  max_guests: number
+  amenities: string[]     // ['wifi', 'tv', 'minibar', 'ac', 'balcony']
+  current_guest_name?: string
+  current_reservation_id?: string
+  check_in_date?: string
+  check_out_date?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type HousekeepingStatus = 'pending' | 'in_progress' | 'completed' | 'inspected'
+export type HousekeepingPriority = 'low' | 'normal' | 'high' | 'urgent'
+
+export type HousekeepingTask = {
+  id: string
+  store_id: string
+  room_id: string
+  room_number: string
+  type: 'checkout_clean' | 'stay_clean' | 'deep_clean' | 'turndown' | 'inspection'
+  status: HousekeepingStatus
+  priority: HousekeepingPriority
+  assigned_to?: string    // employee id
+  assigned_name?: string
+  notes?: string
+  started_at?: string
+  completed_at?: string
+  inspected_by?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type MinibarCharge = {
+  id: string
+  store_id: string
+  room_id: string
+  room_number: string
+  guest_name?: string
+  reservation_id?: string
+  product_id?: string
+  product_name: string
+  quantity: number
+  unit_price: number
+  total: number
+  charged: boolean       // added to folio/bill
+  charged_at?: string
+  synced: boolean
+  created_at: string
+}
+
+// ── School SIS ─────────────────────────────────────────────────────────────
+
+export type StudentStatus = 'enrolled' | 'active' | 'suspended' | 'graduated' | 'withdrawn'
+
+export type Student = {
+  id: string
+  store_id: string
+  student_number: string
+  first_name: string
+  last_name: string
+  date_of_birth?: string
+  gender?: 'male' | 'female' | 'other'
+  class_id?: string
+  class_name?: string
+  parent_name?: string
+  parent_phone?: string
+  parent_email?: string
+  address?: string
+  medical_notes?: string
+  status: StudentStatus
+  enrollment_date: string
+  photo_url?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type SchoolClass = {
+  id: string
+  store_id: string
+  name: string            // "CM2 A", "6ème B"
+  level: string           // "Primaire", "Collège"
+  academic_year: string   // "2025-2026"
+  teacher_id?: string
+  teacher_name?: string
+  capacity: number
+  student_count: number
+  schedule?: string       // free text or JSON
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused'
+
+export type AttendanceRecord = {
+  id: string
+  store_id: string
+  student_id: string
+  student_name: string
+  class_id: string
+  class_name: string
+  date: string            // YYYY-MM-DD
+  status: AttendanceStatus
+  arrival_time?: string   // HH:mm
+  notes?: string
+  recorded_by: string
+  synced: boolean
+  created_at: string
+}
+
+export type GradeEntry = {
+  id: string
+  store_id: string
+  student_id: string
+  student_name: string
+  class_id: string
+  class_name: string
+  subject: string
+  assessment_type: 'exam' | 'quiz' | 'homework' | 'project' | 'participation'
+  score: number
+  max_score: number
+  percentage: number
+  grade_letter?: string   // A, B, C, D, F
+  term: string            // "Trimestre 1", "Semester 2"
+  academic_year: string
+  comments?: string
+  recorded_by: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ── Travel Agency GDS ──────────────────────────────────────────────────────
+
+export type PackageStatus = 'draft' | 'published' | 'sold_out' | 'archived'
+
+export type TravelPackage = {
+  id: string
+  store_id: string
+  name: string
+  destination: string
+  description?: string
+  duration_days: number
+  price_per_person: number
+  max_travelers: number
+  spots_remaining: number
+  departure_date?: string
+  return_date?: string
+  inclusions: string[]    // ['flight', 'hotel', 'meals', 'transfers', 'guide']
+  exclusions: string[]
+  itinerary_summary?: string
+  image_url?: string
+  status: PackageStatus
+  category: string        // 'beach', 'adventure', 'cultural', 'safari', 'cruise', 'business'
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ItineraryDay = {
+  day: number
+  title: string
+  description: string
+  activities: string[]
+  meals_included: string[]  // ['breakfast', 'lunch', 'dinner']
+  accommodation?: string
+  transport?: string
+}
+
+export type Itinerary = {
+  id: string
+  store_id: string
+  package_id?: string
+  booking_id?: string
+  customer_name?: string
+  title: string
+  destination: string
+  start_date: string
+  end_date: string
+  days: ItineraryDay[]
+  total_price: number
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type BookingStatus = 'inquiry' | 'confirmed' | 'deposit_paid' | 'fully_paid' | 'cancelled' | 'completed'
+
+export type TravelBooking = {
+  id: string
+  store_id: string
+  booking_number: string   // "BK-YYMMDD-NNN"
+  customer_id?: string
+  customer_name: string
+  customer_phone?: string
+  customer_email?: string
+  package_id?: string
+  package_name?: string
+  destination: string
+  departure_date: string
+  return_date: string
+  travelers: number
+  total_price: number
+  deposit_amount: number
+  balance_due: number
+  status: BookingStatus
+  payment_method?: PaymentMethod
+  special_requests?: string
+  documents?: string[]     // passport copies, visas, etc. (file references)
+  itinerary_id?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ── Garage VIN / Vehicle Management ────────────────────────────────────────
+
+export type Vehicle = {
+  id: string
+  store_id: string
+  vin?: string
+  license_plate?: string
+  make: string            // "Toyota", "Mercedes"
+  model: string           // "Corolla", "C-Class"
+  year?: number
+  color?: string
+  engine_type?: string    // "1.6L Diesel", "2.0L Essence"
+  transmission?: 'manual' | 'automatic'
+  mileage?: number
+  customer_id?: string
+  customer_name?: string
+  customer_phone?: string
+  last_service_date?: string
+  next_service_date?: string
+  notes?: string
+  synced: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type VinDecodeResult = {
+  vin: string
+  make: string
+  model: string
+  year: number
+  body_class?: string
+  engine_info?: string
+  drive_type?: string
+  fuel_type?: string
+  manufacturer?: string
+  plant_country?: string
+  vehicle_type?: string
+  error?: string
+}
+
+export type VehicleServiceRecord = {
+  id: string
+  store_id: string
+  vehicle_id: string
+  vehicle_display: string  // "Toyota Corolla 2019 - AB-123-CD"
+  work_order_id?: string
+  service_type: 'oil_change' | 'tire_rotation' | 'brake_service' | 'inspection' | 'repair' | 'bodywork' | 'electrical' | 'ac_service' | 'other'
+  description: string
+  mileage_at_service?: number
+  parts_used?: string[]
+  labor_hours?: number
+  total_cost: number
+  technician_id?: string
+  technician_name?: string
+  service_date: string
+  next_service_date?: string
+  next_service_mileage?: number
+  notes?: string
   synced: boolean
   created_at: string
   updated_at: string

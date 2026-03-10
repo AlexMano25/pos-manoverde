@@ -45,6 +45,18 @@ import type {
   WarrantyClaim,
   WasteEntry,
   WorkOrder,
+  HotelRoom,
+  HousekeepingTask,
+  MinibarCharge,
+  Student,
+  SchoolClass,
+  AttendanceRecord,
+  GradeEntry,
+  TravelPackage,
+  Itinerary,
+  TravelBooking,
+  Vehicle,
+  VehicleServiceRecord,
 } from '../types'
 import { generateUUID } from '../utils/uuid'
 
@@ -98,6 +110,18 @@ export class PosDatabase extends Dexie {
   stocktakes!: Table<Stocktake, string>
   tax_rates!: Table<TaxRate, string>
   customer_feedbacks!: Table<CustomerFeedback, string>
+  hotel_rooms!: Table<HotelRoom, string>
+  housekeeping_tasks!: Table<HousekeepingTask, string>
+  minibar_charges!: Table<MinibarCharge, string>
+  students!: Table<Student, string>
+  school_classes!: Table<SchoolClass, string>
+  attendance_records!: Table<AttendanceRecord, string>
+  grade_entries!: Table<GradeEntry, string>
+  travel_packages!: Table<TravelPackage, string>
+  itineraries!: Table<Itinerary, string>
+  travel_bookings!: Table<TravelBooking, string>
+  vehicles!: Table<Vehicle, string>
+  vehicle_service_records!: Table<VehicleServiceRecord, string>
 
   constructor() {
     super('pos_manoverde')
@@ -679,6 +703,123 @@ export class PosDatabase extends Dexie {
       customer_feedbacks:
         'id, store_id, rating, status, channel, customer_id, created_at, [store_id+status], [store_id+rating], [store_id+created_at]',
     })
+
+    // Schema version 14 -- LT-1: Hotel PMS, School SIS, Travel GDS, Garage VIN
+    this.version(14).stores({
+      stores: 'id, name, activity, created_at',
+      users:
+        'id, store_id, email, role, pin, is_active, created_at, [store_id+role], [store_id+is_active]',
+      products:
+        'id, store_id, name, category, sku, barcode, is_active, price, created_at, updated_at, [store_id+category], [store_id+is_active], [store_id+barcode], [store_id+expiry_date]',
+      orders:
+        'id, store_id, user_id, device_id, status, payment_method, synced, created_at, updated_at, [store_id+status], [store_id+created_at], [store_id+synced], table_id, customer_id',
+      stock_moves:
+        'id, store_id, product_id, type, user_id, synced, created_at, [store_id+product_id], [store_id+synced], [store_id+created_at]',
+      sync_queue:
+        'id, entity_type, entity_id, operation, store_id, device_id, retries, created_at, synced_at, [store_id+entity_type]',
+      restaurant_tables:
+        'id, store_id, number, status, zone, current_order_id, [store_id+status]',
+      customers:
+        'id, store_id, name, phone, email, loyalty_points, [store_id+name], [store_id+phone]',
+      promotions:
+        'id, store_id, type, is_active, start_date, end_date, [store_id+is_active]',
+      appointments:
+        'id, store_id, customer_id, status, date, [store_id+date], [store_id+status]',
+      memberships:
+        'id, store_id, customer_id, status, plan_type, end_date, [store_id+status], [store_id+customer_id]',
+      work_orders:
+        'id, store_id, customer_id, status, priority, [store_id+status]',
+      quotes:
+        'id, store_id, customer_id, status, valid_until, [store_id+status]',
+      cash_sessions:
+        'id, store_id, status, opened_at, [store_id+status]',
+      suppliers:
+        'id, store_id, name, is_active, [store_id+is_active]',
+      purchase_orders:
+        'id, store_id, supplier_id, status, [store_id+status]',
+      pos_invoices:
+        'id, store_id, customer_id, status, due_date, [store_id+status]',
+      deliveries:
+        'id, store_id, order_id, driver_id, status, [store_id+status]',
+      time_entries:
+        'id, store_id, user_id, status, created_at, [store_id+user_id], [store_id+created_at]',
+      loyalty_rewards:
+        'id, store_id, is_active, [store_id+is_active]',
+      point_transactions:
+        'id, store_id, customer_id, type, created_at, [store_id+customer_id], [store_id+type]',
+      kds_orders:
+        'id, store_id, order_id, status, station, created_at, [store_id+status], [store_id+station]',
+      gift_cards:
+        'id, store_id, code, status, customer_id, [store_id+status], [store_id+code]',
+      gift_card_transactions:
+        'id, store_id, gift_card_id, type, created_at, [store_id+gift_card_id]',
+      expenses:
+        'id, store_id, category, status, expense_date, user_id, [store_id+category], [store_id+status], [store_id+expense_date]',
+      campaigns:
+        'id, store_id, type, status, scheduled_at, [store_id+status], [store_id+type]',
+      payroll_entries:
+        'id, store_id, user_id, status, period_start, [store_id+user_id], [store_id+status]',
+      commission_rules:
+        'id, store_id, is_active, [store_id+is_active]',
+      notifications:
+        'id, store_id, type, priority, is_read, user_id, created_at, [store_id+is_read], [store_id+type], [store_id+created_at]',
+      audit_logs:
+        'id, store_id, user_id, action, module, created_at, [store_id+module], [store_id+action], [store_id+created_at]',
+      pos_returns:
+        'id, store_id, order_id, status, customer_id, created_at, [store_id+status], [store_id+created_at]',
+      pos_documents:
+        'id, store_id, type, status, category, created_at, [store_id+type], [store_id+status], [store_id+created_at]',
+      stock_transfers:
+        'id, store_id, from_store_id, to_store_id, status, created_at, [store_id+status], [store_id+created_at]',
+      recipes:
+        'id, store_id, name, category, status, [store_id+status], [store_id+category]',
+      production_batches:
+        'id, store_id, recipe_id, status, planned_date, [store_id+status], [store_id+planned_date]',
+      online_orders:
+        'id, store_id, channel, status, payment_status, created_at, [store_id+status], [store_id+channel], [store_id+created_at]',
+      maintenance_tasks:
+        'id, store_id, status, priority, type, scheduled_date, [store_id+status], [store_id+priority], [store_id+scheduled_date]',
+      kiosk_sessions:
+        'id, store_id, terminal_id, status, payment_status, created_at, [store_id+status], [store_id+terminal_id], [store_id+created_at]',
+      warranty_claims:
+        'id, store_id, customer_id, claim_status, warranty_status, product_id, created_at, [store_id+claim_status], [store_id+warranty_status], [store_id+created_at]',
+      barcode_batches:
+        'id, store_id, status, format, created_at, [store_id+status], [store_id+created_at]',
+      pricing_rules:
+        'id, store_id, type, status, priority, start_date, [store_id+status], [store_id+type], [store_id+start_date]',
+      waste_entries:
+        'id, store_id, category, waste_date, reported_by, [store_id+category], [store_id+waste_date]',
+      stocktakes:
+        'id, store_id, status, started_at, [store_id+status], [store_id+started_at]',
+      tax_rates:
+        'id, store_id, type, status, [store_id+status], [store_id+type]',
+      customer_feedbacks:
+        'id, store_id, rating, status, channel, customer_id, created_at, [store_id+status], [store_id+rating], [store_id+created_at]',
+      hotel_rooms:
+        'id, store_id, number, floor, type, status, [store_id+status], [store_id+floor]',
+      housekeeping_tasks:
+        'id, store_id, room_id, status, priority, [store_id+status], [store_id+room_id]',
+      minibar_charges:
+        'id, store_id, room_id, charged, created_at, [store_id+room_id], [store_id+charged]',
+      students:
+        'id, store_id, class_id, status, last_name, [store_id+class_id], [store_id+status]',
+      school_classes:
+        'id, store_id, name, academic_year, [store_id+academic_year]',
+      attendance_records:
+        'id, store_id, class_id, student_id, date, status, [store_id+date], [store_id+class_id]',
+      grade_entries:
+        'id, store_id, class_id, student_id, subject, [store_id+class_id], [store_id+student_id]',
+      travel_packages:
+        'id, store_id, status, category, destination, [store_id+status], [store_id+category]',
+      itineraries:
+        'id, store_id, package_id, [store_id+package_id]',
+      travel_bookings:
+        'id, store_id, package_id, status, booking_number, [store_id+status], [store_id+package_id]',
+      vehicles:
+        'id, store_id, license_plate, vin, customer_id, [store_id+customer_id], [store_id+license_plate]',
+      vehicle_service_records:
+        'id, store_id, vehicle_id, service_date, [store_id+vehicle_id], [store_id+service_date]',
+    })
   }
 
   // ---- Clear all data (useful for store reset / logout) ----
@@ -732,6 +873,18 @@ export class PosDatabase extends Dexie {
         this.stocktakes,
         this.tax_rates,
         this.customer_feedbacks,
+        this.hotel_rooms,
+        this.housekeeping_tasks,
+        this.minibar_charges,
+        this.students,
+        this.school_classes,
+        this.attendance_records,
+        this.grade_entries,
+        this.travel_packages,
+        this.itineraries,
+        this.travel_bookings,
+        this.vehicles,
+        this.vehicle_service_records,
       ],
       async () => {
         await this.stores.clear()
@@ -779,6 +932,18 @@ export class PosDatabase extends Dexie {
         await this.stocktakes.clear()
         await this.tax_rates.clear()
         await this.customer_feedbacks.clear()
+        await this.hotel_rooms.clear()
+        await this.housekeeping_tasks.clear()
+        await this.minibar_charges.clear()
+        await this.students.clear()
+        await this.school_classes.clear()
+        await this.attendance_records.clear()
+        await this.grade_entries.clear()
+        await this.travel_packages.clear()
+        await this.itineraries.clear()
+        await this.travel_bookings.clear()
+        await this.vehicles.clear()
+        await this.vehicle_service_records.clear()
       },
     )
   }

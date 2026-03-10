@@ -57,8 +57,19 @@ import WasteLossPage from './pages/WasteLossPage'
 import StocktakePage from './pages/StocktakePage'
 import TaxPage from './pages/TaxPage'
 import FeedbackPage from './pages/FeedbackPage'
-import WaiterPOSPage from './pages/WaiterPOSPage'
 import ServerOrderPage from './pages/ServerOrderPage'
+import RoomManagementPage from './pages/RoomManagementPage'
+import HousekeepingPage from './pages/HousekeepingPage'
+import MinibarPage from './pages/MinibarPage'
+import EnrollmentPage from './pages/EnrollmentPage'
+import AttendancePage from './pages/AttendancePage'
+import GradesPage from './pages/GradesPage'
+import TravelPackagePage from './pages/TravelPackagePage'
+import ItineraryPage from './pages/ItineraryPage'
+import BookingCalendarPage from './pages/BookingCalendarPage'
+import VinDecoderPage from './pages/VinDecoderPage'
+import VehicleHistoryPage from './pages/VehicleHistoryPage'
+import PartsCatalogPage from './pages/PartsCatalogPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
@@ -116,9 +127,6 @@ function AppContent() {
     }
   }, [activity, currentStore?.activity])
 
-  // Activities that use table-based waiter mode in client mode
-  const TABLE_ACTIVITIES = ['restaurant', 'bar', 'bakery', 'hotel']
-
   const renderPage = () => {
     if (mode === 'client') {
       // Cross-functional server order-taking interface
@@ -170,6 +178,18 @@ function AppContent() {
       case 'tax':              return <TaxPage />
       case 'feedback':         return <FeedbackPage />
       case 'server_orders':    return <ServerOrderPage />
+      case 'room_management':  return <RoomManagementPage />
+      case 'housekeeping':     return <HousekeepingPage />
+      case 'minibar':          return <MinibarPage />
+      case 'student_enrollment': return <EnrollmentPage />
+      case 'attendance':       return <AttendancePage />
+      case 'grades':           return <GradesPage />
+      case 'travel_packages':  return <TravelPackagePage />
+      case 'itineraries':      return <ItineraryPage />
+      case 'booking_calendar': return <BookingCalendarPage />
+      case 'vin_decoder':      return <VinDecoderPage />
+      case 'vehicle_history':  return <VehicleHistoryPage />
+      case 'parts_catalog':    return <PartsCatalogPage />
       default:                 return <DashboardPage />
     }
   }

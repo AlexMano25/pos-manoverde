@@ -237,6 +237,18 @@ export type TranslationKeys = {
     tax: string
     feedback: string
     serverOrders: string
+    roomManagement: string
+    housekeeping: string
+    minibar: string
+    studentEnrollment: string
+    attendance: string
+    grades: string
+    travelPackages: string
+    itineraries: string
+    bookingCalendar: string
+    vinDecoder: string
+    vehicleHistory: string
+    partsCatalog: string
   }
 
   // Server order-taking

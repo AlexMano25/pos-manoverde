@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import {
   Search, ShoppingCart, Minus, Plus, X, Banknote, Send,
   ChevronLeft, Grid3X3, User, Users, Clock, ClipboardList,
-  CheckCircle2, CreditCard, Smartphone,
+  CheckCircle2,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
