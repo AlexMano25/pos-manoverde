@@ -46,6 +46,9 @@ const VIN_DECODER: SidebarItemConfig = { section: 'vin_decoder', icon: 'ScanSear
 const VEHICLE_HISTORY: SidebarItemConfig = { section: 'vehicle_history', icon: 'CarFront', i18nKey: 'nav.vehicleHistory', pageComponent: 'vehicle_history', allowedRoles: ['admin', 'manager'] }
 const PARTS_CATALOG: SidebarItemConfig = { section: 'parts_catalog', icon: 'Cog', i18nKey: 'nav.partsCatalog', pageComponent: 'parts_catalog', allowedRoles: ['admin', 'manager', 'stock'] }
 
+// ── LT-4/6 BI & Multi-store ──────────────────────────────────────────────
+const MULTI_STORE: SidebarItemConfig = { section: 'multi_store', icon: 'Building2', i18nKey: 'nav.multiStore', pageComponent: 'multi_store', serverOnly: true, allowedRoles: ['admin'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -436,10 +439,24 @@ export const SIDEBAR_CONFIG: Record<Activity, SidebarItemConfig[]> = {
 
 // Helper: get sidebar items for a given activity (with fallback)
 export function getSidebarItems(activity: Activity | string | undefined | null): SidebarItemConfig[] {
+  let items: SidebarItemConfig[]
   if (activity && activity in SIDEBAR_CONFIG) {
-    return SIDEBAR_CONFIG[activity as Activity]
+    items = SIDEBAR_CONFIG[activity as Activity]
+  } else {
+    items = SIDEBAR_CONFIG.restaurant // safe default
   }
-  return SIDEBAR_CONFIG.restaurant // safe default
+
+  // Auto-append Multi-Store item if not already present
+  if (!items.find(i => i.section === 'multi_store')) {
+    const settingsIdx = items.findIndex(i => i.section === 'settings')
+    if (settingsIdx >= 0) {
+      items = [...items.slice(0, settingsIdx), MULTI_STORE, ...items.slice(settingsIdx)]
+    } else {
+      items = [...items, MULTI_STORE]
+    }
+  }
+
+  return items
 }
 
 // Helper: get the first POS-like section for client mode

@@ -136,6 +136,8 @@ export type SidebarSection =
   | 'vehicle_history'  // garage vehicle maintenance history
   | 'parts_catalog'    // garage parts catalog
   | 'server_orders'    // cross-functional server order-taking
+  // LT-4/6 — BI & Multi-store
+  | 'multi_store'      // consolidated multi-store dashboard
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -204,6 +206,7 @@ export type PageComponent =
   | 'vehicle_history'
   | 'parts_catalog'
   | 'server_orders'
+  | 'multi_store'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {

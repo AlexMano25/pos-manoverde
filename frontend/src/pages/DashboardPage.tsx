@@ -29,6 +29,7 @@ import {
 import { useOrderStore } from '../stores/orderStore'
 import { useProductStore } from '../stores/productStore'
 import { useAppStore } from '../stores/appStore'
+import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import ExportMenu from '../components/common/ExportMenu'
@@ -43,6 +44,7 @@ import QuickActions from '../components/dashboard/QuickActions'
 import WidgetRenderer from '../components/dashboard/WidgetRenderer'
 import AIInsightsWidget from '../components/dashboard/AIInsightsWidget'
 import ContractModal from '../components/dashboard/ContractModal'
+import DashboardCustomizer from '../components/dashboard/DashboardCustomizer'
 import { useResponsive } from '../hooks/useLayoutMode'
 import InstallTutorial from '../components/common/InstallTutorial'
 import type { PaymentMethod, CreditBalance, Activity as ActivityType, ContractTemplate } from '../types'
@@ -92,6 +94,7 @@ export default function DashboardPage() {
   const { orders, loading: ordersLoading, loadOrders } = useOrderStore()
   const { products, loading: productsLoading, loadProducts } = useProductStore()
   const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled, setPendingAction } = useAppStore()
+  const { user } = useAuthStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -289,6 +292,28 @@ export default function DashboardPage() {
           </p>
         </div>
         <div style={actionsStyle}>
+          <DashboardCustomizer
+            storeId={currentStore?.id || 'default'}
+            userId={user?.id || 'default'}
+            labels={{
+              customizeDashboard: ((t as unknown as Record<string, any>).dashboard?.customize) || 'Customize',
+              customize: ((t as unknown as Record<string, any>).dashboard?.customize) || 'Customize',
+              reset: t.common.cancel,
+              hide: ((t as unknown as Record<string, any>).common?.hide) || 'Hide',
+              show: ((t as unknown as Record<string, any>).common?.show) || 'Show',
+              widget_stat_card: ((t as unknown as Record<string, any>).dashboard?.keyMetrics) || 'Key Metrics',
+              widget_ai_insights: ((t as unknown as Record<string, any>).ai?.insights) || 'AI Insights',
+              widget_quick_actions: t.dashboard.quickActions,
+              widget_revenue_chart: ((t as unknown as Record<string, any>).dashboard?.revenueChart) || 'Revenue Chart',
+              widget_category_breakdown: t.dashboard.categoryBreakdown,
+              widget_heatmap: ((t as unknown as Record<string, any>).dashboard?.heatmap) || 'Heatmap',
+              widget_peak_hours: t.dashboard.peakHours,
+              widget_top_products: ((t as unknown as Record<string, any>).reports?.topProducts) || 'Top Products',
+              widget_payment_breakdown: ((t as unknown as Record<string, any>).reports?.paymentBreakdown) || 'Payment Methods',
+              widget_alerts: t.dashboard.alerts,
+              widget_recent_orders: t.dashboard.recentOrders,
+            }}
+          />
           <ExportMenu
             label={t.common.export}
             items={[

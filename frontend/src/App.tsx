@@ -70,6 +70,7 @@ import BookingCalendarPage from './pages/BookingCalendarPage'
 import VinDecoderPage from './pages/VinDecoderPage'
 import VehicleHistoryPage from './pages/VehicleHistoryPage'
 import PartsCatalogPage from './pages/PartsCatalogPage'
+import MultiStoreDashboardPage from './pages/MultiStoreDashboardPage'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
@@ -190,6 +191,7 @@ function AppContent() {
       case 'vin_decoder':      return <VinDecoderPage />
       case 'vehicle_history':  return <VehicleHistoryPage />
       case 'parts_catalog':    return <PartsCatalogPage />
+      case 'multi_store':      return <MultiStoreDashboardPage />
       default:                 return <DashboardPage />
     }
   }

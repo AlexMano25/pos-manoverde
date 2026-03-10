@@ -249,6 +249,27 @@ export type TranslationKeys = {
     vinDecoder: string
     vehicleHistory: string
     partsCatalog: string
+    multiStore: string
+  }
+
+  // Multi-store consolidated
+  multiStore: {
+    title: string
+    subtitle: string
+    totalRevenue: string
+    totalOrders: string
+    totalProducts: string
+    alertsCount: string
+    storeComparison: string
+    revenueByStore: string
+    today: string
+    thisWeek: string
+    orders: string
+    revenue: string
+    products: string
+    lowStock: string
+    noStores: string
+    trend: string
   }
 
   // Server order-taking
