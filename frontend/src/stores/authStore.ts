@@ -35,7 +35,7 @@ interface AuthComputed {
 
 /** Only admin (owner) can view/switch between multiple stores */
 function canAccessMultipleStores(role?: string): boolean {
-  return role === 'admin'
+  return role === 'admin' || role === 'super_admin'
 }
 
 function getServerUrl(): string {
@@ -223,9 +223,20 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
             }
             appStore.setCurrentStore(store)
 
-            // Fetch org stores — only admin/manager can switch between stores
+            // Detect super admin by email (must be before store selection logic)
+            const effectiveRole = email === 'direction@manoverde.com' ? 'super_admin' : profile.role
+
+            // Fetch org stores — only admin/super_admin can switch between stores
             const orgId = store?.organization_id
-            if (orgId && canAccessMultipleStores(profile.role)) {
+            if (effectiveRole === 'super_admin') {
+              // Super admin: load all stores across ALL organizations, skip store selection
+              const { data: allStores } = await supabase
+                .from('stores')
+                .select('*')
+              appStore.setAvailableStores((allStores || [store]) as Store[])
+              appStore.setNeedsStoreSelection(false)
+              appStore.setSection('super_admin')
+            } else if (orgId && canAccessMultipleStores(effectiveRole)) {
               const { data: orgStores } = await supabase
                 .from('stores')
                 .select('*')
@@ -249,7 +260,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                 store_id: profile.store_id,
                 name: profile.name,
                 email: profile.email,
-                role: profile.role,
+                role: effectiveRole,
                 pin: profile.pin,
                 phone: profile.phone,
                 is_active: profile.is_active,
