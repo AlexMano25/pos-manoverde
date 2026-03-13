@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react'
 import {
   Shield, Building2, CreditCard, Key, BarChart3, Search, RefreshCw,
   Copy, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp,
-  Package, ShoppingCart, Users, Edit3, Trash2, Lock, Unlock,
-  Mail, Phone, Calendar, Store, Eye, EyeOff, Save, Plus, X,
-  UserCheck, UserX, KeyRound, DollarSign, Globe, Activity,
+  Package, ShoppingCart, Users, Edit3, Lock, Unlock,
+  Mail, Store, Eye, EyeOff, Save, X,
+  UserCheck, UserX, KeyRound, DollarSign,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -128,7 +128,7 @@ const btnOutline: React.CSSProperties = {
 
 export default function SuperAdminPage() {
   useAppStore()
-  const t = useLanguageStore(s => s.t)
+  useLanguageStore()
   const { rv } = useResponsive()
 
   const [activeTab, setActiveTab] = useState<TabId>('organizations')
