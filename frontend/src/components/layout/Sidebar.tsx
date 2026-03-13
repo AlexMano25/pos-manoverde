@@ -31,19 +31,46 @@ import {
   Cog,
   Calendar,
   MoreHorizontal,
+  Bell,
+  Shield,
+  RotateCcw,
+  FolderOpen,
+  ArrowLeftRight,
+  Monitor,
+  ShieldCheck,
+  ScanBarcode,
+  TrendingUp,
+  Trash2,
+  ClipboardCheck,
+  MessageSquareHeart,
+  Ticket,
+  Wallet,
+  Megaphone,
+  Coins,
+  Wine,
+  ListChecks,
+  FileSpreadsheet,
+  Route,
+  CalendarRange,
+  ScanSearch,
+  CarFront,
+  Building2,
+  Webhook,
+  ArrowUpDown,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 import { useAuthStore } from '../../stores/authStore'
 import { useSyncStore } from '../../stores/syncStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { goToLanding } from '../../utils/navigation'
-import { SIDEBAR_CONFIG } from '../../data/sidebarConfig'
+import { getSidebarItems } from '../../data/sidebarConfig'
 import { useLayoutMode } from '../../hooks/useLayoutMode'
 import { resolveI18nKey } from '../../utils/i18nResolve'
 import LanguageSelector from '../common/LanguageSelector'
 import StoreSwitcher from './StoreSwitcher'
 
-import type { SidebarItemConfig, Activity } from '../../types'
+import type { SidebarItemConfig } from '../../types'
 
 // ---------------------------------------------------------------------------
 // Icon map: string name -> Lucide component
@@ -77,16 +104,36 @@ const SIDEBAR_ICONS: Record<string, React.ElementType> = {
   Cog,
   Calendar,
   MoreHorizontal,
+  Bell,
+  Shield,
+  RotateCcw,
+  FolderOpen,
+  ArrowLeftRight,
+  Monitor,
+  ShieldCheck,
+  ScanBarcode,
+  TrendingUp,
+  Trash2,
+  ClipboardCheck,
+  MessageSquareHeart,
+  Ticket,
+  Wallet,
+  Megaphone,
+  Coins,
+  Wine,
+  ListChecks,
+  FileSpreadsheet,
+  Route,
+  CalendarRange,
+  ScanSearch,
+  CarFront,
+  Building2,
+  Webhook,
+  ArrowUpDown,
+  ShieldAlert,
 }
 
-// ---------------------------------------------------------------------------
-// Helper: get sidebar items for an activity (with fallback)
-// ---------------------------------------------------------------------------
-
-function getSidebarItems(activity: Activity | null | undefined): SidebarItemConfig[] {
-  if (!activity) return SIDEBAR_CONFIG.supermarket // safe default
-  return SIDEBAR_CONFIG[activity] ?? SIDEBAR_CONFIG.supermarket
-}
+// getSidebarItems imported from sidebarConfig (includes auto-append of cross-cutting items)
 
 // ---------------------------------------------------------------------------
 // Color palette
@@ -190,7 +237,8 @@ const Sidebar: React.FC = () => {
       if (mode === 'client') return item.allowedRoles?.includes('cashier') ?? false
       // Server-only items hidden in non-server modes
       if (item.serverOnly && mode !== 'server' && mode !== 'all_in_one') return false
-      // Role filter
+      // Role filter — super_admin sees everything
+      if (user?.role === 'super_admin') return true
       if (item.allowedRoles && user?.role) {
         return item.allowedRoles.includes(user.role)
       }
