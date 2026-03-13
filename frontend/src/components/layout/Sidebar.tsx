@@ -233,12 +233,13 @@ const Sidebar: React.FC = () => {
   const visibleItems = useMemo(() => {
     const items = getSidebarItems(activity || currentStore?.activity)
     return items.filter((item) => {
+      // Super admin sees ALL menu items — no restrictions
+      if (user?.role === 'super_admin') return true
       // Client mode: only show POS-like sections (cashier-accessible)
       if (mode === 'client') return item.allowedRoles?.includes('cashier') ?? false
       // Server-only items hidden in non-server modes
       if (item.serverOnly && mode !== 'server' && mode !== 'all_in_one') return false
-      // Role filter — super_admin sees everything
-      if (user?.role === 'super_admin') return true
+      // Role filter
       if (item.allowedRoles && user?.role) {
         return item.allowedRoles.includes(user.role)
       }

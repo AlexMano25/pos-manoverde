@@ -72,9 +72,13 @@ import VehicleHistoryPage from './pages/VehicleHistoryPage'
 import PartsCatalogPage from './pages/PartsCatalogPage'
 import MultiStoreDashboardPage from './pages/MultiStoreDashboardPage'
 import WebhooksPage from './pages/WebhooksPage'
+import DataExchangePage from './pages/DataExchangePage'
+import SuperAdminPage from './pages/SuperAdminPage'
+import PlanWarningBanner from './components/PlanWarningBanner'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
+import { usePlanEnforcement } from './hooks/usePlanEnforcement'
 
 function AppContent() {
   const { section, setSection, mode, activity, currentStore } = useAppStore()
@@ -87,6 +91,7 @@ function AppContent() {
   useOnlineStatus()
   useSync()
   useInventoryAlerts()
+  usePlanEnforcement()
 
   // Client mode: force POS section
   useEffect(() => {
@@ -194,12 +199,20 @@ function AppContent() {
       case 'parts_catalog':    return <PartsCatalogPage />
       case 'multi_store':      return <MultiStoreDashboardPage />
       case 'webhooks':         return <WebhooksPage />
+      case 'data_exchange':    return <DataExchangePage />
+      case 'super_admin':      return <SuperAdminPage />
       default:                 return <DashboardPage />
     }
   }
 
+  // Super admin: hide activity subtitle, override title when on super_admin section
+  const isSuperAdmin = user?.role === 'super_admin'
+  const effectiveTitle = (isSuperAdmin && section === 'super_admin') ? 'Super Admin' : currentTitle
+  const effectiveSubtitle = isSuperAdmin ? undefined : currentSubtitle
+
   return (
-    <Layout title={currentTitle} subtitle={currentSubtitle}>
+    <Layout title={effectiveTitle} subtitle={effectiveSubtitle}>
+      <PlanWarningBanner />
       {renderPage()}
       <HelpButton pageKey={pageKey} userRole={user?.role} />
     </Layout>
