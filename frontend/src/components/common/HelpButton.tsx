@@ -10,7 +10,7 @@ interface HelpButtonProps {
   /** Key identifying the current page (e.g. 'pos', 'dashboard', 'products') */
   pageKey: string
   /** Optional: current user's role to filter help content */
-  userRole?: 'admin' | 'manager' | 'cashier' | 'stock'
+  userRole?: 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin'
 }
 
 // ---------------------------------------------------------------------------

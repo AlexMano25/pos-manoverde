@@ -24,6 +24,7 @@ import { useResponsive } from '../hooks/useLayoutMode'
 import PaymentModal from '../components/pos/PaymentModal'
 import BarcodeScanner from '../components/common/BarcodeScanner'
 import { formatCurrency } from '../utils/currency'
+import { useAuthStore } from '../stores/authStore'
 import type { Customer, PaymentMethod, Product } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -43,6 +44,36 @@ const C = {
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function POSPage() {
+  const planStatus = useAppStore(s => s.planStatus)
+  const setSection = useAppStore(s => s.setSection)
+  const user = useAuthStore(s => s.user)
+
+  // Block POS if plan expired (not for super_admin)
+  if (planStatus?.level === 'expired' && user?.role !== 'super_admin') {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '60vh', textAlign: 'center', padding: 32,
+      }}>
+        <div style={{
+          background: '#FEE2E2', borderRadius: 16, padding: 32, maxWidth: 400, width: '100%',
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>&#128274;</div>
+          <h2 style={{ color: '#991B1B', margin: '0 0 8px', fontSize: 20 }}>POS Blocked</h2>
+          <p style={{ color: '#7F1D1D', margin: '0 0 20px', fontSize: 14 }}>
+            Your plan has expired. Please renew your subscription or enter a license code to continue.
+          </p>
+          <button onClick={() => setSection('billing')} style={{
+            background: '#2563EB', color: '#FFF', border: 'none', borderRadius: 8,
+            padding: '10px 24px', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+          }}>
+            Go to Billing
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const { products, categories, loadProducts } = useProductStore()
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()

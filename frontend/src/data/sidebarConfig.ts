@@ -52,6 +52,12 @@ const MULTI_STORE: SidebarItemConfig = { section: 'multi_store', icon: 'Building
 // ── LT-5 API & Integrations ─────────────────────────────────────────────
 const WEBHOOKS: SidebarItemConfig = { section: 'webhooks', icon: 'Webhook', i18nKey: 'nav.webhooks', pageComponent: 'webhooks', serverOnly: true, allowedRoles: ['admin'] }
 
+// ── Data Exchange (import/export) ────────────────────────────────────────
+const DATA_EXCHANGE: SidebarItemConfig = { section: 'data_exchange', icon: 'ArrowUpDown', i18nKey: 'nav.dataExchange', pageComponent: 'data_exchange', serverOnly: true, allowedRoles: ['admin', 'manager'] }
+
+// ── Super Admin ─────────────────────────────────────────────────────────
+const SUPER_ADMIN: SidebarItemConfig = { section: 'super_admin', icon: 'ShieldAlert', i18nKey: 'nav.superAdmin', pageComponent: 'super_admin', allowedRoles: ['super_admin'] }
+
 // ── Shared sidebar configs ───────────────────────────────────────────────
 
 const STANDARD_RETAIL: SidebarItemConfig[] = [
@@ -449,8 +455,8 @@ export function getSidebarItems(activity: Activity | string | undefined | null):
     items = SIDEBAR_CONFIG.restaurant // safe default
   }
 
-  // Auto-append Multi-Store and Webhooks items if not already present
-  const autoItems = [MULTI_STORE, WEBHOOKS]
+  // Auto-append cross-functional items if not already present
+  const autoItems = [MULTI_STORE, WEBHOOKS, DATA_EXCHANGE, SUPER_ADMIN]
   for (const item of autoItems) {
     if (!items.find(i => i.section === item.section)) {
       const settingsIdx = items.findIndex(i => i.section === 'settings')

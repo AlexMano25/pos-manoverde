@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Activity, ConnectionStatus, Mode, Store, SubscriptionPlan } from '../types'
+import type { Activity, ConnectionStatus, Mode, PlanStatus, Store, SubscriptionPlan } from '../types'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,8 @@ interface AppState {
   isAppInstalled: boolean
   installPromptEvent: any | null  // BeforeInstallPromptEvent (non-persisted)
   pendingAction: { type: 'add'; section: string } | null  // transient, not persisted
+  planStatus: PlanStatus | null
+  planWarningDismissed: boolean
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -38,6 +40,8 @@ interface AppActions {
   setIsAppInstalled: (v: boolean) => void
   setInstallPromptEvent: (e: any | null) => void
   setPendingAction: (action: AppState['pendingAction']) => void
+  setPlanStatus: (status: PlanStatus | null) => void
+  setPlanWarningDismissed: (v: boolean) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -60,6 +64,8 @@ export const useAppStore = create<AppState & AppActions>()(
       isAppInstalled: false,
       installPromptEvent: null,
       pendingAction: null,
+      planStatus: null,
+      planWarningDismissed: false,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -76,6 +82,8 @@ export const useAppStore = create<AppState & AppActions>()(
       setIsAppInstalled: (v) => set({ isAppInstalled: v }),
       setInstallPromptEvent: (e) => set({ installPromptEvent: e }),
       setPendingAction: (action) => set({ pendingAction: action }),
+      setPlanStatus: (status) => set({ planStatus: status }),
+      setPlanWarningDismissed: (v) => set({ planWarningDismissed: v }),
     }),
     {
       name: 'pos-app-store',

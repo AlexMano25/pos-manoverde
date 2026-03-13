@@ -251,6 +251,8 @@ export type TranslationKeys = {
     partsCatalog: string
     multiStore: string
     webhooks: string
+    dataExchange: string
+    superAdmin: string
   }
 
   // Multi-store consolidated
@@ -3315,5 +3317,142 @@ export type TranslationKeys = {
     keyCreated: string
     revoke: string
     revoked: string
+  }
+
+  // Data Exchange (import/export)
+  dataExchange: {
+    title: string
+    subtitle: string
+    exportTab: string
+    importTab: string
+    templatesTab: string
+    selectModule: string
+    selectFormat: string
+    exportBtn: string
+    importBtn: string
+    downloadTemplate: string
+    moduleProducts: string
+    moduleOrders: string
+    moduleCustomers: string
+    moduleSuppliers: string
+    moduleEmployees: string
+    moduleStockMoves: string
+    modulePromotions: string
+    moduleExpenses: string
+    formatCsv: string
+    formatJson: string
+    formatXlsx: string
+    formatXml: string
+    uploadFile: string
+    dragDropHint: string
+    preview: string
+    validate: string
+    validRows: string
+    invalidRows: string
+    importMode: string
+    insertOnly: string
+    upsert: string
+    confirmImport: string
+    importing: string
+    importSuccess: string
+    importErrors: string
+    rowNumber: string
+    fieldName: string
+    errorMessage: string
+    requiredField: string
+    invalidNumber: string
+    invalidDate: string
+    filterDateRange: string
+    filterCategory: string
+    filterStatus: string
+    noData: string
+    exportCount: string
+    templatesSubtitle: string
+    activityFields: string
+    sampleData: string
+    baseFields: string
+    step: string
+    back: string
+    reset: string
+    imported: string
+    updated: string
+    skipped: string
+    progress: string
+  }
+
+  // Super Admin
+  superAdmin: {
+    title: string
+    subtitle: string
+    orgsTab: string
+    plansTab: string
+    licensesTab: string
+    analyticsTab: string
+    orgName: string
+    ownerEmail: string
+    plan: string
+    status: string
+    activity: string
+    stores: string
+    products: string
+    orders: string
+    createdAt: string
+    periodEnd: string
+    creditBalance: string
+    searchOrgs: string
+    filterPlan: string
+    filterStatus: string
+    changePlan: string
+    changePlanConfirm: string
+    planChanged: string
+    planLimits: string
+    maxProducts: string
+    maxOrdersDay: string
+    maxStores: string
+    maxEmployees: string
+    features: string
+    unlimited: string
+    saveLimits: string
+    limitsSaved: string
+    generateLicense: string
+    selectOrg: string
+    selectPlan: string
+    licenseDays: string
+    generateBtn: string
+    generatedCode: string
+    copyCode: string
+    codeCopied: string
+    licenseHistory: string
+    code: string
+    days: string
+    generatedAt: string
+    usedAt: string
+    used: string
+    unused: string
+    totalOrgs: string
+    planDistribution: string
+    estimatedRevenue: string
+    renewalRate: string
+    noOrgs: string
+    editOrg: string
+  }
+
+  // Plan Enforcement
+  planEnforcement: {
+    warning30Days: string
+    warning30Credits: string
+    warning10Days: string
+    warning10Credits: string
+    graceMessage: string
+    expiredPlan: string
+    expiredCredits: string
+    renewBtn: string
+    licenseBtn: string
+    licenseTitle: string
+    licenseDesc: string
+    licenseSuccess: string
+    validateBtn: string
+    posBlocked: string
+    posBlockedDesc: string
   }
 }

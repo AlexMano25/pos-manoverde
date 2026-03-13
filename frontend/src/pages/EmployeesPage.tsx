@@ -129,6 +129,7 @@ const roleColors: Record<UserRole, string> = {
   manager: '#2563eb',
   cashier: '#16a34a',
   stock: '#f59e0b',
+  super_admin: '#7c3aed',
 }
 
 // ── Employee form state ──────────────────────────────────────────────────
@@ -223,6 +224,7 @@ export default function EmployeesPage() {
     manager: t.employees.manager,
     cashier: t.employees.cashier,
     stock: t.employees.stockRole,
+    super_admin: 'Super Admin',
   }
 
   const loadEmployees = useCallback(async () => {

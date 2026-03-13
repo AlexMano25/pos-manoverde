@@ -140,6 +140,8 @@ export type SidebarSection =
   | 'multi_store'      // consolidated multi-store dashboard
   // LT-5 — API & Integrations
   | 'webhooks'         // webhook endpoints & API keys management
+  | 'data_exchange'    // cross-module data import/export
+  | 'super_admin'      // super admin dashboard
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -210,6 +212,8 @@ export type PageComponent =
   | 'server_orders'
   | 'multi_store'
   | 'webhooks'
+  | 'data_exchange'
+  | 'super_admin'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {
@@ -241,7 +245,7 @@ export type Store = {
 
 // -- Users -------------------------------------------------------------------
 
-export type UserRole = 'admin' | 'manager' | 'cashier' | 'stock'
+export type UserRole = 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin'
 
 export type User = {
   id: string
@@ -640,6 +644,46 @@ export type CreditTransaction = {
   reference_id?: string
   activity?: string
   created_at: string
+}
+
+// -- Plan Enforcement & License Codes ----------------------------------------
+
+export type PlanStatusLevel = 'active' | 'warning_30' | 'warning_10' | 'expired' | 'grace'
+
+export type PlanStatus = {
+  level: PlanStatusLevel
+  daysRemaining: number | null
+  creditsRemaining: number | null
+  creditsPct: number | null
+  checkedAt: string
+  licenseApplied?: string
+}
+
+export type LicenseCode = {
+  id: string
+  organization_id: string
+  code: string
+  plan: SubscriptionPlan
+  days: number
+  generated_by: string
+  generated_at: string
+  used_at: string | null
+  is_used: boolean
+}
+
+export type OrgSummary = {
+  id: string
+  name: string
+  owner_email: string
+  plan: SubscriptionPlan
+  status: SubscriptionStatus
+  activity: Activity
+  stores_count: number
+  products_count: number
+  orders_count: number
+  created_at: string
+  period_end: string | null
+  credit_balance: number | null
 }
 
 // -- Dashboard Widgets --------------------------------------------------------
