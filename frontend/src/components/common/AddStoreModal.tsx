@@ -6,16 +6,8 @@ import { useLanguageStore } from '../../stores/languageStore'
 import { supabase } from '../../services/supabase'
 import { WORLD_CURRENCIES } from '../../utils/currency'
 import { seedSampleProducts } from '../../utils/seedProducts'
+import { ALL_ACTIVITIES } from '../../data/activityIcons'
 import type { Activity } from '../../types'
-
-// ── All 26 supported activities ──────────────────────────────────────────────
-
-const ALL_ACTIVITIES: Activity[] = [
-  'restaurant', 'supermarket', 'pharmacy', 'fashion', 'electronics', 'services',
-  'bar', 'bakery', 'hotel', 'hair_salon', 'spa', 'gym', 'pool', 'car_wash',
-  'gas_station', 'laundry', 'auto_repair', 'daycare', 'school', 'home_cleaning',
-  'florist', 'pet_shop', 'bookstore', 'printing', 'real_estate', 'travel_agency',
-]
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
