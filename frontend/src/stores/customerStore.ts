@@ -141,6 +141,16 @@ export const useCustomerStore = create<CustomerState & CustomerActions>()(
 
     searchCustomers: async (storeId: string, query: string) => {
       const lower = query.toLowerCase()
+      // Search in-memory Zustand array first (instantly reactive after addCustomer)
+      const inMemory = get().customers.filter(
+        (c) =>
+          c.store_id === storeId &&
+          (c.name.toLowerCase().includes(lower) ||
+            (c.phone != null && c.phone.includes(query)) ||
+            (c.email != null && c.email.toLowerCase().includes(lower)))
+      )
+      if (inMemory.length > 0) return inMemory
+      // Fallback to Dexie query (covers edge cases where Zustand is not yet loaded)
       return db.customers
         .where('store_id')
         .equals(storeId)

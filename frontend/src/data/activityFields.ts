@@ -182,4 +182,16 @@ export const ACTIVITY_PRODUCT_FIELDS: Partial<Record<Activity, ActivityFieldConf
   bar: [
     { key: 'description', i18nKey: 'products.description', inputType: 'text' },
   ],
+
+  btp: [
+    {
+      key: 'vehicle_type',
+      i18nKey: 'products.btpCategory',
+      inputType: 'select',
+      options: ['material', 'equipment', 'labor', 'subcontract', 'transport'],
+    },
+    { key: 'weight_kg', i18nKey: 'products.weight', inputType: 'number' },
+    { key: 'duration_minutes', i18nKey: 'products.duration', inputType: 'number' },
+    { key: 'description', i18nKey: 'products.description', inputType: 'text' },
+  ],
 }

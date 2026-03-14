@@ -163,6 +163,8 @@ export type TranslationKeys = {
     real_estateDesc: string
     travel_agency: string
     travel_agencyDesc: string
+    btp: string
+    btpDesc: string
     // Additional setup keys
     backToWebsite: string
     searchActivities: string
@@ -195,6 +197,7 @@ export type TranslationKeys = {
     schedule: string
     workshop: string
     parts: string
+    btpCatalog: string
     invoices: string
     appointments: string
     memberships: string
@@ -467,6 +470,7 @@ export type TranslationKeys = {
     surface: string
     color: string
     vehicleType: string
+    btpCategory: string
     author: string
     isbn: string
     destination: string

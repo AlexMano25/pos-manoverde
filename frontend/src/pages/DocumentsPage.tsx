@@ -211,6 +211,9 @@ export default function DocumentsPage() {
   const [formDescription, setFormDescription] = useState('')
   const [formFileUrl, setFormFileUrl] = useState('')
   const [formFileSize, setFormFileSize] = useState('')
+  const [formFileName, setFormFileName] = useState('')
+  const [formFileMime, setFormFileMime] = useState('')
+  const [uploadingFile, setUploadingFile] = useState(false)
   const [formTags, setFormTags] = useState('')
   const [formEntityType, setFormEntityType] = useState('')
   const [formEntityId, setFormEntityId] = useState('')
@@ -274,11 +277,47 @@ export default function DocumentsPage() {
     setFormDescription('')
     setFormFileUrl('')
     setFormFileSize('')
+    setFormFileName('')
+    setFormFileMime('')
     setFormTags('')
     setFormEntityType('')
     setFormEntityId('')
     setFormExpiresAt('')
     setEditingDocument(null)
+  }
+
+  /** Read a file from local device and store as base64 data URL in IndexedDB */
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    // Max 10 MB to avoid IndexedDB bloat
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Fichier trop volumineux (max 10 Mo)')
+      return
+    }
+    setUploadingFile(true)
+    setFormFileName(file.name)
+    setFormFileMime(file.type)
+    setFormFileSize(file.size.toString())
+    // Auto-fill document name if empty
+    if (!formName.trim()) {
+      setFormName(file.name.replace(/\.[^/.]+$/, ''))
+    }
+    // Auto-detect document type from MIME
+    if (file.type.startsWith('image/')) setFormType('photo')
+    else if (file.type === 'application/pdf') setFormType('report')
+    else if (file.type.includes('spreadsheet') || file.type.includes('excel')) setFormType('report')
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setFormFileUrl(reader.result as string) // base64 data URL
+      setUploadingFile(false)
+    }
+    reader.onerror = () => {
+      setUploadingFile(false)
+      alert('Erreur lors de la lecture du fichier')
+    }
+    reader.readAsDataURL(file)
   }
 
   function openAddModal() {
@@ -323,6 +362,7 @@ export default function DocumentsPage() {
         description: formDescription.trim() || undefined,
         file_url: formFileUrl.trim() || undefined,
         file_size: formFileSize ? parseInt(formFileSize, 10) || undefined : undefined,
+        mime_type: formFileMime || undefined,
         tags: parsedTags.length > 0 ? parsedTags : undefined,
         related_entity_type: formEntityType.trim() || undefined,
         related_entity_id: formEntityId.trim() || undefined,
@@ -726,7 +766,17 @@ export default function DocumentsPage() {
               >
                 {[
                   { label: L.view, icon: Eye, color: C.info, action: () => { openViewModal(doc); setOpenMenuId(null) } },
-                  ...(doc.file_url ? [{ label: L.download, icon: Download, color: C.primary, action: () => { window.open(doc.file_url, '_blank'); setOpenMenuId(null) } }] : []),
+                  ...(doc.file_url ? [{ label: L.download, icon: Download, color: C.primary, action: () => {
+                    if (doc.file_url?.startsWith('data:')) {
+                      const a = document.createElement('a')
+                      a.href = doc.file_url!
+                      a.download = doc.name + (doc.mime_type ? '.' + doc.mime_type.split('/').pop() : '')
+                      a.click()
+                    } else {
+                      window.open(doc.file_url, '_blank')
+                    }
+                    setOpenMenuId(null)
+                  } }] : []),
                   { label: doc.status === 'archived' ? L.unarchive : L.archive, icon: Archive, color: '#f59e0b', action: () => { handleArchive(doc); setOpenMenuId(null) } },
                   { label: L.editDocument, icon: Edit3, color: C.textSecondary, action: () => { openEditModal(doc); setOpenMenuId(null) } },
                   { label: L.deleteLabel, icon: Trash2, color: C.danger, action: () => { setDeleteTarget(doc.id); setOpenMenuId(null) } },
@@ -1400,31 +1450,71 @@ export default function DocumentsPage() {
             />
           </div>
 
-          {/* File URL + Size row */}
-          <div style={{ display: 'flex', gap: 12, flexDirection: isMobile ? 'column' : 'row' }}>
-            <div style={{ flex: 2 }}>
-              <label style={labelStyle}>{L.fileUrl}</label>
+          {/* File Upload */}
+          <div>
+            <label style={labelStyle}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Upload size={13} />
+                Fichier (depuis l'appareil)
+              </span>
+            </label>
+            <div style={{
+              border: `2px dashed ${formFileUrl ? C.success : C.border}`,
+              borderRadius: 8,
+              padding: 16,
+              textAlign: 'center',
+              cursor: 'pointer',
+              background: formFileUrl ? '#f0fdf4' : '#f8fafc',
+              transition: 'all 0.2s',
+            }}
+              onClick={() => document.getElementById('doc-file-input')?.click()}
+            >
               <input
-                type="text"
-                value={formFileUrl}
-                onChange={(e) => setFormFileUrl(e.target.value)}
-                placeholder="https://example.com/document.pdf"
-                style={inputStyle}
-                onFocus={(e) => { e.currentTarget.style.borderColor = C.primary }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = C.border }}
+                id="doc-file-input"
+                type="file"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip,.rar"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
               />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>{L.fileSize} (bytes)</label>
-              <input
-                type="number"
-                value={formFileSize}
-                onChange={(e) => setFormFileSize(e.target.value)}
-                placeholder="e.g. 1048576"
-                style={inputStyle}
-                onFocus={(e) => { e.currentTarget.style.borderColor = C.primary }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = C.border }}
-              />
+              {uploadingFile ? (
+                <div style={{ color: C.primary, fontSize: 14 }}>Chargement en cours...</div>
+              ) : formFileUrl ? (
+                <div>
+                  <div style={{ color: C.success, fontWeight: 600, fontSize: 14, marginBottom: 4 }}>
+                    &#10003; {formFileName || 'Fichier charge'}
+                  </div>
+                  <div style={{ color: C.textSecondary, fontSize: 12 }}>
+                    {formFileMime} — {formFileSize ? `${(parseInt(formFileSize) / 1024).toFixed(1)} Ko` : ''}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setFormFileUrl('')
+                      setFormFileName('')
+                      setFormFileMime('')
+                      setFormFileSize('')
+                    }}
+                    style={{
+                      marginTop: 8, background: '#fee2e2', color: '#dc2626',
+                      border: 'none', borderRadius: 6, padding: '4px 12px',
+                      fontSize: 12, cursor: 'pointer',
+                    }}
+                  >
+                    Supprimer le fichier
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <Upload size={24} style={{ color: C.textMuted, marginBottom: 4 }} />
+                  <div style={{ color: C.textSecondary, fontSize: 14 }}>
+                    Cliquez pour choisir un fichier
+                  </div>
+                  <div style={{ color: C.textMuted, fontSize: 11, marginTop: 2 }}>
+                    Images, PDF, Word, Excel, CSV, ZIP — Max 10 Mo
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1626,41 +1716,65 @@ export default function DocumentsPage() {
               </div>
             )}
 
-            {/* File URL */}
+            {/* File preview & download */}
             {viewingDocument.file_url && (
-              <div
-                style={{
-                  padding: 14,
-                  borderRadius: 10,
-                  backgroundColor: C.primaryLight,
-                  border: `1px solid ${C.primary}20`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 10,
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: C.primary, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    File URL
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Image preview */}
+                {viewingDocument.file_url.startsWith('data:image/') && (
+                  <div style={{ textAlign: 'center', padding: 8, background: '#f8fafc', borderRadius: 10 }}>
+                    <img
+                      src={viewingDocument.file_url}
+                      alt={viewingDocument.name}
+                      style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8, objectFit: 'contain' }}
+                    />
                   </div>
-                  <div style={{ fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {viewingDocument.file_url}
-                  </div>
-                </div>
-                <button
-                  onClick={() => window.open(viewingDocument.file_url, '_blank')}
+                )}
+                <div
                   style={{
-                    ...btnPrimary,
-                    padding: '8px 16px',
-                    fontSize: 13,
+                    padding: 14,
+                    borderRadius: 10,
+                    backgroundColor: C.primaryLight,
+                    border: `1px solid ${C.primary}20`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.primaryDark }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = C.primary }}
                 >
-                  <Download size={14} />
-                  {L.download}
-                </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: C.primary, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {viewingDocument.file_url.startsWith('data:') ? 'Fichier local (stocke sur l\'appareil)' : 'URL externe'}
+                    </div>
+                    <div style={{ fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {viewingDocument.file_url.startsWith('data:')
+                        ? `${viewingDocument.mime_type || 'fichier'} — ${viewingDocument.file_size ? (viewingDocument.file_size / 1024).toFixed(1) + ' Ko' : ''}`
+                        : viewingDocument.file_url}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (viewingDocument.file_url?.startsWith('data:')) {
+                        // Download base64 file locally
+                        const a = document.createElement('a')
+                        a.href = viewingDocument.file_url!
+                        a.download = viewingDocument.name + (viewingDocument.mime_type ? '.' + viewingDocument.mime_type.split('/').pop() : '')
+                        a.click()
+                      } else {
+                        window.open(viewingDocument.file_url, '_blank')
+                      }
+                    }}
+                    style={{
+                      ...btnPrimary,
+                      padding: '8px 16px',
+                      fontSize: 13,
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = C.primaryDark }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = C.primary }}
+                  >
+                    <Download size={14} />
+                    {L.download}
+                  </button>
+                </div>
               </div>
             )}
 

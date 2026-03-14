@@ -618,4 +618,35 @@ export const SAMPLE_PRODUCTS: Partial<Record<Activity, SampleProduct[]>> = {
     { name: 'Traduction document (par page)', price: 3000, cost: 1000, stock: 50, category: 'Traduction', unit: 'page', duration_minutes: 60, image_url: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=200&h=200&fit=crop&q=60' },
     { name: 'Conseil juridique (heure)', price: 25000, cost: 8000, stock: 15, category: 'Consultations', unit: 'heure', duration_minutes: 60, image_url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=200&h=200&fit=crop&q=60' },
   ],
+
+  // ---------------------------------------------------------------------------
+  // BTP / GENIE CIVIL / FORAGE
+  // ---------------------------------------------------------------------------
+  btp: [
+    // Materiaux
+    { name: 'Ciment Portland CEM II 50kg', price: 5500, cost: 4200, stock: 500, category: 'Materiaux', unit: 'sac', weight_kg: 50, vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Fer a beton T12 (barre 12m)', price: 4500, cost: 3200, stock: 200, category: 'Materiaux', unit: 'barre', weight_kg: 10.7, vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Fer a beton T8 (barre 12m)', price: 2800, cost: 1900, stock: 300, category: 'Materiaux', unit: 'barre', weight_kg: 4.7, vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Gravier concasse 0/25 (m3)', price: 15000, cost: 10000, stock: 100, category: 'Materiaux', unit: 'm3', weight_kg: 1500, vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Sable de riviere (m3)', price: 8000, cost: 5000, stock: 100, category: 'Materiaux', unit: 'm3', weight_kg: 1400, vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Brique creuse 15x20x40', price: 350, cost: 200, stock: 5000, category: 'Materiaux', unit: 'piece', vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Tole ondulee BG28 (3m)', price: 6500, cost: 4500, stock: 200, category: 'Materiaux', unit: 'feuille', vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Tube PVC pression 110mm (6m)', price: 12000, cost: 8000, stock: 100, category: 'Plomberie', unit: 'barre', vehicle_type: 'material', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    // Equipement location
+    { name: 'Location betonniere 350L (journee)', price: 25000, cost: 8000, stock: 5, category: 'Equipements', unit: 'jour', vehicle_type: 'equipment', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Location groupe electrogene 5KVA', price: 20000, cost: 7000, stock: 3, category: 'Equipements', unit: 'jour', vehicle_type: 'equipment', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Location compacteur vibrant', price: 35000, cost: 12000, stock: 2, category: 'Equipements', unit: 'jour', vehicle_type: 'equipment', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    // Main d'oeuvre
+    { name: 'Maconnerie (m2 mur)', price: 8000, cost: 4000, stock: 100, category: 'Main d\'oeuvre', unit: 'm2', duration_minutes: 180, vehicle_type: 'labor', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Ferraillage + coffrage (m3)', price: 45000, cost: 25000, stock: 50, category: 'Main d\'oeuvre', unit: 'm3', duration_minutes: 480, vehicle_type: 'labor', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Carrelage sol (m2)', price: 5000, cost: 2500, stock: 200, category: 'Finitions', unit: 'm2', duration_minutes: 60, vehicle_type: 'labor', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Peinture interieure (m2)', price: 2500, cost: 1200, stock: 500, category: 'Finitions', unit: 'm2', duration_minutes: 30, vehicle_type: 'labor', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    // Forage / adduction
+    { name: 'Forage puits (metre lineaire)', price: 35000, cost: 20000, stock: 100, category: 'Forage', unit: 'ml', duration_minutes: 120, vehicle_type: 'subcontract', description: 'Forage en terrain alluvionnaire', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Pompe immergee 2CV', price: 250000, cost: 180000, stock: 5, category: 'Forage', unit: 'piece', vehicle_type: 'equipment', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Reservoir eau 5000L (installation)', price: 350000, cost: 220000, stock: 3, category: 'Adduction', unit: 'piece', vehicle_type: 'equipment', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    // Transport
+    { name: 'Transport materiaux (camion 10T)', price: 45000, cost: 25000, stock: 10, category: 'Transport', unit: 'voyage', vehicle_type: 'transport', image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+    { name: 'Etude de sol / topographie', price: 150000, cost: 80000, stock: 10, category: 'Etudes', unit: 'prestation', vehicle_type: 'subcontract', duration_minutes: 480, image_url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=200&h=200&fit=crop&q=60' },
+  ],
 }

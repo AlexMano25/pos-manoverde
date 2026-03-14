@@ -93,13 +93,15 @@ export default function ServerOrderPage() {
     tableLabel: so.tableLabel || 'Table',
   }
 
+  // Always reload data on mount (ensures newly created tables/products appear)
   useEffect(() => {
     if (storeId) {
       loadProducts(storeId)
       loadOrders(storeId)
       if (hasTableSupport) loadTables(storeId)
     }
-  }, [storeId, loadProducts, loadOrders, loadTables, hasTableSupport])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeId])
 
   // Filter products
   const filteredProducts = useMemo(() => {

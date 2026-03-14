@@ -355,4 +355,17 @@ export const DASHBOARD_CONFIG: Record<Activity, ActivityDashboardConfig> = {
       { type: 'contract_shortcuts', templates: ['devis_prestation'] },
     ],
   },
+
+  // =========================================================================
+  // BTP / CONSTRUCTION / FORAGE
+  // =========================================================================
+
+  btp: {
+    statCards: ['revenue', 'orders', 'products', 'avg_order', 'low_stock'],
+    quickActions: QA_SERVICE,
+    widgets: [
+      { type: 'category_breakdown' },
+      { type: 'alerts_panel' },
+    ],
+  },
 }

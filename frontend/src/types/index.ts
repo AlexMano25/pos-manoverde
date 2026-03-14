@@ -38,6 +38,7 @@ export type Activity =
   | 'printing'
   | 'real_estate'
   | 'travel_agency'
+  | 'btp'
 
 // -- Restaurant / Bar table management ----------------------------------------
 

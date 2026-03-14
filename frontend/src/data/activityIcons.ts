@@ -26,6 +26,7 @@ import {
   Printer as PrinterIcon,
   Building2,
   Plane,
+  HardHat,
 } from 'lucide-react'
 import type { Activity } from '../types'
 
@@ -59,16 +60,17 @@ export const ACTIVITY_ICONS: Record<Activity, React.ElementType> = {
   printing: PrinterIcon,
   real_estate: Building2,
   travel_agency: Plane,
+  btp: HardHat,
 }
 
-// ── Ordered list of all 26 activities ────────────────────────────────────────
+// ── Ordered list of all 27 activities ────────────────────────────────────────
 
 export const ALL_ACTIVITIES: Activity[] = [
   'restaurant', 'supermarket', 'pharmacy', 'fashion', 'electronics', 'services',
   'bar', 'bakery', 'hotel', 'hair_salon', 'spa', 'gym',
   'pool', 'car_wash', 'gas_station', 'laundry', 'auto_repair',
   'daycare', 'school', 'home_cleaning', 'florist', 'pet_shop',
-  'bookstore', 'printing', 'real_estate', 'travel_agency',
+  'bookstore', 'printing', 'real_estate', 'travel_agency', 'btp',
 ]
 
 // ── Brand colors per activity (used on landing page cards) ───────────────────
@@ -100,4 +102,5 @@ export const ACTIVITY_COLORS: Record<Activity, string> = {
   printing: '#6b7280',
   real_estate: '#3b82f6',
   travel_agency: '#06b6d4',
+  btp: '#92400e',
 }

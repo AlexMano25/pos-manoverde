@@ -41,6 +41,9 @@ export const ACTIVITY_WALLPAPERS: Record<Activity, string> = {
   // Travel
   travel_agency: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&q=60&auto=format',
 
+  // BTP / Construction
+  btp: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1200&q=60&auto=format',
+
   // Wellness & Fitness
   gym: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=60&auto=format',
   spa: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200&q=60&auto=format',

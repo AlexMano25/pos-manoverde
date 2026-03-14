@@ -396,6 +396,41 @@ const HAIR_SALON: SidebarItemConfig[] = [
   { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
 ]
 
+const BTP: SidebarItemConfig[] = [
+  { section: 'dashboard', icon: 'LayoutDashboard', i18nKey: 'nav.dashboard', pageComponent: 'dashboard' },
+  NOTIFICATIONS,
+  { section: 'pos', icon: 'ShoppingCart', i18nKey: 'nav.caisse', pageComponent: 'pos', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'cash_register', icon: 'Banknote', i18nKey: 'nav.cashRegister', pageComponent: 'cash_register', allowedRoles: ['admin', 'manager', 'cashier'] },
+  SERVER_ORDERS,
+  EXPENSES,
+  { section: 'products', icon: 'HardHat', i18nKey: 'nav.btpCatalog', pageComponent: 'products', allowedRoles: ['admin', 'manager', 'stock'] },
+  { section: 'orders', icon: 'ClipboardList', i18nKey: 'nav.orders', pageComponent: 'orders', allowedRoles: ['admin', 'manager', 'cashier'] },
+  { section: 'quotes', icon: 'FileText', i18nKey: 'nav.quotes', pageComponent: 'quotes', allowedRoles: ['admin', 'manager'], serverOnly: true },
+  RETURNS,
+  { section: 'customers', icon: 'UserCheck', i18nKey: 'nav.clients', pageComponent: 'customers', allowedRoles: ['admin', 'manager'] },
+  { section: 'loyalty', icon: 'Gift', i18nKey: 'nav.loyalty', pageComponent: 'loyalty', allowedRoles: ['admin', 'manager'] },
+  { section: 'stock', icon: 'BarChart3', i18nKey: 'nav.stock', pageComponent: 'stock', allowedRoles: ['admin', 'manager', 'stock'] },
+  STOCKTAKE,
+  WASTE_LOSS,
+  TRANSFERS,
+  BARCODE,
+  { section: 'suppliers', icon: 'Truck', i18nKey: 'nav.suppliers', pageComponent: 'suppliers', allowedRoles: ['admin', 'manager'] },
+  { section: 'invoices', icon: 'Receipt', i18nKey: 'nav.invoices', pageComponent: 'invoices', allowedRoles: ['admin', 'manager'] },
+  { section: 'deliveries', icon: 'Bike', i18nKey: 'nav.deliveries', pageComponent: 'deliveries', allowedRoles: ['admin', 'manager', 'cashier'] },
+  DOCUMENTS,
+  CAMPAIGNS,
+  FEEDBACK,
+  { section: 'reports', icon: 'PieChart', i18nKey: 'nav.reports', pageComponent: 'reports', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+  PAYROLL,
+  MAINTENANCE,
+  AUDIT_TRAIL,
+  TAX,
+  { section: 'billing', icon: 'CreditCard', i18nKey: 'nav.billing', pageComponent: 'billing', serverOnly: true, allowedRoles: ['admin'] },
+  { section: 'settings', icon: 'Settings', i18nKey: 'nav.settings', pageComponent: 'settings', serverOnly: true, allowedRoles: ['admin', 'manager'] },
+]
+
 // ── Main config map ──────────────────────────────────────────────────────
 
 export const SIDEBAR_CONFIG: Record<Activity, SidebarItemConfig[]> = {
@@ -444,6 +479,9 @@ export const SIDEBAR_CONFIG: Record<Activity, SidebarItemConfig[]> = {
 
   // Hair Salon
   hair_salon: HAIR_SALON,
+
+  // BTP / Construction / Forage
+  btp: BTP,
 }
 
 // Helper: get sidebar items for a given activity (with fallback)

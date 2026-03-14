@@ -78,7 +78,7 @@ export default function POSPage() {
   const { items, addItem, updateQty, removeItem, clear, getTotal } = useCartStore()
   const { currentStore } = useAppStore()
   const { t } = useLanguageStore()
-  const { selectedCustomer, selectCustomer, loadCustomers, searchCustomers } = useCustomerStore()
+  const { selectedCustomer, selectCustomer, loadCustomers } = useCustomerStore()
   const { getActivePromotions, calculateTotalDiscount, loadPromotions } = usePromotionStore()
 
   const { isMobile, rv } = useResponsive()
@@ -98,6 +98,8 @@ export default function POSPage() {
 
   const storeId = currentStore?.id || 'default-store'
   const currencyCode = currentStore?.currency || 'XAF'
+  // Subscribe to customerStore.customers so POS always has fresh customer data
+  const allCustomers = useCustomerStore(s => s.customers)
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -105,7 +107,8 @@ export default function POSPage() {
       loadCustomers(currentStore.id)
       loadPromotions(currentStore.id)
     }
-  }, [currentStore?.id, loadProducts, loadCustomers, loadPromotions])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStore?.id])
 
   // Active promotions for product badges
   const activePromos = useMemo(
@@ -119,14 +122,22 @@ export default function POSPage() {
     [items, storeId, calculateTotalDiscount]
   )
 
-  // Customer search
-  const handleCustomerSearch = async (query: string) => {
+  // Customer search — uses in-memory Zustand array for instant reactivity
+  const handleCustomerSearch = (query: string) => {
     setCustomerQuery(query)
-    if (query.trim().length >= 2) {
-      const results = await searchCustomers(storeId, query)
+    if (query.trim().length >= 1) {
+      const q = query.toLowerCase()
+      const results = allCustomers.filter(
+        (c) =>
+          c.store_id === storeId &&
+          (c.name.toLowerCase().includes(q) ||
+            (c.phone && c.phone.includes(query)) ||
+            (c.email && c.email.toLowerCase().includes(q)))
+      )
       setCustomerResults(results)
     } else {
-      setCustomerResults([])
+      // Show all customers when no query (for quick selection)
+      setCustomerResults(allCustomers.filter(c => c.store_id === storeId).slice(0, 20))
     }
   }
 
@@ -383,7 +394,11 @@ export default function POSPage() {
                 alignItems: 'center',
                 gap: 4,
               }}
-              onClick={() => setShowCustomerSearch(true)}
+              onClick={() => {
+                setShowCustomerSearch(true)
+                // Pre-populate with recent customers for instant display
+                setCustomerResults(allCustomers.filter(c => c.store_id === storeId).slice(0, 20))
+              }}
             >
               👤 {selectedCustomer ? selectedCustomer.name : (t.customers?.selectCustomer || 'Client')}
               {selectedCustomer && (
