@@ -939,6 +939,7 @@ export const zh: TranslationKeys = {
     sectorsCategoryServices: '服务',
     sectorsCategoryWellness: '健康与休闲',
     sectorsCategoryEducation: '教育与其他',
+    sectorsCategoryConstruction: '建筑与工程',
     sectorsViewPreview: '查看预览',
     // Footer
     footerDesc: '专为全球商户打造的智能收银解决方案。支持离线运行、自动同步和蓝牙打印。',

@@ -939,6 +939,7 @@ export const ar: TranslationKeys = {
     sectorsCategoryServices: 'الخدمات',
     sectorsCategoryWellness: 'الصحة والترفيه',
     sectorsCategoryEducation: 'التعليم وأخرى',
+    sectorsCategoryConstruction: 'البناء والهندسة',
     sectorsViewPreview: 'عرض المعاينة',
     // Footer
     footerDesc: 'حل نقطة البيع الذكي المصمم للتجار حول العالم. يعمل بدون اتصال، مزامنة تلقائية وطباعة عبر Bluetooth.',

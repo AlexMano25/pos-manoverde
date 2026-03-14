@@ -939,6 +939,7 @@ export const es: TranslationKeys = {
     sectorsCategoryServices: 'Servicios',
     sectorsCategoryWellness: 'Bienestar & Ocio',
     sectorsCategoryEducation: 'Educacion & Otros',
+    sectorsCategoryConstruction: 'Construccion & Ingenieria',
     sectorsViewPreview: 'Ver vista previa',
     // Footer
     footerDesc: 'La solucion de caja inteligente disenada para comerciantes de todo el mundo. Funcionamiento sin conexion, sincronizacion automatica e impresion Bluetooth.',

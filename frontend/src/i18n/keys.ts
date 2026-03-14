@@ -983,7 +983,7 @@ export type TranslationKeys = {
     ctaSubtitle: string
     ctaButton: string
     ctaNoCard: string
-    // Sectors v2 (all 26 activities)
+    // Sectors v2 (all 27 activities)
     sectorsFeaturedBadge: string
     sectorsAllTitle: string
     sectorsAllSubtitle: string
@@ -993,6 +993,7 @@ export type TranslationKeys = {
     sectorsCategoryServices: string
     sectorsCategoryWellness: string
     sectorsCategoryEducation: string
+    sectorsCategoryConstruction: string
     sectorsViewPreview: string
     // Footer
     footerDesc: string

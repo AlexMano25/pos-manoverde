@@ -939,6 +939,7 @@ export const it: TranslationKeys = {
     sectorsCategoryServices: 'Servizi',
     sectorsCategoryWellness: 'Benessere & Tempo libero',
     sectorsCategoryEducation: 'Istruzione & Altro',
+    sectorsCategoryConstruction: 'Edilizia & Ingegneria',
     sectorsViewPreview: 'Vedi anteprima',
     // Footer
     footerDesc: 'La soluzione di cassa intelligente pensata per i commercianti di tutto il mondo. Funzionamento offline, sincronizzazione automatica e stampa Bluetooth.',

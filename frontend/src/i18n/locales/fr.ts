@@ -943,6 +943,7 @@ export const fr: TranslationKeys = {
     sectorsCategoryServices: 'Services',
     sectorsCategoryWellness: 'Bien-etre & Loisirs',
     sectorsCategoryEducation: 'Education & Autres',
+    sectorsCategoryConstruction: 'BTP & Construction',
     sectorsViewPreview: 'Voir l\'apercu',
     // Footer
     footerDesc: 'La solution de caisse intelligente concue pour les commercants du monde entier. Fonctionnement hors-ligne, synchronisation automatique et impression Bluetooth.',

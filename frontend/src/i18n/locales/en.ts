@@ -975,6 +975,7 @@ export const en: TranslationKeys = {
     sectorsCategoryServices: 'Services',
     sectorsCategoryWellness: 'Wellness & Leisure',
     sectorsCategoryEducation: 'Education & More',
+    sectorsCategoryConstruction: 'Construction & Engineering',
     sectorsViewPreview: 'See preview',
     // Footer
     footerDesc: 'The smart POS solution designed for merchants worldwide. Offline operation, automatic sync, and Bluetooth printing.',

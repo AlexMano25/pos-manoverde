@@ -412,7 +412,7 @@ export default function LandingPage() {
 
   // Animated counters for hero stats
   const stat1 = useCountUp(2500, 2000)
-  const stat2 = useCountUp(26, 1500)
+  const stat2 = useCountUp(27, 1500)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -690,7 +690,7 @@ export default function LandingPage() {
     { question: t.landing.faqQ8, answer: t.landing.faqA8 },
   ]
 
-  // ── Featured sectors (8 most popular) with mockup data for interactive modal ──
+  // ── Featured sectors (16 most popular) with mockup data for interactive modal ──
   const FEATURED_SECTORS: { activity: Activity; color: string; stats: { v: string; c: string }[]; stat3Label: string; bars: number[]; sidebar: string[]; categories: string[]; products: { n: string; p: string; bg: string; badge: string }[]; cart: string[]; total: string }[] = [
     { activity: 'restaurant', color: '#ef4444',
       stats: [{ v: '185,000', c: '#ef4444' }, { v: '42', c: '#16a34a' }, { v: '4,400', c: '#f59e0b' }], stat3Label: 'Ticket moyen',
@@ -748,6 +748,62 @@ export default function LandingPage() {
       categories: ['Chambres','Restauration','Services'],
       products: [{ n:'Ch. Double Deluxe', p:'35,000', bg:'#f3e8ff', badge:'\uD83D\uDECF Double' },{ n:'Ch. Simple Std', p:'25,000', bg:'#dbeafe', badge:'\uD83D\uDECF Simple' },{ n:'Suite Presidentielle', p:'65,000', bg:'#fef3c7', badge:'\uD83D\uDECF Suite' },{ n:'Petit-dejeuner buffet', p:'5,000', bg:'#dcfce7', badge:'' },{ n:'Spa & Massage', p:'15,000', bg:'#fce7f3', badge:'\u23F1 60min' },{ n:'Parking 24h', p:'2,000', bg:'#f1f5f9', badge:'' }],
       cart: ['Ch. Double x1','Petit-dej x2','Parking x1'], total: '47,000' },
+    { activity: 'electronics', color: '#0891b2',
+      stats: [{ v: '420,000', c: '#0891b2' }, { v: '78', c: '#16a34a' }, { v: '15', c: '#ef4444' }], stat3Label: 'Stock faible',
+      bars: [55,70,85,60,90,75,80,65,88,72,95,82],
+      sidebar: ['Caisse','Produits','Stock','SAV','Employes'],
+      categories: ['Telephones','Ordinateurs','Accessoires'],
+      products: [{ n:'iPhone 15 Pro', p:'750,000', bg:'#ecfeff', badge:'📱 Apple' },{ n:'Samsung Galaxy S24', p:'550,000', bg:'#dbeafe', badge:'📱 Samsung' },{ n:'MacBook Air M3', p:'900,000', bg:'#f1f5f9', badge:'💻 Apple' },{ n:'Ecouteurs AirPods', p:'120,000', bg:'#dcfce7', badge:'🎧 Apple' },{ n:'Chargeur USB-C', p:'8,000', bg:'#fef3c7', badge:'' },{ n:'Coque silicone', p:'5,000', bg:'#fce7f3', badge:'' }],
+      cart: ['iPhone 15 Pro x1','Coque x1','Chargeur x2'], total: '771,000' },
+    { activity: 'gym', color: '#f97316',
+      stats: [{ v: '180,000', c: '#f97316' }, { v: '120', c: '#16a34a' }, { v: '85%', c: '#2563eb' }], stat3Label: 'Taux renouv.',
+      bars: [80,75,85,90,70,65,88,92,78,82,86,94],
+      sidebar: ['Caisse','Abonnements','Planning','Clients','Employes'],
+      categories: ['Abonnements','Coaching','Supplements'],
+      products: [{ n:'Abo Mensuel', p:'25,000', bg:'#fff7ed', badge:'🏋️ 30j' },{ n:'Abo Annuel', p:'250,000', bg:'#dcfce7', badge:'🏋️ 365j' },{ n:'Coach Perso x10', p:'80,000', bg:'#fef3c7', badge:'👤 10 seances' },{ n:'Pass Journee', p:'3,000', bg:'#dbeafe', badge:'🏋️ 1j' },{ n:'Whey Protein 1kg', p:'15,000', bg:'#fce7f3', badge:'⚡ 1kg' },{ n:'Serviette sport', p:'5,000', bg:'#f1f5f9', badge:'' }],
+      cart: ['Abo Mensuel x1','Coach x10','Whey x1'], total: '120,000' },
+    { activity: 'spa', color: '#14b8a6',
+      stats: [{ v: '310,000', c: '#14b8a6' }, { v: '65', c: '#16a34a' }, { v: '50min', c: '#2563eb' }], stat3Label: 'Duree moy.',
+      bars: [60,65,75,80,85,90,88,82,78,70,85,92],
+      sidebar: ['Caisse','Soins','RDV','Produits','Employes'],
+      categories: ['Massages','Visage','Corps'],
+      products: [{ n:'Massage Relaxant', p:'20,000', bg:'#f0fdfa', badge:'💆 60min' },{ n:'Soin Visage Premium', p:'25,000', bg:'#dcfce7', badge:'💆 45min' },{ n:'Gommage Corps', p:'15,000', bg:'#fef3c7', badge:'💆 30min' },{ n:'Massage Pierres', p:'30,000', bg:'#fce7f3', badge:'💆 75min' },{ n:'Manucure Gel', p:'8,000', bg:'#dbeafe', badge:'💅 40min' },{ n:'Epilation cire', p:'5,000', bg:'#f1f5f9', badge:'⏱ 20min' }],
+      cart: ['Massage Relaxant x1','Soin Visage x1','Manucure x1'], total: '53,000' },
+    { activity: 'auto_repair', color: '#78716c',
+      stats: [{ v: '480,000', c: '#78716c' }, { v: '35', c: '#16a34a' }, { v: '2.5h', c: '#f59e0b' }], stat3Label: 'Temps moy.',
+      bars: [70,60,80,75,65,90,85,55,78,88,72,82],
+      sidebar: ['Caisse','Reparations','Stock','Vehicules','Factures'],
+      categories: ['Mecanique','Electricite','Carrosserie'],
+      products: [{ n:'Vidange complete', p:'25,000', bg:'#f5f5f4', badge:'🔧 45min' },{ n:'Freins avant', p:'45,000', bg:'#fef2f2', badge:'🔧 90min' },{ n:'Pneu 205/55R16', p:'35,000', bg:'#dbeafe', badge:'🔧 30min' },{ n:'Batterie 12V', p:'40,000', bg:'#fef3c7', badge:'⚡ 12V' },{ n:'Diagnostic elec.', p:'15,000', bg:'#dcfce7', badge:'🔧 60min' },{ n:'Climatisation', p:'30,000', bg:'#f1f5f9', badge:'❄️ 120min' }],
+      cart: ['Vidange x1','Freins avant x1','Diagnostic x1'], total: '85,000' },
+    { activity: 'travel_agency', color: '#06b6d4',
+      stats: [{ v: '2,500,000', c: '#06b6d4' }, { v: '18', c: '#16a34a' }, { v: '92%', c: '#2563eb' }], stat3Label: 'Satisfaction',
+      bars: [50,65,80,70,95,85,90,88,75,60,82,78],
+      sidebar: ['Caisse','Voyages','Reservations','Clients','Factures'],
+      categories: ['Vols','Hotels','Packages'],
+      products: [{ n:'Vol Douala-Paris', p:'450,000', bg:'#ecfeff', badge:'✈️ Aller' },{ n:'Visa Schengen', p:'75,000', bg:'#dbeafe', badge:'📋 15j' },{ n:'Hotel 3* x5 nuits', p:'175,000', bg:'#dcfce7', badge:'🏨 5N' },{ n:'Assurance voyage', p:'25,000', bg:'#fef3c7', badge:'🛡 30j' },{ n:'Transfer aeroport', p:'20,000', bg:'#fce7f3', badge:'🚗 A/R' },{ n:'Package Dubaï 7j', p:'800,000', bg:'#f3e8ff', badge:'✈️ All incl.' }],
+      cart: ['Vol DLA-CDG x2','Hotel 3* x1','Assurance x2'], total: '1,175,000' },
+    { activity: 'school', color: '#059669',
+      stats: [{ v: '850,000', c: '#059669' }, { v: '245', c: '#16a34a' }, { v: '32', c: '#2563eb' }], stat3Label: 'Classes',
+      bars: [90,88,85,92,80,75,82,78,86,90,84,88],
+      sidebar: ['Caisse','Inscriptions','Eleves','Classes','Rapports'],
+      categories: ['Frais scol.','Fournitures','Cantine'],
+      products: [{ n:'Inscription annuelle', p:'150,000', bg:'#dcfce7', badge:'📚 2025/26' },{ n:'Frais examen', p:'25,000', bg:'#dbeafe', badge:'📋 Trim.' },{ n:'Uniforme complet', p:'15,000', bg:'#fef3c7', badge:'👔 S/M/L' },{ n:'Manuels scolaires', p:'20,000', bg:'#fce7f3', badge:'📖 Lot' },{ n:'Cantine mensuelle', p:'12,000', bg:'#f1f5f9', badge:'🍽 30j' },{ n:'Transport scolaire', p:'10,000', bg:'#f3e8ff', badge:'🚌 Mensuel' }],
+      cart: ['Inscription x1','Uniforme x1','Cantine x3'], total: '201,000' },
+    { activity: 'pet_shop', color: '#d97706',
+      stats: [{ v: '165,000', c: '#d97706' }, { v: '92', c: '#16a34a' }, { v: '8', c: '#ef4444' }], stat3Label: 'Stock faible',
+      bars: [65,70,80,75,85,60,90,72,88,68,82,78],
+      sidebar: ['Caisse','Produits','Stock','Clients','Employes'],
+      categories: ['Alimentation','Accessoires','Hygiene'],
+      products: [{ n:'Croquettes chien 10kg', p:'18,000', bg:'#fef3c7', badge:'🐕 10kg' },{ n:'Croquettes chat 5kg', p:'12,000', bg:'#dcfce7', badge:'🐱 5kg' },{ n:'Laisse cuir L', p:'5,000', bg:'#dbeafe', badge:'🐕 L' },{ n:'Litiere 10L', p:'4,500', bg:'#f1f5f9', badge:'🐱 10L' },{ n:'Jouet balle', p:'2,000', bg:'#fce7f3', badge:'' },{ n:'Shampooing animal', p:'3,500', bg:'#f3e8ff', badge:'🧴 250ml' }],
+      cart: ['Croquettes chien x2','Litiere x1','Laisse x1'], total: '45,500' },
+    { activity: 'btp', color: '#92400e',
+      stats: [{ v: '12,500,000', c: '#92400e' }, { v: '8', c: '#16a34a' }, { v: '3', c: '#2563eb' }], stat3Label: 'Chantiers',
+      bars: [45,55,70,80,90,85,75,88,65,78,82,60],
+      sidebar: ['Caisse','Devis','Stock','Fournisseurs','Factures'],
+      categories: ['Materiaux','Equipement','Main d\'oeuvre'],
+      products: [{ n:'Ciment CPA 50kg', p:'5,500', bg:'#fef3c7', badge:'⚖ 50kg' },{ n:'Fer a beton 12mm', p:'4,800', bg:'#f5f5f4', badge:'⚖ 12m' },{ n:'Gravier 1m³', p:'15,000', bg:'#e0e7ff', badge:'⚖ 1m³' },{ n:'Sable 1m³', p:'8,000', bg:'#fef2f2', badge:'⚖ 1m³' },{ n:'Location betonniere', p:'25,000', bg:'#dbeafe', badge:'🔧 /jour' },{ n:'Maconnerie m²', p:'8,000', bg:'#dcfce7', badge:'👷 /m²' }],
+      cart: ['Ciment x100','Fer 12mm x50','Gravier x5'], total: '865,000' },
   ]
 
   const FEATURED_KEYS = new Set(FEATURED_SECTORS.map(s => s.activity))
@@ -760,6 +816,7 @@ export default function LandingPage() {
     { key: 'services', i18nKey: 'sectorsCategoryServices', activities: ['services', 'laundry', 'printing', 'home_cleaning', 'car_wash', 'auto_repair', 'hair_salon'] },
     { key: 'wellness', i18nKey: 'sectorsCategoryWellness', activities: ['gym', 'spa', 'pool', 'hotel', 'travel_agency'] },
     { key: 'education', i18nKey: 'sectorsCategoryEducation', activities: ['school', 'daycare', 'real_estate'] },
+    { key: 'construction', i18nKey: 'sectorsCategoryConstruction', activities: ['btp'] },
   ]
 
   const filteredActivities = ACTIVITY_CATEGORIES.find(c => c.key === activeCategory)?.activities || ALL_ACTIVITIES
@@ -2149,7 +2206,7 @@ export default function LandingPage() {
       </section>
 
       {/* ================================================================
-          SECTORS / USE CASES — ALL 26 ACTIVITIES
+          SECTORS / USE CASES — ALL 27 ACTIVITIES
           ================================================================ */}
       <section id="sectors" className="landing-section-padding" style={sectionStyle('#ffffff')}>
         <div style={containerStyle}>
@@ -2232,7 +2289,7 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* ── Tier 2: All 26 activities compact grid ── */}
+          {/* ── Tier 2: All 27 activities compact grid ── */}
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
               {t.landing.sectorsAllTitle}
@@ -3646,7 +3703,7 @@ export default function LandingPage() {
                 'Landing page: Product showcase, Video demo, Sectors, Trust badges',
                 'Employee authentication with PIN login',
                 'Multi-currency support (25+ currencies)',
-                'Activity-specific products (26 business types)',
+                'Activity-specific products (27 business types)',
               ]},
               { version: 'v1.4.0', date: 'Fevrier 2026', tag: null, items: [
                 'Responsive 3-tier layout',

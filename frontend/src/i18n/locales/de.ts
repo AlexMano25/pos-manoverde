@@ -939,6 +939,7 @@ export const de: TranslationKeys = {
     sectorsCategoryServices: 'Dienstleistungen',
     sectorsCategoryWellness: 'Wellness & Freizeit',
     sectorsCategoryEducation: 'Bildung & Sonstiges',
+    sectorsCategoryConstruction: 'Bau & Ingenieurwesen',
     sectorsViewPreview: 'Vorschau ansehen',
     // Footer
     footerDesc: 'Die intelligente Kassenl\u00f6sung f\u00fcr H\u00e4ndler weltweit. Offline-Betrieb, automatische Synchronisation und Bluetooth-Druck.',
