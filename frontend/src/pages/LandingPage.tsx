@@ -2224,81 +2224,6 @@ export default function LandingPage() {
           <h2 style={sectionTitleStyle}>{t.landing.sectorsTitle}</h2>
           <p style={sectionSubtitleStyle}>{t.landing.sectorsSubtitle}</p>
 
-          {/* ── Tier 1: Featured activities (8 large cards) ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              ★ {t.landing.sectorsFeaturedBadge}
-            </span>
-          </div>
-
-          <div className="landing-sectors-featured" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 48 }}>
-            {FEATURED_SECTORS.map((sector) => {
-              const Icon = ACTIVITY_ICONS[sector.activity]
-              const wallpaper = ACTIVITY_WALLPAPERS[sector.activity]
-              const setupKey = sector.activity as keyof typeof t.setup
-              return (
-                <div
-                  key={sector.activity}
-                  onClick={() => { setSectorTab(0); setSectorModal(sector.activity) }}
-                  style={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: 16,
-                    padding: 24,
-                    border: '1px solid #e2e8f0',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)'
-                    e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-                    e.currentTarget.style.borderColor = sector.color
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                    e.currentTarget.style.borderColor = '#e2e8f0'
-                  }}
-                >
-                  {/* Wallpaper subtle overlay */}
-                  {wallpaper && (
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      backgroundImage: `url(${wallpaper.replace('w=1200', 'w=400').replace('q=60', 'q=40')})`,
-                      backgroundSize: 'cover', backgroundPosition: 'center',
-                      opacity: 0.08, pointerEvents: 'none',
-                    }} />
-                  )}
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: `${sector.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-                      <Icon size={24} color={sector.color} />
-                    </div>
-                    <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
-                      {t.setup[setupKey]}
-                    </h3>
-                    <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, margin: '0 0 12px', fontFamily: pageFont, minHeight: 40 }}>
-                      {t.setup[`${sector.activity}Desc` as keyof typeof t.setup]}
-                    </p>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: sector.color, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {t.landing.sectorsViewPreview} <span style={{ fontSize: 16 }}>&rarr;</span>
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* ── Tier 2: All 27 activities compact grid ── */}
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '0 0 6px', fontFamily: pageFont }}>
-              {t.landing.sectorsAllTitle}
-            </h3>
-            <p style={{ fontSize: 14, color: '#64748b', margin: 0, fontFamily: pageFont }}>
-              {t.landing.sectorsAllSubtitle}
-            </p>
-          </div>
-
           {/* Category filter tabs */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
             {ACTIVITY_CATEGORIES.map((cat) => (
@@ -2324,13 +2249,14 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Compact activity chips grid */}
-          <div className="landing-sectors-all-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          {/* Unified activity cards grid */}
+          <div className="landing-sectors-all-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             {filteredActivities.map((act) => {
               const Icon = ACTIVITY_ICONS[act]
               const color = ACTIVITY_COLORS[act]
               const isFeatured = FEATURED_KEYS.has(act)
               const setupKey = act as keyof typeof t.setup
+              const wallpaper = ACTIVITY_WALLPAPERS[act]
               return (
                 <div
                   key={act}
@@ -2344,38 +2270,55 @@ export default function LandingPage() {
                     }
                   }}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '12px 16px',
-                    borderRadius: 12,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 16,
+                    padding: 20,
                     border: '1px solid #e2e8f0',
-                    backgroundColor: '#fff',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.3s ease',
                     position: 'relative',
+                    overflow: 'hidden',
                   }}
                   onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px)'
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)'
                     e.currentTarget.style.borderColor = color
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'
-                    e.currentTarget.style.transform = 'translateY(-2px)'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#e2e8f0'
-                    e.currentTarget.style.boxShadow = 'none'
                     e.currentTarget.style.transform = 'translateY(0)'
+                    e.currentTarget.style.boxShadow = 'none'
+                    e.currentTarget.style.borderColor = '#e2e8f0'
                   }}
                 >
-                  <div style={{ width: 34, height: 34, borderRadius: 8, backgroundColor: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon size={18} color={color} />
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', fontFamily: pageFont, flex: 1 }}>
-                    {t.setup[setupKey]}
-                  </span>
-                  {isFeatured && (
-                    <span style={{ fontSize: 10, color: '#f59e0b' }} title={t.landing.sectorsFeaturedBadge}>★</span>
+                  {/* Wallpaper subtle overlay for featured */}
+                  {isFeatured && wallpaper && (
+                    <div style={{
+                      position: 'absolute', inset: 0,
+                      backgroundImage: `url(${wallpaper.replace('w=1200', 'w=400').replace('q=60', 'q=40')})`,
+                      backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: 0.06, pointerEvents: 'none',
+                    }} />
                   )}
-                  <span style={{ fontSize: 14, color: '#94a3b8' }}>&rarr;</span>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={20} color={color} />
+                      </div>
+                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0, fontFamily: pageFont, flex: 1 }}>
+                        {t.setup[setupKey]}
+                      </h3>
+                    </div>
+                    <p style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5, margin: '0 0 10px', fontFamily: pageFont, minHeight: 36 }}>
+                      {t.setup[`${act}Desc` as keyof typeof t.setup]}
+                    </p>
+                    {isFeatured ? (
+                      <span style={{ fontSize: 12, fontWeight: 600, color: color, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {t.landing.sectorsViewPreview} <span style={{ fontSize: 14 }}>&rarr;</span>
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#94a3b8' }}>&rarr;</span>
+                    )}
+                  </div>
                 </div>
               )
             })}

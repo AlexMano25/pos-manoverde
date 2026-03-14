@@ -176,7 +176,7 @@ export const en: TranslationKeys = {
   // Navigation
   nav: {
     dashboard: 'Dashboard',
-    pos: 'POS',
+    pos: 'Point of Sale',
     products: 'Products',
     orders: 'Orders',
     stock: 'Stock',
@@ -203,7 +203,7 @@ export const en: TranslationKeys = {
     bookings: 'Bookings',
     packages: 'Packages',
     menu: 'Menu',
-    caisse: 'Register',
+    caisse: 'Point of Sale',
     transactions: 'Transactions',
     more: 'More',
     tables: 'Tables',

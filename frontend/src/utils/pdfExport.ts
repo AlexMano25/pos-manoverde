@@ -302,7 +302,7 @@ export function exportReceipt(
 
   // Separator
   doc.setFontSize(7)
-  doc.text('─'.repeat(40), centerX, y, { align: 'center' })
+  doc.text('-'.repeat(40), centerX, y, { align: 'center' })
   y += 10
 
   // Order info
@@ -316,7 +316,7 @@ export function exportReceipt(
     y += 10
   }
 
-  doc.text('─'.repeat(40), centerX, y, { align: 'center' })
+  doc.text('-'.repeat(40), centerX, y, { align: 'center' })
   y += 10
 
   // Items
@@ -332,7 +332,7 @@ export function exportReceipt(
     doc.setFontSize(8)
   }
 
-  doc.text('─'.repeat(40), centerX, y, { align: 'center' })
+  doc.text('-'.repeat(40), centerX, y, { align: 'center' })
   y += 12
 
   // Total
@@ -347,7 +347,7 @@ export function exportReceipt(
   doc.text(`Payment: ${order.payment_method.toUpperCase()}`, 10, y)
   y += 14
 
-  doc.text('─'.repeat(40), centerX, y, { align: 'center' })
+  doc.text('-'.repeat(40), centerX, y, { align: 'center' })
   y += 12
 
   // Footer
@@ -620,7 +620,7 @@ export function generateReceiptHTML(
 
   const tipRow =
     order.tip_amount && order.tip_amount > 0
-      ? `<tr><td colspan="3" style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px">Tip ❤️</td><td style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px;font-weight:600">${fmt(order.tip_amount)}</td></tr>`
+      ? `<tr><td colspan="3" style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px">Tip</td><td style="padding:4px 8px;text-align:right;color:#e11d48;font-size:13px;font-weight:600">${fmt(order.tip_amount)}</td></tr>`
       : ''
 
   const paymentsInfo = order.payments
