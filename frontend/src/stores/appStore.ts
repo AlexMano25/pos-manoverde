@@ -21,6 +21,7 @@ interface AppState {
   pendingAction: { type: 'add'; section: string } | null  // transient, not persisted
   planStatus: PlanStatus | null
   planWarningDismissed: boolean
+  sidebarCollapsed: boolean
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ interface AppActions {
   setPendingAction: (action: AppState['pendingAction']) => void
   setPlanStatus: (status: PlanStatus | null) => void
   setPlanWarningDismissed: (v: boolean) => void
+  toggleSidebar: () => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -66,6 +68,7 @@ export const useAppStore = create<AppState & AppActions>()(
       pendingAction: null,
       planStatus: null,
       planWarningDismissed: false,
+      sidebarCollapsed: false,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -84,6 +87,7 @@ export const useAppStore = create<AppState & AppActions>()(
       setPendingAction: (action) => set({ pendingAction: action }),
       setPlanStatus: (status) => set({ planStatus: status }),
       setPlanWarningDismissed: (v) => set({ planWarningDismissed: v }),
+      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
     }),
     {
       name: 'pos-app-store',
@@ -94,6 +98,7 @@ export const useAppStore = create<AppState & AppActions>()(
         selectedPlan: state.selectedPlan,
         registrationMode: state.registrationMode,
         showLogin: state.showLogin,
+        sidebarCollapsed: state.sidebarCollapsed,
       }),
     }
   )

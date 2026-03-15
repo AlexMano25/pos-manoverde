@@ -58,6 +58,8 @@ import {
   Webhook,
   ArrowUpDown,
   ShieldAlert,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
 import { useAuthStore } from '../../stores/authStore'
@@ -203,7 +205,7 @@ const TRANSITION_SPEED = '0.2s'
 // ---------------------------------------------------------------------------
 
 const Sidebar: React.FC = () => {
-  const { section, setSection, mode, activity, currentStore, connectionStatus } = useAppStore()
+  const { section, setSection, mode, activity, currentStore, connectionStatus, sidebarCollapsed, toggleSidebar } = useAppStore()
   const { user, logout } = useAuthStore()
   const { pendingCount, isSyncing, syncToServer, countPending } = useSyncStore()
   const { t } = useLanguageStore()
@@ -845,12 +847,15 @@ const Sidebar: React.FC = () => {
   }
 
   // =====================================================================
-  // DESKTOP: Full 260px sidebar with icons + text labels
+  // DESKTOP: Collapsible sidebar (260px expanded / 64px collapsed)
   // =====================================================================
+  const desktopWidth = sidebarCollapsed ? TABLET_COLLAPSED : DESKTOP_WIDTH
+  const showLabels = !sidebarCollapsed
+
   return (
     <aside
       style={{
-        width: DESKTOP_WIDTH,
+        width: desktopWidth,
         minHeight: '100vh',
         backgroundColor: colors.sidebarBg,
         display: 'flex',
@@ -858,18 +863,25 @@ const Sidebar: React.FC = () => {
         color: colors.sidebarText,
         userSelect: 'none',
         flexShrink: 0,
+        transition: 'width 0.2s ease',
+        overflow: 'hidden',
+        position: 'relative',
       }}
     >
-      {/* ── Brand logo ──────────────────────────────────────────────────── */}
+      {/* ── Brand logo + collapse toggle ──────────────────────────────── */}
       <div
         style={{
-          padding: '24px 20px 16px',
+          padding: sidebarCollapsed ? '24px 8px 16px' : '24px 20px 16px',
           borderBottom: `1px solid ${colors.sidebarActive}`,
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: sidebarCollapsed ? 'center' : 'flex-start',
         }}
       >
         <div
           style={{
-            fontSize: 28,
+            fontSize: sidebarCollapsed ? 20 : 28,
             fontWeight: 800,
             color: colors.primary,
             letterSpacing: -0.5,
@@ -878,22 +890,61 @@ const Sidebar: React.FC = () => {
         >
           POS
         </div>
-        <div
+        {showLabels && (
+          <div
+            style={{
+              fontSize: 13,
+              color: colors.textMuted,
+              marginTop: 4,
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Mano Verde
+          </div>
+        )}
+        {/* Toggle button */}
+        <button
+          onClick={toggleSidebar}
+          title={sidebarCollapsed ? 'Expand' : 'Collapse'}
           style={{
-            fontSize: 13,
-            color: colors.textMuted,
-            marginTop: 4,
-            fontWeight: 500,
+            position: 'absolute',
+            top: 24,
+            right: -14,
+            width: 28,
+            height: 28,
+            borderRadius: '50%',
+            border: `1px solid ${colors.sidebarActive}`,
+            backgroundColor: colors.sidebarBg,
+            color: colors.sidebarText,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10,
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = colors.primary
+            e.currentTarget.style.color = '#ffffff'
+            e.currentTarget.style.borderColor = colors.primary
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = colors.sidebarBg
+            e.currentTarget.style.color = colors.sidebarText
+            e.currentTarget.style.borderColor = colors.sidebarActive
           }}
         >
-          Mano Verde
-        </div>
+          {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
 
       {/* ── Store switcher ──────────────────────────────────────────────── */}
-      <div style={{ padding: '12px 12px 0' }}>
-        <StoreSwitcher />
-      </div>
+      {showLabels && (
+        <div style={{ padding: '12px 12px 0' }}>
+          <StoreSwitcher />
+        </div>
+      )}
 
       {/* ── Navigation ──────────────────────────────────────────────────── */}
       <nav style={{ flex: 1, padding: '12px 0', overflowY: 'auto' }}>
@@ -901,18 +952,21 @@ const Sidebar: React.FC = () => {
           const Icon = getIcon(item)
           const isActive = section === item.section
           const isHovered = hoveredItem === item.section
+          const label = getLabel(item)
           return (
             <button
               key={item.section}
               onClick={() => handleNavClick(item.section)}
               onMouseEnter={() => setHoveredItem(item.section)}
               onMouseLeave={() => setHoveredItem(null)}
+              title={!showLabels ? label : undefined}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
+                gap: showLabels ? 12 : 0,
                 width: '100%',
-                padding: '10px 20px',
+                padding: showLabels ? '10px 20px' : '10px 0',
+                justifyContent: showLabels ? 'flex-start' : 'center',
                 fontSize: 14,
                 fontWeight: isActive ? 600 : 400,
                 color: isActive ? colors.white : colors.sidebarText,
@@ -932,7 +986,7 @@ const Sidebar: React.FC = () => {
               }}
             >
               <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
-              <span>{getLabel(item)}</span>
+              {showLabels && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>}
             </button>
           )
         })}
@@ -941,16 +995,18 @@ const Sidebar: React.FC = () => {
       {/* ── Sync indicator ──────────────────────────────────────────────── */}
       <div
         style={{
-          padding: '8px 20px',
+          padding: sidebarCollapsed ? '8px 0' : '8px 20px',
           borderTop: `1px solid ${colors.sidebarActive}`,
         }}
       >
         <button
           onClick={handleSync}
+          title={!showLabels ? t.sidebar.synchronize : undefined}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: showLabels ? 10 : 0,
+            justifyContent: showLabels ? 'flex-start' : 'center',
             width: '100%',
             padding: '8px 0',
             background: 'none',
@@ -964,10 +1020,11 @@ const Sidebar: React.FC = () => {
             size={16}
             style={{
               animation: isSyncing ? 'spin 1s linear infinite' : 'none',
+              flexShrink: 0,
             }}
           />
-          <span>{t.sidebar.synchronize}</span>
-          {pendingCount > 0 && (
+          {showLabels && <span>{t.sidebar.synchronize}</span>}
+          {showLabels && pendingCount > 0 && (
             <span
               style={{
                 marginLeft: 'auto',
@@ -987,15 +1044,39 @@ const Sidebar: React.FC = () => {
               {pendingCount}
             </span>
           )}
+          {!showLabels && pendingCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: 8,
+                backgroundColor: colors.warning,
+                color: colors.sidebarBg,
+                fontSize: 9,
+                fontWeight: 700,
+                borderRadius: 8,
+                minWidth: 16,
+                height: 16,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 4px',
+              }}
+            >
+              {pendingCount}
+            </span>
+          )}
         </button>
       </div>
 
       {/* ── Connection status ───────────────────────────────────────────── */}
       <div
+        title={!showLabels ? connectionLabel() : undefined}
         style={{
-          padding: '8px 20px',
+          padding: sidebarCollapsed ? '8px 0' : '8px 20px',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
           gap: 8,
           fontSize: 12,
           color: colors.textMuted,
@@ -1011,53 +1092,59 @@ const Sidebar: React.FC = () => {
             flexShrink: 0,
           }}
         />
-        <span>{connectionLabel()}</span>
-        {connectionStatus === 'online' ? (
+        {showLabels && <span>{connectionLabel()}</span>}
+        {showLabels && (connectionStatus === 'online' ? (
           <Wifi size={14} style={{ marginLeft: 'auto' }} />
         ) : (
           <WifiOff size={14} style={{ marginLeft: 'auto' }} />
-        )}
+        ))}
       </div>
 
       {/* ── Back to website ────────────────────────────────────────────── */}
-      <div style={{ padding: '4px 20px 8px' }}>
-        <button
-          onClick={goToLanding}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            width: '100%',
-            padding: '8px 0',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: colors.textMuted,
-            fontSize: 12,
-          }}
-        >
-          <Globe size={14} />
-          <span>{t.sidebar.backToWebsite}</span>
-        </button>
-      </div>
+      {showLabels && (
+        <div style={{ padding: '4px 20px 8px' }}>
+          <button
+            onClick={goToLanding}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '8px 0',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: colors.textMuted,
+              fontSize: 12,
+            }}
+          >
+            <Globe size={14} />
+            <span>{t.sidebar.backToWebsite}</span>
+          </button>
+        </div>
+      )}
 
       {/* ── Language selector ───────────────────────────────────────────── */}
-      <div style={{ padding: '8px 20px' }}>
-        <LanguageSelector />
-      </div>
+      {showLabels && (
+        <div style={{ padding: '8px 20px' }}>
+          <LanguageSelector />
+        </div>
+      )}
 
       {/* ── User info + Logout ──────────────────────────────────────────── */}
       <div
         style={{
-          padding: '16px 20px',
+          padding: sidebarCollapsed ? '16px 8px' : '16px 20px',
           borderTop: `1px solid ${colors.sidebarActive}`,
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
+          justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+          gap: showLabels ? 10 : 0,
         }}
       >
         {/* Avatar circle */}
         <div
+          title={!showLabels ? (user?.name ?? '') : undefined}
           style={{
             width: 36,
             height: 36,
@@ -1082,60 +1169,64 @@ const Sidebar: React.FC = () => {
             : '?'}
         </div>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: colors.white,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {user?.name ?? t.common.welcome}
-          </div>
-          {user?.role && (
-            <span
-              style={{
-                display: 'inline-block',
-                marginTop: 2,
-                fontSize: 10,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: 0.5,
-                color: colors.white,
-                backgroundColor: roleBadgeBg(user.role),
-                borderRadius: 4,
-                padding: '2px 6px',
-              }}
-            >
-              {user.role}
-            </span>
-          )}
-        </div>
+        {showLabels && (
+          <>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: colors.white,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user?.name ?? t.common.welcome}
+              </div>
+              {user?.role && (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    marginTop: 2,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    color: colors.white,
+                    backgroundColor: roleBadgeBg(user.role),
+                    borderRadius: 4,
+                    padding: '2px 6px',
+                  }}
+                >
+                  {user.role}
+                </span>
+              )}
+            </div>
 
-        {/* Logout button */}
-        <button
-          onClick={logout}
-          title={t.sidebar.disconnect}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: colors.textMuted,
-            padding: 4,
-            borderRadius: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = colors.danger)}
-          onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
-        >
-          <LogOut size={18} />
-        </button>
+            {/* Logout button */}
+            <button
+              onClick={logout}
+              title={t.sidebar.disconnect}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: colors.textMuted,
+                padding: 4,
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = colors.danger)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = colors.textMuted)}
+            >
+              <LogOut size={18} />
+            </button>
+          </>
+        )}
       </div>
 
       {/* ── CSS keyframes for spinner (injected once) ───────────────────── */}

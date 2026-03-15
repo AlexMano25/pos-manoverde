@@ -13,6 +13,7 @@ import {
   Trash2,
   ChevronLeft,
   ScanBarcode,
+  Keyboard,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
@@ -23,6 +24,8 @@ import { usePromotionStore } from '../stores/promotionStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import PaymentModal from '../components/pos/PaymentModal'
 import BarcodeScanner from '../components/common/BarcodeScanner'
+import VirtualKeyboard from '../components/common/VirtualKeyboard'
+import { useVirtualKeyboard } from '../hooks/useVirtualKeyboard'
 import { formatCurrency } from '../utils/currency'
 import { useAuthStore } from '../stores/authStore'
 import type { Customer, PaymentMethod, Product } from '../types'
@@ -100,6 +103,21 @@ export default function POSPage() {
   const currencyCode = currentStore?.currency || 'XAF'
   // Subscribe to customerStore.customers so POS always has fresh customer data
   const allCustomers = useCustomerStore(s => s.customers)
+
+  // Virtual keyboard for touchscreens
+  const vk = useVirtualKeyboard()
+  // Register search input
+  vk.registerInput('search', {
+    getValue: () => searchQuery,
+    setValue: (v: string) => setSearchQuery(v),
+    type: 'alphanumeric',
+  })
+  // Register discount input
+  vk.registerInput('discount', {
+    getValue: () => String(discountPercent || ''),
+    setValue: (v: string) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(v) || 0))),
+    type: 'numeric',
+  })
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -260,6 +278,7 @@ export default function POSPage() {
             placeholder={t.pos.searchProducts}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => vk.onInputFocus('search')}
           />
           {searchQuery && (
             <button
@@ -269,6 +288,21 @@ export default function POSPage() {
               <X size={16} />
             </button>
           )}
+          <button
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: vk.isVisible ? C.primary : C.textSecondary,
+              padding: 4,
+              display: 'flex',
+              flexShrink: 0,
+            }}
+            onClick={vk.toggleKeyboard}
+            title={vk.isVisible ? 'Hide keyboard' : 'Show keyboard'}
+          >
+            <Keyboard size={20} />
+          </button>
           <button
             style={{
               background: 'none',
@@ -639,6 +673,18 @@ export default function POSPage() {
           </div>
         </div>
       )}
+
+      {/* ── Virtual Keyboard ───────────────────────────────────────── */}
+      <VirtualKeyboard
+        mode={vk.mode}
+        visible={vk.isVisible}
+        onKeyPress={vk.handleKeyPress}
+        onBackspace={vk.handleBackspace}
+        onClear={vk.handleClear}
+        onConfirm={vk.handleConfirm}
+        onClose={vk.hideKeyboard}
+        onToggleMode={() => vk.setMode(vk.mode === 'numeric' ? 'alphanumeric' : 'numeric')}
+      />
     </div>
   )
 }
