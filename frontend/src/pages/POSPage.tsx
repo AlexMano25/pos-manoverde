@@ -118,6 +118,20 @@ export default function POSPage() {
     setValue: (v: string) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(v) || 0))),
     type: 'numeric',
   })
+  // Register cart quantity inputs dynamically (with cleanup for removed items)
+  useEffect(() => {
+    items.forEach((item) => {
+      vk.registerInput(`qty-${item.product_id}`, {
+        getValue: () => String(item.qty),
+        setValue: (v: string) => updateQty(item.product_id, parseInt(v) || 0),
+        type: 'numeric',
+      })
+    })
+    return () => {
+      items.forEach((item) => vk.unregisterInput(`qty-${item.product_id}`))
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items])
 
   useEffect(() => {
     if (currentStore?.id) {
@@ -474,6 +488,7 @@ export default function POSPage() {
                       type="number"
                       value={item.qty}
                       onChange={(e) => { const val = parseInt(e.target.value) || 0; updateQty(item.product_id, val) }}
+                      onFocus={() => vk.onInputFocus(`qty-${item.product_id}`)}
                       min={0}
                     />
                     <button style={qtyBtnStyle} onClick={() => updateQty(item.product_id, item.qty + 1)}>
@@ -507,6 +522,7 @@ export default function POSPage() {
                     type="number"
                     value={discountPercent || ''}
                     onChange={(e) => setDiscountPercent(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                    onFocus={() => vk.onInputFocus('discount')}
                     placeholder="0"
                     min={0}
                     max={100}
