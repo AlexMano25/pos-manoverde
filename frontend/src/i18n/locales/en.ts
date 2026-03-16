@@ -1136,6 +1136,13 @@ export const en: TranslationKeys = {
     mtnMomo: 'MTN MoMo',
     mtnConfirmOnPhone: 'Enter your MTN MoMo PIN to confirm',
     mtnPaymentDesc: 'Secure payment via MTN MoMo. A USSD prompt will be sent to your phone.',
+    cardPayment: 'Bank card',
+    payWithCard: 'Pay by card',
+    cardPaymentDesc: 'Secure bank card payment via CamPay.',
+    openingPaymentPage: 'Opening payment page...',
+    cardPaymentInstructions: 'You will be redirected to the secure CamPay payment page.',
+    waitingCardPayment: 'Waiting for payment confirmation...',
+    openPaymentPage: 'Open payment page',
   },
   legal: {
     lastUpdated: 'Last updated',

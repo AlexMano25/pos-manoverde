@@ -4,13 +4,15 @@ import { useLanguageStore } from '../../stores/languageStore'
 import PayPalButton from './PayPalButton'
 import OrangeMoneyForm from './OrangeMoneyForm'
 import MtnMomoForm from './MtnMomoForm'
+import CardPaymentForm from './CardPaymentForm'
 import type { PayPalResult, PaymentGateway, RechargePackage } from '../../types'
 
 // ---------------------------------------------------------------------------
-// Unified payment method selector with 3 tabs:
-// 1. PayPal / Visa  (international) — PayPal account: direction@manovende.com
-// 2. Orange Money   (Cameroon / Central Africa)
-// 3. MTN MoMo       (Cameroon / Central Africa) — Y-Note/PayNote integration
+// Unified payment method selector with 4 tabs:
+// 1. Orange Money   (Cameroon) — CamPay integration
+// 2. MTN MoMo       (Cameroon) — Y-Note/PayNote integration
+// 3. Carte bancaire (CamPay payment link)
+// 4. PayPal / Visa  (international) — PayPal account: direction@manovende.com
 //
 // Used in: BillingPage (recharge modal) and RegistrationPage (step 4)
 // ---------------------------------------------------------------------------
@@ -29,10 +31,14 @@ interface PaymentMethodSelectorProps {
   onPayPalSuccess: (result: PayPalResult) => void
   onOrangeMoneySuccess: (transactionId: string) => void
   onMtnSuccess?: (transactionId: string) => void
+  onCardSuccess?: (transactionId: string) => void
   onError: (error: string) => void
 
   // Optional: pre-selected gateway
   defaultGateway?: PaymentGateway
+
+  // Optional: organization ID for credit tracking
+  organizationId?: string
 }
 
 const RECHARGE_PACKAGES: RechargePackage[] = [
@@ -51,8 +57,10 @@ export default function PaymentMethodSelector({
   onPayPalSuccess,
   onOrangeMoneySuccess,
   onMtnSuccess,
+  onCardSuccess,
   onError,
-  defaultGateway = 'paypal',
+  defaultGateway = 'orange_money',
+  organizationId,
 }: PaymentMethodSelectorProps) {
   const { t } = useLanguageStore()
   const [activeTab, setActiveTab] = useState<PaymentGateway>(defaultGateway)
@@ -61,9 +69,10 @@ export default function PaymentMethodSelector({
 
   // ── Tab definitions ────────────────────────────────────────────────────
   const tabs: { id: PaymentGateway; label: string; icon: React.ReactNode; enabled: boolean }[] = [
-    { id: 'paypal', label: billing.paypalVisa, icon: <CreditCard size={16} />, enabled: true },
     { id: 'orange_money', label: billing.orangeMoney, icon: <Smartphone size={16} />, enabled: true },
     { id: 'mtn_momo', label: billing.mtnMomo, icon: <Wallet size={16} />, enabled: true },
+    { id: 'carte_bancaire', label: billing.cardPayment, icon: <CreditCard size={16} />, enabled: true },
+    { id: 'paypal', label: billing.paypalVisa, icon: <CreditCard size={16} />, enabled: true },
   ]
 
   // ── Styles ─────────────────────────────────────────────────────────────
@@ -181,6 +190,7 @@ export default function PaymentMethodSelector({
                 description={context === 'subscription' ? 'POS Subscription' : `Credit recharge ${selectedPackage?.id || ''}`}
                 onSuccess={onOrangeMoneySuccess}
                 onError={onError}
+                organizationId={organizationId}
               />
             ) : (
               <div style={comingSoonStyle}>
@@ -205,6 +215,27 @@ export default function PaymentMethodSelector({
             ) : (
               <div style={comingSoonStyle}>
                 <Wallet size={24} color="#cbd5e1" />
+                <span>{billing.selectAmount}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Carte bancaire (CamPay payment link) ──────────── */}
+        {activeTab === 'carte_bancaire' && (
+          <div>
+            {selectedPackage || (context === 'subscription') ? (
+              <CardPaymentForm
+                amount={selectedPackage?.amountXAF || 0}
+                amountUSD={selectedPackage?.amountUSD || 0}
+                description={context === 'subscription' ? 'POS Subscription' : `Credit recharge ${selectedPackage?.id || ''}`}
+                onSuccess={onCardSuccess || onOrangeMoneySuccess}
+                onError={onError}
+                organizationId={organizationId}
+              />
+            ) : (
+              <div style={comingSoonStyle}>
+                <CreditCard size={24} color="#cbd5e1" />
                 <span>{billing.selectAmount}</span>
               </div>
             )}

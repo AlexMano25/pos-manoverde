@@ -393,7 +393,7 @@ export type RechargePackage = {
   tickets: number
 }
 
-export type PaymentGateway = 'paypal' | 'orange_money' | 'mtn_momo'
+export type PaymentGateway = 'paypal' | 'orange_money' | 'mtn_momo' | 'carte_bancaire'
 
 // -- Orders ------------------------------------------------------------------
 

@@ -1096,6 +1096,13 @@ export const zh: TranslationKeys = {
     mtnMomo: 'MTN MoMo',
     mtnConfirmOnPhone: '请输入您的MTN MoMo PIN码确认',
     mtnPaymentDesc: '通过MTN MoMo安全支付。USSD推送将发送到您的手机。',
+    cardPayment: '银行卡',
+    payWithCard: '银行卡支付',
+    cardPaymentDesc: '通过CamPay安全银行卡支付。',
+    openingPaymentPage: '正在打开支付页面...',
+    cardPaymentInstructions: '您将被重定向到CamPay安全支付页面。',
+    waitingCardPayment: '等待支付确认...',
+    openPaymentPage: '打开支付页面',
   },
   legal: {
     lastUpdated: '最后更新',

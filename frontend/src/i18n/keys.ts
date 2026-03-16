@@ -1162,6 +1162,14 @@ export type TranslationKeys = {
     mtnMomo: string
     mtnConfirmOnPhone: string
     mtnPaymentDesc: string
+    // CamPay / Card payment keys
+    cardPayment: string
+    payWithCard: string
+    cardPaymentDesc: string
+    openingPaymentPage: string
+    cardPaymentInstructions: string
+    waitingCardPayment: string
+    openPaymentPage: string
   }
 
   // Legal documents

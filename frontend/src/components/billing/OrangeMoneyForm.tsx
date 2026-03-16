@@ -5,8 +5,8 @@ import { supabase } from '../../services/supabase'
 import type { OrangeMoneyStatus } from '../../types'
 
 // ---------------------------------------------------------------------------
-// Orange Money payment form
-// Initiates payment via Supabase Edge Function → Orange Money Web Pay API
+// Orange Money payment form — CamPay integration
+// Initiates payment via Supabase Edge Function → CamPay collect API
 // Shows USSD confirmation waiting state + polling for result
 // ---------------------------------------------------------------------------
 
@@ -17,11 +17,12 @@ interface OrangeMoneyFormProps {
   onSuccess: (transactionId: string) => void
   onError: (error: string) => void
   disabled?: boolean
+  organizationId?: string   // for credit tracking
 }
 
 const MAX_IT_LINK = 'https://www.orange.cm/fr/orange-money-max-it.html'
 
-export default function OrangeMoneyForm({ amount, amountUSD, description, onSuccess, onError, disabled }: OrangeMoneyFormProps) {
+export default function OrangeMoneyForm({ amount, amountUSD, description, onSuccess, onError, disabled, organizationId }: OrangeMoneyFormProps) {
   const { t } = useLanguageStore()
 
   const [phone, setPhone] = useState('')
@@ -47,21 +48,22 @@ export default function OrangeMoneyForm({ amount, amountUSD, description, onSucc
     setStatus('pending')
 
     try {
-      // Call Supabase Edge Function to initiate Orange Money payment
+      // Call CamPay collect edge function for Orange Money payment
       if (supabase) {
-        const { data, error } = await supabase.functions.invoke('orange-money-pay', {
+        const { data, error } = await supabase.functions.invoke('campay-collect', {
           body: {
-            phone: `237${cleanPhone}`,  // full international format
+            phone: cleanPhone,  // 9-digit local format, edge function adds 237
             amount,
             currency: 'XAF',
             amountUSD,
             description,
+            organizationId,
           },
         })
 
         if (error) throw new Error(error.message)
 
-        const txId = data?.transactionId || `OM-${Date.now()}`
+        const txId = data?.reference || data?.transactionId || `OM-${Date.now()}`
         setTransactionId(txId)
 
         // Start polling for payment confirmation
@@ -92,7 +94,7 @@ export default function OrangeMoneyForm({ amount, amountUSD, description, onSucc
       try {
         if (supabase) {
           const { data } = await supabase.functions.invoke('payment-status', {
-            body: { transactionId: txId, gateway: 'orange_money' },
+            body: { transactionId: txId, gateway: 'campay' },
           })
 
           if (data?.status === 'success') {
