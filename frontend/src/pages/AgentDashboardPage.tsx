@@ -97,17 +97,17 @@ interface Commission {
 interface TierConfig {
   tier: number
   name: string
-  min_clients: number
+  min_referrals: number
   commission_rate: number
 }
 
 // ── Default tiers ────────────────────────────────────────────────────────
 
 const DEFAULT_TIERS: TierConfig[] = [
-  { tier: 1, name: 'Debutant', min_clients: 10, commission_rate: 5 },
-  { tier: 2, name: 'Intermediaire', min_clients: 25, commission_rate: 10 },
-  { tier: 3, name: 'Avance', min_clients: 50, commission_rate: 15 },
-  { tier: 4, name: 'Expert', min_clients: 100, commission_rate: 20 },
+  { tier: 1, name: 'Debutant', min_referrals: 10, commission_rate: 5 },
+  { tier: 2, name: 'Intermediaire', min_referrals: 25, commission_rate: 10 },
+  { tier: 3, name: 'Avance', min_referrals: 50, commission_rate: 15 },
+  { tier: 4, name: 'Expert', min_referrals: 100, commission_rate: 20 },
 ]
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -220,25 +220,25 @@ export default function AgentDashboardPage() {
   const currentTier = tiers.find((t) => t.tier === (agent?.tier || 1)) || tiers[0]
   const nextTier = tiers.find((t) => t.tier === (agent?.tier || 1) + 1)
 
-  const activeClients = agent?.active_clients || 0
-  const totalReferrals = agent?.total_referrals || referrals.length
-  const totalEarned = agent?.total_earned || commissions.reduce((s, c) => s + (c.status === 'paid' ? c.commission_amount : 0), 0)
+  const activeClients = referrals.filter((r: any) => r.status === 'active').length
+  const totalReferrals = referrals.length
+  const totalEarned = Number(agent?.total_earned_usd) || 0
 
   const pendingCommissions = commissions
-    .filter((c) => c.status === 'pending')
-    .reduce((s, c) => s + c.commission_amount, 0)
+    .filter((c: any) => c.status === 'pending')
+    .reduce((s: number, c: any) => s + (Number(c.commission_usd) || 0), 0)
 
   const totalPaid = commissions
-    .filter((c) => c.status === 'paid')
-    .reduce((s, c) => s + c.commission_amount, 0)
+    .filter((c: any) => c.status === 'paid')
+    .reduce((s: number, c: any) => s + (Number(c.commission_usd) || 0), 0)
 
-  const totalCommissionsEarned = commissions.reduce((s, c) => s + c.commission_amount, 0)
+  const totalCommissionsEarned = commissions.reduce((s: number, c: any) => s + (Number(c.commission_usd) || 0), 0)
   const balancePending = totalCommissionsEarned - totalPaid
 
   // ── Tier progress ────────────────────────────────────────────────────
 
   const progressPercent = nextTier
-    ? Math.min(100, Math.round((activeClients / nextTier.min_clients) * 100))
+    ? Math.min(100, Math.round((activeClients / nextTier.min_referrals) * 100))
     : 100
 
   // ── Clipboard ────────────────────────────────────────────────────────
@@ -507,7 +507,7 @@ export default function AgentDashboardPage() {
                 />
               </div>
               <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 16 }}>
-                {activeClients}/{nextTier.min_clients} {(t as any).agent?.clientsFor || 'clients pour'}{' '}
+                {activeClients}/{nextTier.min_referrals} {(t as any).agent?.clientsFor || 'clients pour'}{' '}
                 <strong style={{ color: TIER_COLORS[nextTier.tier] }}>{nextTier.name}</strong>
               </div>
             </>
@@ -538,7 +538,7 @@ export default function AgentDashboardPage() {
                     {tier.name}
                   </div>
                   <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>
-                    {tier.min_clients} clients
+                    {tier.min_referrals} clients
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>
                     {tier.commission_rate}%
@@ -709,11 +709,11 @@ export default function AgentDashboardPage() {
                         </span>
                       </td>
                       <td style={{ padding: '8px 10px' }}>
-                        {comm.gross_amount.toLocaleString()} $
+                        {Number(comm.gross_amount_usd || 0).toLocaleString()} $
                       </td>
                       <td style={{ padding: '8px 10px' }}>{comm.rate}%</td>
                       <td style={{ padding: '8px 10px', fontWeight: 600 }}>
-                        {comm.commission_amount.toLocaleString()} $
+                        {Number(comm.commission_usd || 0).toLocaleString()} $
                       </td>
                       <td style={{ padding: '8px 10px' }}>
                         <StatusBadge status={comm.status} />
