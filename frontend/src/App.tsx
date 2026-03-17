@@ -276,6 +276,11 @@ export default function App() {
     return <RegistrationPage />
   }
 
+  // Agent dashboard — agents don't need activity or store, intercept early
+  if (user && token && (user.role === 'agent' || section === 'agent_dashboard')) {
+    return <AgentDashboardPage />
+  }
+
   // Explicit login mode (user clicked "Already have an account?" or "Sign in")
   // Skip if user is already authenticated with an activity (login succeeded)
   if (showLogin && !(user && token && activity)) {
@@ -299,16 +304,7 @@ export default function App() {
 
   // Has activity but not logged in
   if (!user || !token) {
-    // Agent login: agents don't need an activity, check section
-    if (user?.role === 'agent' && token) {
-      return <AgentDashboardPage />
-    }
     return <LoginPage />
-  }
-
-  // Agent dashboard — agents don't access the POS
-  if (user.role === 'agent' || section === 'agent_dashboard') {
-    return <AgentDashboardPage />
   }
 
   // Multiple stores available → let user pick
