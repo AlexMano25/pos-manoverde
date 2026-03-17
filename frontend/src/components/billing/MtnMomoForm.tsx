@@ -4,8 +4,8 @@ import { useLanguageStore } from '../../stores/languageStore'
 import { supabase } from '../../services/supabase'
 
 // ---------------------------------------------------------------------------
-// MTN MoMo payment form — Y-Note / PayNote integration
-// Initiates payment via Supabase Edge Function → Y-Note API (USSD push)
+// MTN MoMo payment form — CamPay integration
+// Initiates payment via Supabase Edge Function → CamPay collect API
 // Polls for payment status confirmation
 // ---------------------------------------------------------------------------
 
@@ -16,6 +16,7 @@ interface MtnMomoFormProps {
   onSuccess: (transactionId: string) => void
   onError: (error: string) => void
   disabled?: boolean
+  organizationId?: string  // for credit tracking
 }
 
 type MtnStatus = 'idle' | 'pending' | 'success' | 'failed' | 'expired'
@@ -23,7 +24,7 @@ type MtnStatus = 'idle' | 'pending' | 'success' | 'failed' | 'expired'
 const MTN_YELLOW = '#FFCC00'
 const MTN_BLUE = '#004F9F'
 
-export default function MtnMomoForm({ amount, amountUSD, description, onSuccess, onError, disabled }: MtnMomoFormProps) {
+export default function MtnMomoForm({ amount, amountUSD, description, onSuccess, onError, disabled, organizationId }: MtnMomoFormProps) {
   const { t } = useLanguageStore()
 
   const [phone, setPhone] = useState('')
@@ -50,19 +51,20 @@ export default function MtnMomoForm({ amount, amountUSD, description, onSuccess,
 
     try {
       if (supabase) {
-        const { data, error } = await supabase.functions.invoke('mtn-momo-pay', {
+        const { data, error } = await supabase.functions.invoke('campay-collect', {
           body: {
-            phone: cleanPhone,  // local 9-digit format (edge function handles prefix)
+            phone: cleanPhone,  // 9-digit local format, edge function adds 237
             amount,
             currency: 'XAF',
             amountUSD,
             description,
+            organizationId,
           },
         })
 
         if (error) throw new Error(error.message)
 
-        const txId = data?.messageId || data?.transactionId || `MTN-${Date.now()}`
+        const txId = data?.reference || data?.transactionId || `MTN-${Date.now()}`
         setTransactionId(txId)
 
         // Start polling for payment confirmation
@@ -93,7 +95,7 @@ export default function MtnMomoForm({ amount, amountUSD, description, onSuccess,
       try {
         if (supabase) {
           const { data } = await supabase.functions.invoke('payment-status', {
-            body: { transactionId: txId, gateway: 'mtn_momo' },
+            body: { transactionId: txId, gateway: 'campay' },
           })
 
           if (data?.status === 'success') {

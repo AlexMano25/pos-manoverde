@@ -201,7 +201,7 @@ export default function PaymentMethodSelector({
           </div>
         )}
 
-        {/* ── MTN MoMo (Y-Note / PayNote) ────────────────────── */}
+        {/* ── MTN MoMo (CamPay) ───────────────────────────────── */}
         {activeTab === 'mtn_momo' && (
           <div>
             {selectedPackage || (context === 'subscription') ? (
@@ -211,6 +211,7 @@ export default function PaymentMethodSelector({
                 description={context === 'subscription' ? 'POS Subscription' : `Credit recharge ${selectedPackage?.id || ''}`}
                 onSuccess={onMtnSuccess || onOrangeMoneySuccess}
                 onError={onError}
+                organizationId={organizationId}
               />
             ) : (
               <div style={comingSoonStyle}>
