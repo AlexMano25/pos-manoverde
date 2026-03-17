@@ -191,33 +191,51 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
               throw new Error(authError.message)
             }
 
-            // Check if this is an agent login
-            const { data: agentProfile } = await supabase
-              .from('agents')
-              .select('*')
-              .eq('email', email)
-              .eq('is_active', true)
-              .single()
+            // Check if this is an agent login (via auth metadata first, then agents table)
+            const isAgent = authData.user?.user_metadata?.role === 'agent'
+            let agentProfile: any = null
 
-            if (agentProfile) {
+            if (isAgent) {
+              const { data: ap, error: agentErr } = await supabase
+                .from('agents')
+                .select('*')
+                .eq('email', email)
+                .eq('is_active', true)
+                .single()
+              if (agentErr) console.warn('[authStore] Agent query error:', agentErr.message)
+              agentProfile = ap
+            }
+
+            // Fallback: also check agents table even without metadata (for manually created agents)
+            if (!agentProfile && !isAgent) {
+              const { data: ap } = await supabase
+                .from('agents')
+                .select('*')
+                .eq('email', email)
+                .eq('is_active', true)
+                .maybeSingle()
+              agentProfile = ap
+            }
+
+            if (isAgent || agentProfile) {
               // Agent login — redirect to agent dashboard
               const appStore = useAppStore.getState()
               appStore.setSection('agent_dashboard')
               appStore.setShowLogin(false)
-              // Set a dummy activity so the app doesn't think user is unregistered
               if (!appStore.activity) appStore.setActivity('supermarket')
+              const now = new Date().toISOString()
               set({
                 user: {
-                  id: agentProfile.id,
+                  id: agentProfile?.id || authData.user!.id,
                   store_id: '',
-                  name: agentProfile.name,
-                  email: agentProfile.email,
+                  name: agentProfile?.name || email.split('@')[0],
+                  email,
                   role: 'agent' as any,
                   pin: '',
-                  phone: agentProfile.phone || '',
+                  phone: agentProfile?.phone || '',
                   is_active: true,
-                  created_at: agentProfile.created_at,
-                  updated_at: agentProfile.updated_at,
+                  created_at: agentProfile?.created_at || now,
+                  updated_at: agentProfile?.updated_at || now,
                 },
                 token: authData.session?.access_token || '',
               })
