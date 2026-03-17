@@ -145,32 +145,59 @@ export default function AgentDashboardPage() {
     setLoading(true)
     try {
       // Fetch agent record
-      const { data: agentData } = await supabase
+      const { data: agentData, error: agentErr } = await supabase
         .from('agents')
         .select('*')
         .eq('email', user.email)
         .single()
 
+      if (agentErr) console.warn('[AgentDashboard] Agent fetch error:', agentErr.message)
       if (agentData) setAgent(agentData)
 
       if (agentData?.id) {
-        // Fetch referrals with joined data
-        const { data: refData } = await supabase
+        // Fetch referrals (separate queries to avoid RLS join issues)
+        const { data: refData, error: refErr } = await supabase
           .from('agent_referrals')
-          .select('*, organizations(name, owner_name, owner_email), subscriptions(plan, status)')
+          .select('*')
           .eq('agent_id', agentData.id)
           .order('created_at', { ascending: false })
+        if (refErr) console.warn('[AgentDashboard] Referrals error:', refErr.message)
 
-        if (refData) setReferrals(refData)
+        // Enrich referrals with org info
+        if (refData && refData.length > 0) {
+          const orgIds = refData.map((r: any) => r.organization_id)
+          const { data: orgs } = await supabase
+            .from('organizations')
+            .select('id, name, owner_name, owner_email')
+            .in('id', orgIds)
+          const orgMap: Record<string, any> = {}
+          ;(orgs || []).forEach((o: any) => { orgMap[o.id] = o })
+          setReferrals(refData.map((r: any) => ({
+            ...r,
+            organizations: orgMap[r.organization_id] || { name: '-', owner_name: '-', owner_email: '-' },
+          })))
+        }
 
-        // Fetch commissions with joined data
-        const { data: commData } = await supabase
+        // Fetch commissions (no join)
+        const { data: commData, error: commErr } = await supabase
           .from('agent_commissions')
-          .select('*, organizations(name)')
+          .select('*')
           .eq('agent_id', agentData.id)
           .order('created_at', { ascending: false })
-
-        if (commData) setCommissions(commData)
+        if (commErr) console.warn('[AgentDashboard] Commissions error:', commErr.message)
+        if (commData) {
+          const cOrgIds = [...new Set(commData.map((c: any) => c.organization_id))]
+          const { data: cOrgs } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .in('id', cOrgIds)
+          const cOrgMap: Record<string, any> = {}
+          ;(cOrgs || []).forEach((o: any) => { cOrgMap[o.id] = o })
+          setCommissions(commData.map((c: any) => ({
+            ...c,
+            organizations: cOrgMap[c.organization_id] || { name: '-' },
+          })))
+        }
       }
 
       // Fetch tier config
