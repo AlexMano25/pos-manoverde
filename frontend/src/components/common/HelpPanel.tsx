@@ -12,7 +12,7 @@ interface HelpPanelProps {
   onClose: () => void
   pageKey: string
   /** Optional: filter content by the current user's role */
-  userRole?: 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin'
+  userRole?: 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin' | 'agent'
 }
 
 // ---------------------------------------------------------------------------

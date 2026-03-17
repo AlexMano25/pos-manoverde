@@ -1005,6 +1005,20 @@ export type TranslationKeys = {
     footerTerms: string
     footerCopyright: string
     footerMadeIn: string
+    // Partner / Agent program
+    navPartner: string
+    partnerTitle: string
+    partnerSubtitle: string
+    partnerCard1Title: string
+    partnerCard1Desc: string
+    partnerCard2Title: string
+    partnerCard2Desc: string
+    partnerCard3Title: string
+    partnerCard3Desc: string
+    partnerTierTitle: string
+    partnerCTA: string
+    partnerPhoneTitle: string
+    partnerPhoneDesc: string
   }
 
   // Sidebar
@@ -3467,5 +3481,47 @@ export type TranslationKeys = {
     validateBtn: string
     posBlocked: string
     posBlockedDesc: string
+  }
+
+  // Agent / Affiliate program
+  agent: {
+    dashboardTitle: string
+    myReferralCode: string
+    copyLink: string
+    linkCopied: string
+    totalReferrals: string
+    activeClients: string
+    pendingCommissions: string
+    totalEarned: string
+    tierProgress: string
+    clientsToNextTier: string
+    tier1: string
+    tier2: string
+    tier3: string
+    tier4: string
+    currentTier: string
+    commissionRate: string
+    referredClients: string
+    clientName: string
+    plan: string
+    registrationDate: string
+    commissions: string
+    grossAmount: string
+    commissionAmount: string
+    statusPending: string
+    statusApproved: string
+    statusPaid: string
+    payoutSummary: string
+    totalPaid: string
+    pendingBalance: string
+    createAgent: string
+    agentsList: string
+    manageCommissions: string
+    tierConfig: string
+    approveCommission: string
+    markAsPaid: string
+    referredByAgent: string
+    shareWhatsApp: string
+    logout: string
   }
 }

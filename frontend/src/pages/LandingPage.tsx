@@ -827,6 +827,7 @@ export default function LandingPage() {
     { id: 'pricing', label: t.landing.navPricing },
     { id: 'install', label: t.landing.navInstall },
     { id: 'testimonials', label: t.landing.navTestimonials },
+    { id: 'partner', label: (t.landing as any)?.navPartner || 'Partenaires' },
     { id: 'faq', label: t.landing.navFaq },
   ]
 
@@ -2911,6 +2912,445 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================================================================
+          PARTNER / DEVENIR PARTENAIRE SECTION
+          ================================================================ */}
+      <section id="partner" className="landing-section-padding" style={{
+        ...sectionStyle('#0f172a'),
+        background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+        color: '#f8fafc',
+      }}>
+        <div style={containerStyle}>
+          {/* Section Title */}
+          <p style={{
+            textAlign: 'center',
+            fontSize: 13,
+            fontWeight: 600,
+            color: '#4ade80',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            margin: '0 0 12px',
+          }}>
+            {(t.landing as any)?.partnerBadge || 'Programme Partenaire'}
+          </p>
+          <h2 style={{
+            ...sectionTitleStyle,
+            color: '#f8fafc',
+          }}>
+            {(t.landing as any)?.partnerTitle || 'Devenez Partenaire '}
+            <span style={{
+              background: 'linear-gradient(90deg, #4ade80, #22d3ee)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              {(t.landing as any)?.partnerTitleAccent || 'Mano Verde'}
+            </span>
+          </h2>
+          <p style={{
+            ...sectionSubtitleStyle,
+            color: '#94a3b8',
+          }}>
+            {(t.landing as any)?.partnerSubtitle || 'Gagnez des commissions en aidant les commerçants à digitaliser leur activité'}
+          </p>
+
+          {/* 3 Value Proposition Cards */}
+          <div className="landing-features-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 24,
+            marginBottom: 80,
+          }}>
+            {/* Card 1 - Phone */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 16,
+              padding: 32,
+              textAlign: 'center',
+              transition: 'transform 0.2s, background 0.2s',
+            }}>
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', margin: '0 0 10px' }}>
+                {(t.landing as any)?.partnerCard1Title || 'Gérez tout depuis un téléphone'}
+              </h3>
+              <p style={{ fontSize: 14, lineHeight: 1.6, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerCard1Desc || 'Proposez à vos clients une caisse enregistreuse professionnelle sur leur téléphone ou tablette. Toute activité commerciale, gérée simplement.'}
+              </p>
+            </div>
+
+            {/* Card 2 - Commissions */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 16,
+              padding: 32,
+              textAlign: 'center',
+              transition: 'transform 0.2s, background 0.2s',
+            }}>
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #16a34a, #4ade80)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                  <polyline points="17 6 23 6 23 12" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', margin: '0 0 10px' }}>
+                {(t.landing as any)?.partnerCard2Title || 'Commissions jusqu\'à 20%'}
+              </h3>
+              <p style={{ fontSize: 14, lineHeight: 1.6, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerCard2Desc || 'Évoluez à travers 4 niveaux de partenariat et augmentez vos revenus à chaque palier atteint.'}
+              </p>
+            </div>
+
+            {/* Card 3 - Dashboard */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 16,
+              padding: 32,
+              textAlign: 'center',
+              transition: 'transform 0.2s, background 0.2s',
+            }}>
+              <div style={{
+                width: 56,
+                height: 56,
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, #9333ea, #c084fc)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 20px',
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', margin: '0 0 10px' }}>
+                {(t.landing as any)?.partnerCard3Title || 'Suivi en temps réel'}
+              </h3>
+              <p style={{ fontSize: 14, lineHeight: 1.6, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerCard3Desc || 'Un tableau de bord dédié pour suivre vos clients, vos commissions et vos performances en temps réel.'}
+              </p>
+            </div>
+          </div>
+
+          {/* 4-Tier Progression Visual */}
+          <h3 style={{
+            textAlign: 'center',
+            fontSize: 'clamp(20px, 3vw, 26px)',
+            fontWeight: 700,
+            color: '#f8fafc',
+            margin: '0 0 40px',
+          }}>
+            {(t.landing as any)?.partnerTiersTitle || 'Votre progression'}
+          </h3>
+          <div className="landing-pricing-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 16,
+            marginBottom: 80,
+          }}>
+            {/* Tier 1 - Débutant */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid #64748b',
+              borderRadius: 14,
+              padding: '28px 20px',
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                fontSize: 18,
+                fontWeight: 800,
+                color: '#fff',
+              }}>1</div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+                {(t.landing as any)?.partnerTier1Label || 'Débutant'}
+              </p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: '#f8fafc', margin: '0 0 4px' }}>5%</p>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerTier1Clients || '10 clients'}
+              </p>
+            </div>
+
+            {/* Tier 2 - Intermédiaire */}
+            <div style={{
+              background: 'rgba(37,99,235,0.1)',
+              border: '1px solid #3b82f6',
+              borderRadius: 14,
+              padding: '28px 20px',
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: '#2563eb',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                fontSize: 18,
+                fontWeight: 800,
+                color: '#fff',
+              }}>2</div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+                {(t.landing as any)?.partnerTier2Label || 'Intermédiaire'}
+              </p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: '#f8fafc', margin: '0 0 4px' }}>10%</p>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerTier2Clients || '25 clients'}
+              </p>
+            </div>
+
+            {/* Tier 3 - Avancé */}
+            <div style={{
+              background: 'rgba(147,51,234,0.1)',
+              border: '1px solid #a855f7',
+              borderRadius: 14,
+              padding: '28px 20px',
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: '#9333ea',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                fontSize: 18,
+                fontWeight: 800,
+                color: '#fff',
+              }}>3</div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#c084fc', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+                {(t.landing as any)?.partnerTier3Label || 'Avancé'}
+              </p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: '#f8fafc', margin: '0 0 4px' }}>15%</p>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerTier3Clients || '50 clients'}
+              </p>
+            </div>
+
+            {/* Tier 4 - Expert */}
+            <div style={{
+              background: 'rgba(234,179,8,0.1)',
+              border: '1px solid #eab308',
+              borderRadius: 14,
+              padding: '28px 20px',
+              textAlign: 'center',
+              position: 'relative',
+            }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #eab308, #f59e0b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                fontSize: 18,
+                fontWeight: 800,
+                color: '#fff',
+              }}>4</div>
+              <p style={{ fontSize: 11, fontWeight: 600, color: '#facc15', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px' }}>
+                {(t.landing as any)?.partnerTier4Label || 'Expert'}
+              </p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: '#f8fafc', margin: '0 0 4px' }}>20%</p>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+                {(t.landing as any)?.partnerTier4Clients || '100+ clients'}
+              </p>
+            </div>
+          </div>
+
+          {/* Phone/Tablet Showcase */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.15), rgba(74,222,128,0.1))',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 20,
+            padding: 'clamp(32px, 5vw, 56px)',
+            marginBottom: 48,
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <h3 style={{
+              fontSize: 'clamp(22px, 3.5vw, 32px)',
+              fontWeight: 800,
+              color: '#f8fafc',
+              margin: '0 0 8px',
+              letterSpacing: '-0.02em',
+            }}>
+              {(t.landing as any)?.partnerShowcaseTitle || 'Votre caisse enregistreuse dans la poche'}
+            </h3>
+            <p style={{ fontSize: 'clamp(14px, 2vw, 16px)', color: '#94a3b8', margin: '0 0 40px', maxWidth: 500, marginLeft: 'auto', marginRight: 'auto' }}>
+              {(t.landing as any)?.partnerShowcaseDesc || 'Restaurant, boutique, salon de coiffure, pharmacie... Toute activité se gère professionnellement depuis un simple téléphone.'}
+            </p>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-end',
+              gap: 'clamp(24px, 4vw, 48px)',
+              flexWrap: 'wrap',
+            }}>
+              {/* Phone SVG */}
+              <svg width="140" height="260" viewBox="0 0 140 260" fill="none" style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))' }}>
+                <rect x="4" y="4" width="132" height="252" rx="20" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                <rect x="12" y="40" width="116" height="190" rx="4" fill="#0f172a" />
+                {/* Status bar */}
+                <rect x="50" y="12" width="40" height="6" rx="3" fill="#334155" />
+                {/* POS Interface mockup */}
+                <rect x="18" y="48" width="50" height="8" rx="2" fill="#4ade80" opacity="0.8" />
+                <rect x="18" y="62" width="104" height="1" fill="#334155" />
+                {/* Product rows */}
+                <rect x="18" y="70" width="70" height="6" rx="2" fill="#475569" />
+                <rect x="96" y="70" width="26" height="6" rx="2" fill="#3b82f6" opacity="0.6" />
+                <rect x="18" y="82" width="55" height="6" rx="2" fill="#475569" />
+                <rect x="96" y="82" width="26" height="6" rx="2" fill="#3b82f6" opacity="0.6" />
+                <rect x="18" y="94" width="65" height="6" rx="2" fill="#475569" />
+                <rect x="96" y="94" width="26" height="6" rx="2" fill="#3b82f6" opacity="0.6" />
+                <rect x="18" y="106" width="48" height="6" rx="2" fill="#475569" />
+                <rect x="96" y="106" width="26" height="6" rx="2" fill="#3b82f6" opacity="0.6" />
+                <rect x="18" y="118" width="60" height="6" rx="2" fill="#475569" />
+                <rect x="96" y="118" width="26" height="6" rx="2" fill="#3b82f6" opacity="0.6" />
+                {/* Divider */}
+                <rect x="18" y="132" width="104" height="1" fill="#334155" />
+                {/* Total area */}
+                <rect x="18" y="140" width="30" height="8" rx="2" fill="#94a3b8" />
+                <rect x="80" y="138" width="42" height="12" rx="3" fill="#4ade80" opacity="0.9" />
+                {/* Pay button */}
+                <rect x="18" y="162" width="104" height="28" rx="8" fill="url(#payGrad)" />
+                <text x="70" y="180" textAnchor="middle" fill="white" fontSize="10" fontWeight="700" fontFamily="sans-serif">ENCAISSER</text>
+                {/* Bottom grid - categories */}
+                <rect x="18" y="198" width="22" height="22" rx="6" fill="#2563eb" opacity="0.3" />
+                <rect x="46" y="198" width="22" height="22" rx="6" fill="#16a34a" opacity="0.3" />
+                <rect x="74" y="198" width="22" height="22" rx="6" fill="#9333ea" opacity="0.3" />
+                <rect x="102" y="198" width="22" height="22" rx="6" fill="#eab308" opacity="0.3" />
+                {/* Home indicator */}
+                <rect x="45" y="240" width="50" height="5" rx="2.5" fill="#475569" />
+                <defs>
+                  <linearGradient id="payGrad" x1="18" y1="162" x2="122" y2="190">
+                    <stop offset="0%" stopColor="#16a34a" />
+                    <stop offset="100%" stopColor="#4ade80" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* Tablet SVG */}
+              <svg width="220" height="280" viewBox="0 0 220 280" fill="none" style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.4))' }}>
+                <rect x="4" y="4" width="212" height="272" rx="16" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+                <rect x="12" y="12" width="196" height="256" rx="8" fill="#0f172a" />
+                {/* Header */}
+                <rect x="20" y="20" width="60" height="10" rx="3" fill="#4ade80" opacity="0.8" />
+                <rect x="160" y="20" width="40" height="10" rx="3" fill="#334155" />
+                <rect x="20" y="36" width="180" height="1" fill="#334155" />
+                {/* Sidebar - Categories */}
+                <rect x="20" y="44" width="44" height="200" rx="6" fill="rgba(255,255,255,0.03)" />
+                <rect x="26" y="52" width="32" height="20" rx="4" fill="#2563eb" opacity="0.4" />
+                <rect x="26" y="78" width="32" height="20" rx="4" fill="rgba(255,255,255,0.05)" />
+                <rect x="26" y="104" width="32" height="20" rx="4" fill="rgba(255,255,255,0.05)" />
+                <rect x="26" y="130" width="32" height="20" rx="4" fill="rgba(255,255,255,0.05)" />
+                <rect x="26" y="156" width="32" height="20" rx="4" fill="rgba(255,255,255,0.05)" />
+                {/* Product Grid */}
+                <rect x="72" y="44" width="50" height="40" rx="6" fill="rgba(255,255,255,0.05)" />
+                <rect x="78" y="50" width="38" height="20" rx="3" fill="#334155" />
+                <rect x="78" y="74" width="30" height="5" rx="2" fill="#475569" />
+                <rect x="128" y="44" width="50" height="40" rx="6" fill="rgba(255,255,255,0.05)" />
+                <rect x="134" y="50" width="38" height="20" rx="3" fill="#334155" />
+                <rect x="134" y="74" width="30" height="5" rx="2" fill="#475569" />
+                <rect x="72" y="92" width="50" height="40" rx="6" fill="rgba(255,255,255,0.05)" />
+                <rect x="78" y="98" width="38" height="20" rx="3" fill="#334155" />
+                <rect x="78" y="122" width="30" height="5" rx="2" fill="#475569" />
+                <rect x="128" y="92" width="50" height="40" rx="6" fill="rgba(255,255,255,0.05)" />
+                <rect x="134" y="98" width="38" height="20" rx="3" fill="#334155" />
+                <rect x="134" y="122" width="30" height="5" rx="2" fill="#475569" />
+                {/* Cart panel on right */}
+                <rect x="184" y="44" width="1" height="200" fill="#334155" />
+                <rect x="190" y="50" width="12" height="6" rx="2" fill="#94a3b8" />
+                <rect x="190" y="62" width="12" height="4" rx="1" fill="#475569" />
+                <rect x="190" y="72" width="12" height="4" rx="1" fill="#475569" />
+                <rect x="190" y="82" width="12" height="4" rx="1" fill="#475569" />
+                {/* Total + Pay */}
+                <rect x="72" y="212" width="108" height="1" fill="#334155" />
+                <rect x="72" y="220" width="30" height="8" rx="2" fill="#94a3b8" />
+                <rect x="130" y="218" width="48" height="12" rx="3" fill="#4ade80" opacity="0.9" />
+                <rect x="72" y="238" width="108" height="24" rx="6" fill="url(#tabPayGrad)" />
+                <text x="126" y="254" textAnchor="middle" fill="white" fontSize="9" fontWeight="700" fontFamily="sans-serif">VALIDER LA VENTE</text>
+                <defs>
+                  <linearGradient id="tabPayGrad" x1="72" y1="238" x2="180" y2="262">
+                    <stop offset="0%" stopColor="#16a34a" />
+                    <stop offset="100%" stopColor="#4ade80" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+
+          {/* CTA Button */}
+          <div style={{ textAlign: 'center' }}>
+            <a
+              href="mailto:direction@manoverde.com?subject=Devenir Partenaire"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '16px 40px',
+                background: 'linear-gradient(135deg, #16a34a, #4ade80)',
+                color: '#fff',
+                fontSize: 17,
+                fontWeight: 700,
+                borderRadius: 12,
+                textDecoration: 'none',
+                fontFamily: pageFont,
+                boxShadow: '0 4px 24px rgba(74,222,128,0.3)',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+            >
+              <IconMail size={20} />
+              {(t.landing as any)?.partnerCta || 'Rejoindre le programme'}
+            </a>
           </div>
         </div>
       </section>

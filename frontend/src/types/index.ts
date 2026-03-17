@@ -246,7 +246,7 @@ export type Store = {
 
 // -- Users -------------------------------------------------------------------
 
-export type UserRole = 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin'
+export type UserRole = 'admin' | 'manager' | 'cashier' | 'stock' | 'super_admin' | 'agent'
 
 export type User = {
   id: string
@@ -913,6 +913,66 @@ export type RegistrationData = {
   activity: Activity
   password: string
   termsAcceptedAt?: string
+  referralCode?: string
+}
+
+// -- Agent / Affiliate Program ------------------------------------------------
+
+export type AgentTier = 1 | 2 | 3 | 4
+
+export type AgentTierConfig = {
+  tier: AgentTier
+  name_fr: string
+  name_en: string
+  min_referrals: number
+  commission_rate: number
+}
+
+export type Agent = {
+  id: string
+  name: string
+  email: string
+  phone: string
+  referral_code: string
+  auth_id: string
+  tier: AgentTier
+  commission_rate: number
+  is_active: boolean
+  total_earned_usd: number
+  total_paid_usd: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export type AgentReferral = {
+  id: string
+  agent_id: string
+  organization_id: string
+  referral_code: string
+  status: 'active' | 'churned' | 'suspended'
+  created_at: string
+  // Joined fields
+  organization?: { name: string; owner_name: string; owner_email: string }
+}
+
+export type AgentCommissionSourceType = 'subscription' | 'credit_load' | 'plan_upgrade'
+export type AgentCommissionStatus = 'pending' | 'approved' | 'paid' | 'cancelled'
+
+export type AgentCommission = {
+  id: string
+  agent_id: string
+  organization_id: string
+  source_type: AgentCommissionSourceType
+  source_id?: string
+  gross_amount_usd: number
+  commission_rate: number
+  commission_usd: number
+  status: AgentCommissionStatus
+  paid_at?: string
+  created_at: string
+  // Joined fields
+  organization?: { name: string }
 }
 
 // -- Phase 3: Cash Register, Suppliers, POS Invoices, Deliveries ---------------

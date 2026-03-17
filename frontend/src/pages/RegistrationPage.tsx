@@ -1035,6 +1035,26 @@ export default function RegistrationPage() {
           <p style={stepDescStyle}>{getStepDesc()}</p>
         </div>
 
+        {/* Referral banner */}
+        {(useAppStore.getState().referralCode || sessionStorage.getItem('pos_referral_code')) && (
+          <div style={{
+            margin: '0 24px',
+            padding: '10px 16px',
+            borderRadius: 8,
+            backgroundColor: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 13,
+            color: '#166534',
+            fontWeight: 500,
+          }}>
+            <Zap size={16} color="#16a34a" />
+            {t.agent?.referredByAgent || 'Vous avez été invité par un partenaire Mano Verde'}
+          </div>
+        )}
+
         {/* Step progress indicator */}
         <div style={progressContainerStyle}>
           {[1, 2, 3, 4, 5].map((s) => (

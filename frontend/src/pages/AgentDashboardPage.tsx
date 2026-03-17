@@ -1,0 +1,821 @@
+import React, { useEffect, useState } from 'react'
+import {
+  LogOut,
+  Copy,
+  Check,
+  Share2,
+  Users,
+  UserCheck,
+  Clock,
+  DollarSign,
+  Award,
+  Loader,
+  Leaf,
+} from 'lucide-react'
+import { useAuthStore } from '../stores/authStore'
+import { useLanguageStore } from '../stores/languageStore'
+import { supabase } from '../services/supabase'
+
+// ── Color palette ────────────────────────────────────────────────────────
+
+const C = {
+  primary: '#2563eb',
+  primaryDark: '#1e293b',
+  darkest: '#0f172a',
+  accent: '#3b82f6',
+  bg: '#f1f5f9',
+  card: '#ffffff',
+  text: '#1e293b',
+  textSecondary: '#64748b',
+  border: '#e2e8f0',
+  success: '#16a34a',
+  warning: '#d97706',
+  pending: '#eab308',
+}
+
+const TIER_COLORS: Record<number, string> = {
+  1: '#6b7280',
+  2: '#2563eb',
+  3: '#7c3aed',
+  4: '#d97706',
+}
+
+const STATUS_STYLES: Record<string, React.CSSProperties> = {
+  pending: { background: '#fef9c3', color: '#92400e', border: '1px solid #fde68a' },
+  approved: { background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' },
+  paid: { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
+  active: { background: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
+  inactive: { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' },
+  trial: { background: '#e0e7ff', color: '#3730a3', border: '1px solid #a5b4fc' },
+}
+
+// ── Types ────────────────────────────────────────────────────────────────
+
+interface AgentRecord {
+  id: string
+  user_id: string
+  email: string
+  full_name: string
+  referral_code: string
+  tier: number
+  total_referrals: number
+  active_clients: number
+  total_earned: number
+  created_at: string
+}
+
+interface Referral {
+  id: string
+  organization_id: string
+  status: string
+  created_at: string
+  organizations?: {
+    name: string
+    owner_name: string
+    owner_email: string
+  }
+  subscriptions?: {
+    plan: string
+    status: string
+  }
+}
+
+interface Commission {
+  id: string
+  organization_id: string
+  type: string
+  gross_amount: number
+  rate: number
+  commission_amount: number
+  status: string
+  created_at: string
+  organizations?: {
+    name: string
+  }
+}
+
+interface TierConfig {
+  tier: number
+  name: string
+  min_clients: number
+  commission_rate: number
+}
+
+// ── Default tiers ────────────────────────────────────────────────────────
+
+const DEFAULT_TIERS: TierConfig[] = [
+  { tier: 1, name: 'Debutant', min_clients: 10, commission_rate: 5 },
+  { tier: 2, name: 'Intermediaire', min_clients: 25, commission_rate: 10 },
+  { tier: 3, name: 'Avance', min_clients: 50, commission_rate: 15 },
+  { tier: 4, name: 'Expert', min_clients: 100, commission_rate: 20 },
+]
+
+// ── Component ────────────────────────────────────────────────────────────
+
+export default function AgentDashboardPage() {
+  const { t } = useLanguageStore()
+  const user = useAuthStore((s) => s.user)
+
+  const [loading, setLoading] = useState(true)
+  const [agent, setAgent] = useState<AgentRecord | null>(null)
+  const [referrals, setReferrals] = useState<Referral[]>([])
+  const [commissions, setCommissions] = useState<Commission[]>([])
+  const [tiers, setTiers] = useState<TierConfig[]>(DEFAULT_TIERS)
+  const [copied, setCopied] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // ── Responsive listener ──────────────────────────────────────────────
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
+  // ── Data fetching ────────────────────────────────────────────────────
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  async function fetchData() {
+    if (!supabase) return
+    if (!user?.email) return
+
+    setLoading(true)
+    try {
+      // Fetch agent record
+      const { data: agentData } = await supabase
+        .from('agents')
+        .select('*')
+        .eq('email', user.email)
+        .single()
+
+      if (agentData) setAgent(agentData)
+
+      if (agentData?.id) {
+        // Fetch referrals with joined data
+        const { data: refData } = await supabase
+          .from('agent_referrals')
+          .select('*, organizations(name, owner_name, owner_email), subscriptions(plan, status)')
+          .eq('agent_id', agentData.id)
+          .order('created_at', { ascending: false })
+
+        if (refData) setReferrals(refData)
+
+        // Fetch commissions with joined data
+        const { data: commData } = await supabase
+          .from('agent_commissions')
+          .select('*, organizations(name)')
+          .eq('agent_id', agentData.id)
+          .order('created_at', { ascending: false })
+
+        if (commData) setCommissions(commData)
+      }
+
+      // Fetch tier config
+      const { data: tierData } = await supabase
+        .from('agent_tier_config')
+        .select('*')
+        .order('tier', { ascending: true })
+
+      if (tierData && tierData.length > 0) setTiers(tierData)
+    } catch (err) {
+      console.error('Agent dashboard fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Computed values ──────────────────────────────────────────────────
+
+  const referralLink = `https://pos.manoverde.com/?ref=${agent?.referral_code || ''}`
+  const currentTier = tiers.find((t) => t.tier === (agent?.tier || 1)) || tiers[0]
+  const nextTier = tiers.find((t) => t.tier === (agent?.tier || 1) + 1)
+
+  const activeClients = agent?.active_clients || 0
+  const totalReferrals = agent?.total_referrals || referrals.length
+  const totalEarned = agent?.total_earned || commissions.reduce((s, c) => s + (c.status === 'paid' ? c.commission_amount : 0), 0)
+
+  const pendingCommissions = commissions
+    .filter((c) => c.status === 'pending')
+    .reduce((s, c) => s + c.commission_amount, 0)
+
+  const totalPaid = commissions
+    .filter((c) => c.status === 'paid')
+    .reduce((s, c) => s + c.commission_amount, 0)
+
+  const totalCommissionsEarned = commissions.reduce((s, c) => s + c.commission_amount, 0)
+  const balancePending = totalCommissionsEarned - totalPaid
+
+  // ── Tier progress ────────────────────────────────────────────────────
+
+  const progressPercent = nextTier
+    ? Math.min(100, Math.round((activeClients / nextTier.min_clients) * 100))
+    : 100
+
+  // ── Clipboard ────────────────────────────────────────────────────────
+
+  function handleCopy() {
+    navigator.clipboard.writeText(referralLink).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  function handleWhatsAppShare() {
+    const text = encodeURIComponent(
+      `${(t as any).agent?.whatsappMessage || 'Rejoignez Mano Verde POS avec mon lien :'} ${referralLink}`
+    )
+    window.open(`https://wa.me/?text=${text}`, '_blank')
+  }
+
+  function handleLogout() {
+    useAuthStore.getState().logout()
+  }
+
+  // ── Loading state ────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: C.bg }}>
+        <Loader size={40} style={{ animation: 'spin 1s linear infinite', color: C.primary }} />
+      </div>
+    )
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.bg }}>
+      {/* ── Top Bar ────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: C.darkest,
+          color: '#fff',
+          padding: isMobile ? '12px 16px' : '14px 32px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Leaf size={24} color="#22c55e" />
+          <span style={{ fontWeight: 700, fontSize: isMobile ? 16 : 20 }}>Mano Verde</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 14 }}>{agent?.full_name || user?.name || ''}</span>
+          <span
+            style={{
+              background: TIER_COLORS[agent?.tier || 1],
+              color: '#fff',
+              padding: '2px 10px',
+              borderRadius: 12,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {currentTier.name}
+          </span>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              color: '#fff',
+              padding: '6px 12px',
+              borderRadius: 6,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 13,
+            }}
+          >
+            <LogOut size={16} />
+            {!isMobile && ((t as any).agent?.logout || 'Deconnexion')}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Page Content ──────────────────────────────────────────────── */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px 12px' : '24px 32px' }}>
+
+        {/* ── Referral Link ────────────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 10, color: C.text }}>
+            {(t as any).agent?.referralLink || 'Votre lien de parrainage'}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: 10,
+              alignItems: isMobile ? 'stretch' : 'center',
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                background: C.bg,
+                padding: '10px 14px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontFamily: 'monospace',
+                color: C.textSecondary,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {referralLink}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={handleCopy}
+                style={{
+                  background: copied ? C.success : C.primary,
+                  color: '#fff',
+                  border: 'none',
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  transition: 'background 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? ((t as any).agent?.copied || 'Copie !') : ((t as any).agent?.copy || 'Copier')}
+              </button>
+              <button
+                onClick={handleWhatsAppShare}
+                style={{
+                  background: '#25d366',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <Share2 size={16} />
+                WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Stats Cards ──────────────────────────────────────────────── */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <StatCard
+            icon={<Users size={20} color={C.primary} />}
+            label={(t as any).agent?.totalReferrals || 'Total filleuls'}
+            value={totalReferrals}
+            color={C.primary}
+          />
+          <StatCard
+            icon={<UserCheck size={20} color={C.success} />}
+            label={(t as any).agent?.activeClients || 'Clients actifs'}
+            value={activeClients}
+            color={C.success}
+          />
+          <StatCard
+            icon={<Clock size={20} color={C.warning} />}
+            label={(t as any).agent?.pendingCommissions || 'Commissions en attente'}
+            value={`${pendingCommissions.toLocaleString()} $`}
+            color={C.warning}
+          />
+          <StatCard
+            icon={<DollarSign size={20} color={C.success} />}
+            label={(t as any).agent?.totalEarned || 'Total gagne'}
+            value={`${totalEarned.toLocaleString()} $`}
+            color={C.success}
+          />
+        </div>
+
+        {/* ── Tier Progression ─────────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Award size={20} color={TIER_COLORS[agent?.tier || 1]} />
+            <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>
+              {(t as any).agent?.tierProgression || 'Progression de niveau'}
+            </span>
+          </div>
+
+          {/* Current tier info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span
+              style={{
+                background: TIER_COLORS[agent?.tier || 1],
+                color: '#fff',
+                padding: '3px 12px',
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              {currentTier.name}
+            </span>
+            <span style={{ fontSize: 13, color: C.textSecondary }}>
+              {currentTier.commission_rate}% {(t as any).agent?.commissionRate || 'de commission'}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          {nextTier && (
+            <>
+              <div
+                style={{
+                  background: '#e2e8f0',
+                  borderRadius: 8,
+                  height: 10,
+                  marginBottom: 8,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    background: TIER_COLORS[agent?.tier || 1],
+                    height: '100%',
+                    borderRadius: 8,
+                    width: `${progressPercent}%`,
+                    transition: 'width 0.5s ease',
+                  }}
+                />
+              </div>
+              <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 16 }}>
+                {activeClients}/{nextTier.min_clients} {(t as any).agent?.clientsFor || 'clients pour'}{' '}
+                <strong style={{ color: TIER_COLORS[nextTier.tier] }}>{nextTier.name}</strong>
+              </div>
+            </>
+          )}
+
+          {/* All tiers */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+              gap: 10,
+            }}
+          >
+            {tiers.map((tier) => {
+              const isActive = tier.tier === (agent?.tier || 1)
+              return (
+                <div
+                  key={tier.tier}
+                  style={{
+                    background: isActive ? `${TIER_COLORS[tier.tier]}12` : C.bg,
+                    borderRadius: 8,
+                    padding: '10px 12px',
+                    border: isActive ? `2px solid ${TIER_COLORS[tier.tier]}` : `1px solid ${C.border}`,
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontWeight: 600, fontSize: 13, color: TIER_COLORS[tier.tier] }}>
+                    {tier.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>
+                    {tier.min_clients} clients
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>
+                    {tier.commission_rate}%
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ── Referred Clients Table ──────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+            {(t as any).agent?.referredClients || 'Clients parraines'}
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                  {[
+                    (t as any).agent?.colName || 'Nom',
+                    (t as any).agent?.colOwner || 'Proprietaire',
+                    (t as any).agent?.colPlan || 'Plan',
+                    (t as any).agent?.colStatus || 'Statut',
+                    (t as any).agent?.colDate || 'Date inscription',
+                  ].map((col) => (
+                    <th
+                      key={col}
+                      style={{
+                        textAlign: 'left',
+                        padding: '8px 10px',
+                        color: C.textSecondary,
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {referrals.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{ padding: 20, textAlign: 'center', color: C.textSecondary }}
+                    >
+                      {(t as any).agent?.noReferrals || 'Aucun filleul pour le moment'}
+                    </td>
+                  </tr>
+                ) : (
+                  referrals.map((ref) => (
+                    <tr key={ref.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '8px 10px', fontWeight: 500 }}>
+                        {ref.organizations?.name || '-'}
+                      </td>
+                      <td style={{ padding: '8px 10px', color: C.textSecondary }}>
+                        {ref.organizations?.owner_name || '-'}
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <span
+                          style={{
+                            background: '#e0e7ff',
+                            color: '#3730a3',
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {ref.subscriptions?.plan || '-'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <StatusBadge status={ref.subscriptions?.status || ref.status} />
+                      </td>
+                      <td style={{ padding: '8px 10px', color: C.textSecondary }}>
+                        {new Date(ref.created_at).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Commissions Table ───────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+            {(t as any).agent?.commissions || 'Commissions'}
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                  {[
+                    'Date',
+                    'Client',
+                    'Type',
+                    (t as any).agent?.grossAmount || 'Montant brut',
+                    (t as any).agent?.rate || 'Taux',
+                    'Commission',
+                    (t as any).agent?.colStatus || 'Statut',
+                  ].map((col) => (
+                    <th
+                      key={col}
+                      style={{
+                        textAlign: 'left',
+                        padding: '8px 10px',
+                        color: C.textSecondary,
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {commissions.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{ padding: 20, textAlign: 'center', color: C.textSecondary }}
+                    >
+                      {(t as any).agent?.noCommissions || 'Aucune commission pour le moment'}
+                    </td>
+                  </tr>
+                ) : (
+                  commissions.map((comm) => (
+                    <tr key={comm.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '8px 10px', color: C.textSecondary }}>
+                        {new Date(comm.created_at).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '8px 10px', fontWeight: 500 }}>
+                        {comm.organizations?.name || '-'}
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <span
+                          style={{
+                            background: '#f0f9ff',
+                            color: '#0369a1',
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            fontSize: 12,
+                          }}
+                        >
+                          {comm.type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        {comm.gross_amount.toLocaleString()} $
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>{comm.rate}%</td>
+                      <td style={{ padding: '8px 10px', fontWeight: 600 }}>
+                        {comm.commission_amount.toLocaleString()} $
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <StatusBadge status={comm.status} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Payout Summary ──────────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 40,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+            {(t as any).agent?.payoutSummary || 'Resume des paiements'}
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+              gap: 12,
+            }}
+          >
+            <PayoutCard
+              label={(t as any).agent?.totalEarned || 'Total gagne'}
+              value={`${totalCommissionsEarned.toLocaleString()} $`}
+              color={C.primary}
+            />
+            <PayoutCard
+              label={(t as any).agent?.totalPaid || 'Total paye'}
+              value={`${totalPaid.toLocaleString()} $`}
+              color={C.success}
+            />
+            <PayoutCard
+              label={(t as any).agent?.pendingBalance || 'Solde en attente'}
+              value={`${balancePending.toLocaleString()} $`}
+              color={C.warning}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Sub-components ─────────────────────────────────────────────────────
+
+function StatCard({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string | number
+  color: string
+}) {
+  return (
+    <div
+      style={{
+        background: '#ffffff',
+        borderRadius: 12,
+        padding: 16,
+        border: '1px solid #e2e8f0',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          background: `${color}14`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ fontSize: 12, color: '#64748b' }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: '#1e293b' }}>{value}</div>
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const style = STATUS_STYLES[status] || STATUS_STYLES.pending
+  return (
+    <span
+      style={{
+        ...style,
+        padding: '2px 10px',
+        borderRadius: 12,
+        fontSize: 12,
+        fontWeight: 500,
+        display: 'inline-block',
+      }}
+    >
+      {status}
+    </span>
+  )
+}
+
+function PayoutCard({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div
+      style={{
+        background: `${color}08`,
+        borderRadius: 10,
+        padding: 16,
+        border: `1px solid ${color}30`,
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
+    </div>
+  )
+}

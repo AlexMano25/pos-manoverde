@@ -191,6 +191,36 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
               throw new Error(authError.message)
             }
 
+            // Check if this is an agent login
+            const { data: agentProfile } = await supabase
+              .from('agents')
+              .select('*')
+              .eq('email', email)
+              .eq('is_active', true)
+              .single()
+
+            if (agentProfile) {
+              // Agent login — redirect to agent dashboard
+              const appStore = useAppStore.getState()
+              appStore.setSection('agent_dashboard')
+              set({
+                user: {
+                  id: agentProfile.id,
+                  store_id: '',
+                  name: agentProfile.name,
+                  email: agentProfile.email,
+                  role: 'agent' as any,
+                  pin: '',
+                  phone: agentProfile.phone || '',
+                  is_active: true,
+                  created_at: agentProfile.created_at,
+                  updated_at: agentProfile.updated_at,
+                },
+                token: authData.session?.access_token || '',
+              })
+              return
+            }
+
             // Fetch user profile from users table
             const { data: profile, error: profileError } = await supabase
               .from('users')
@@ -465,6 +495,21 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           p_terms_accepted_at: data.termsAcceptedAt || null,
         })
         if (rpcError) throw new Error(rpcError.message)
+
+        // 2b. Link organization to agent if referral code was captured
+        const referralCode = data.referralCode || useAppStore.getState().referralCode || sessionStorage.getItem('pos_referral_code')
+        if (referralCode && result.organization_id) {
+          try {
+            await supabase.rpc('link_org_to_agent', {
+              p_organization_id: result.organization_id,
+              p_referral_code: referralCode,
+            })
+            useAppStore.getState().setReferralCode(null)
+            sessionStorage.removeItem('pos_referral_code')
+          } catch (err: any) {
+            console.warn('[authStore] Agent referral link failed:', err)
+          }
+        }
 
         // 3. Now sign in (user is auto-confirmed by the RPC function)
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

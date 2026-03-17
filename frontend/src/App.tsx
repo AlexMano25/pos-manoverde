@@ -74,6 +74,7 @@ import MultiStoreDashboardPage from './pages/MultiStoreDashboardPage'
 import WebhooksPage from './pages/WebhooksPage'
 import DataExchangePage from './pages/DataExchangePage'
 import SuperAdminPage from './pages/SuperAdminPage'
+import AgentDashboardPage from './pages/AgentDashboardPage'
 import PlanWarningBanner from './components/PlanWarningBanner'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -220,8 +221,22 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent } = useAppStore()
+  const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent, setReferralCode, section } = useAppStore()
   const { user, token } = useAuthStore()
+
+  // Capture ?ref= referral code from URL on first load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const refCode = params.get('ref')
+    if (refCode) {
+      setReferralCode(refCode)
+      sessionStorage.setItem('pos_referral_code', refCode)
+      // Clean URL without reload
+      const url = new URL(window.location.href)
+      url.searchParams.delete('ref')
+      window.history.replaceState({}, '', url.pathname + url.search)
+    }
+  }, [setReferralCode])
 
   useEffect(() => {
     if (!activity && !registrationMode && !showLogin) {
@@ -284,7 +299,16 @@ export default function App() {
 
   // Has activity but not logged in
   if (!user || !token) {
+    // Agent login: agents don't need an activity, check section
+    if (user?.role === 'agent' && token) {
+      return <AgentDashboardPage />
+    }
     return <LoginPage />
+  }
+
+  // Agent dashboard — agents don't access the POS
+  if (user.role === 'agent' || section === 'agent_dashboard') {
+    return <AgentDashboardPage />
   }
 
   // Multiple stores available → let user pick

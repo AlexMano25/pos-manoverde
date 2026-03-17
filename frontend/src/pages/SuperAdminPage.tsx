@@ -71,7 +71,7 @@ const ROLE_COLORS: Record<string, string> = {
   stock: '#F59E0B',
 }
 
-type TabId = 'organizations' | 'users' | 'plans' | 'licenses' | 'analytics'
+type TabId = 'organizations' | 'users' | 'plans' | 'licenses' | 'analytics' | 'agents'
 
 // ── Plan config type ────────────────────────────────────────────────────
 
@@ -173,6 +173,21 @@ export default function SuperAdminPage() {
   const [licenseHistory, setLicenseHistory] = useState<LicenseCode[]>([])
   const [licenseLoading, setLicenseLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
+
+  // ── Agents state ────────────────────────────────────────────────────
+  const [agents, setAgents] = useState<any[]>([])
+  const [agentsLoading, setAgentsLoading] = useState(false)
+  const [agentForm, setAgentForm] = useState({ name: '', email: '', phone: '' })
+  const [agentCreating, setAgentCreating] = useState(false)
+  const [agentMsg, setAgentMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [expandedAgent, setExpandedAgent] = useState<string | null>(null)
+  const [agentReferrals, setAgentReferrals] = useState<Record<string, any[]>>({})
+  const [agentReferralCounts, setAgentReferralCounts] = useState<Record<string, number>>({})
+  const [pendingCommissions, setPendingCommissions] = useState<any[]>([])
+  const [commissionsLoading, setCommissionsLoading] = useState(false)
+  const [tierConfigs, setTierConfigs] = useState<any[]>([])
+  const [tierEdits, setTierEdits] = useState<Record<string, any>>({})
+  const [tierSaving, setTierSaving] = useState(false)
 
   // ── Data fetching ────────────────────────────────────────────────────
 
@@ -289,6 +304,69 @@ export default function SuperAdminPage() {
     }
   }, [])
 
+  const fetchAgents = useCallback(async () => {
+    if (!supabase) return
+    setAgentsLoading(true)
+    try {
+      const { data } = await supabase.from('agents').select('*').order('created_at', { ascending: false })
+      const agentsList = data || []
+      setAgents(agentsList)
+
+      // Fetch referral counts per agent
+      const counts: Record<string, number> = {}
+      for (const ag of agentsList) {
+        const { count } = await supabase.from('agent_referrals').select('*', { count: 'exact', head: true }).eq('agent_id', ag.id)
+        counts[ag.id] = count || 0
+      }
+      setAgentReferralCounts(counts)
+    } catch (err) {
+      console.error('Failed to fetch agents:', err)
+    } finally {
+      setAgentsLoading(false)
+    }
+  }, [])
+
+  const fetchAgentReferrals = useCallback(async (agentId: string) => {
+    if (!supabase) return
+    try {
+      const { data } = await supabase
+        .from('agent_referrals')
+        .select('*, organizations(name, owner_name, owner_email)')
+        .eq('agent_id', agentId)
+        .order('created_at', { ascending: false })
+      setAgentReferrals(prev => ({ ...prev, [agentId]: data || [] }))
+    } catch (err) {
+      console.error('Failed to fetch agent referrals:', err)
+    }
+  }, [])
+
+  const fetchPendingCommissions = useCallback(async () => {
+    if (!supabase) return
+    setCommissionsLoading(true)
+    try {
+      const { data } = await supabase
+        .from('agent_commissions')
+        .select('*, agents(name), organizations(name)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+      setPendingCommissions(data || [])
+    } catch (err) {
+      console.error('Failed to fetch commissions:', err)
+    } finally {
+      setCommissionsLoading(false)
+    }
+  }, [])
+
+  const fetchTierConfigs = useCallback(async () => {
+    if (!supabase) return
+    try {
+      const { data } = await supabase.from('agent_tier_config').select('*').order('min_referrals', { ascending: true })
+      setTierConfigs(data || [])
+    } catch (err) {
+      console.error('Failed to fetch tier configs:', err)
+    }
+  }, [])
+
   useEffect(() => {
     if (activeTab === 'organizations' || activeTab === 'analytics') fetchOrganizations()
     if (activeTab === 'users') { fetchAllUsers(); if (orgs.length === 0) fetchOrganizations() }
@@ -297,7 +375,12 @@ export default function SuperAdminPage() {
       fetchLicenseHistory()
       if (orgs.length === 0) fetchOrganizations()
     }
-  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers])
+    if (activeTab === 'agents') {
+      fetchAgents()
+      fetchPendingCommissions()
+      fetchTierConfigs()
+    }
+  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers, fetchAgents, fetchPendingCommissions, fetchTierConfigs])
 
   // ── Organizations helpers ────────────────────────────────────────────
 
@@ -490,6 +573,7 @@ export default function SuperAdminPage() {
     { id: 'plans', label: 'Plans & Tarifs', icon: <CreditCard size={rv(14, 16, 16)} /> },
     { id: 'licenses', label: 'Licences', icon: <Key size={rv(14, 16, 16)} /> },
     { id: 'analytics', label: 'Analyses', icon: <BarChart3 size={rv(14, 16, 16)} /> },
+    { id: 'agents', label: 'Agents', icon: <Users size={rv(14, 16, 16)} />, count: agents.length },
   ]
 
   // ── Guard ─────────────────────────────────────────────────────────────
@@ -1138,6 +1222,389 @@ export default function SuperAdminPage() {
     </div>
   )
 
+  // ── Agents helpers ─────────────────────────────────────────────────
+
+  const generateReferralCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let code = 'AGT-'
+    for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length))
+    return code
+  }
+
+  const handleCreateAgent = async () => {
+    if (!supabase || !agentForm.name || !agentForm.email) return
+    setAgentCreating(true)
+    setAgentMsg(null)
+    try {
+      // Create Supabase auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: agentForm.email,
+        password: 'agent123',
+        email_confirm: true,
+      })
+      if (authError) throw authError
+
+      // Insert into agents table
+      const { error: insertError } = await supabase.from('agents').insert({
+        auth_id: authData.user.id,
+        name: agentForm.name,
+        email: agentForm.email,
+        phone: agentForm.phone || null,
+        referral_code: generateReferralCode(),
+        tier: 'bronze',
+        is_active: true,
+      })
+      if (insertError) throw insertError
+
+      setAgentForm({ name: '', email: '', phone: '' })
+      setAgentMsg({ type: 'success', text: 'Agent cree avec succes (mot de passe: agent123)' })
+      fetchAgents()
+    } catch (err: any) {
+      setAgentMsg({ type: 'error', text: err.message || 'Erreur lors de la creation' })
+    } finally {
+      setAgentCreating(false)
+    }
+  }
+
+  const handleToggleAgent = async (agentId: string, currentlyActive: boolean) => {
+    if (!supabase) return
+    try {
+      await supabase.from('agents').update({ is_active: !currentlyActive }).eq('id', agentId)
+      fetchAgents()
+    } catch (err) {
+      console.error('Failed to toggle agent:', err)
+    }
+  }
+
+  const handleApproveCommission = async (commissionId: string) => {
+    if (!supabase) return
+    try {
+      await supabase.from('agent_commissions').update({ status: 'approved' }).eq('id', commissionId)
+      fetchPendingCommissions()
+    } catch (err) {
+      console.error('Failed to approve commission:', err)
+    }
+  }
+
+  const handleMarkPaid = async (commissionId: string) => {
+    if (!supabase) return
+    try {
+      await supabase.from('agent_commissions').update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', commissionId)
+      fetchPendingCommissions()
+    } catch (err) {
+      console.error('Failed to mark commission paid:', err)
+    }
+  }
+
+  const handleSaveTierConfigs = async () => {
+    if (!supabase) return
+    setTierSaving(true)
+    try {
+      for (const tier of tierConfigs) {
+        const edits = tierEdits[tier.id]
+        if (edits) {
+          await supabase.from('agent_tier_config').update({
+            tier_name: edits.tier_name ?? tier.tier_name,
+            min_referrals: edits.min_referrals ?? tier.min_referrals,
+            commission_rate: edits.commission_rate ?? tier.commission_rate,
+          }).eq('id', tier.id)
+        }
+      }
+      setTierEdits({})
+      fetchTierConfigs()
+    } catch (err) {
+      console.error('Failed to save tier configs:', err)
+    } finally {
+      setTierSaving(false)
+    }
+  }
+
+  const renderAgentsTab = () => (
+    <div>
+      {/* ── Create Agent Form ──────────────────────────────────────────── */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Users size={16} /> Creer un agent
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: rv('1fr', '1fr 1fr 1fr', '1fr 1fr 1fr auto'), gap: 10, alignItems: 'end' }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Nom</label>
+            <input style={inputStyle} placeholder="Nom complet" value={agentForm.name} onChange={e => setAgentForm(f => ({ ...f, name: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Email</label>
+            <input style={inputStyle} placeholder="email@example.com" type="email" value={agentForm.email} onChange={e => setAgentForm(f => ({ ...f, email: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Telephone</label>
+            <input style={inputStyle} placeholder="+237..." value={agentForm.phone} onChange={e => setAgentForm(f => ({ ...f, phone: e.target.value }))} />
+          </div>
+          <button style={{ ...btnPrimary, height: 38 }} onClick={handleCreateAgent} disabled={agentCreating || !agentForm.name || !agentForm.email}>
+            {agentCreating ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <UserCheck size={14} />}
+            Creer Agent
+          </button>
+        </div>
+        {agentMsg && (
+          <div style={{
+            marginTop: 10, padding: '8px 12px', borderRadius: 6, fontSize: 13,
+            background: agentMsg.type === 'success' ? C.successLight : C.errorLight,
+            color: agentMsg.type === 'success' ? C.success : C.error,
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            {agentMsg.type === 'success' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+            {agentMsg.text}
+          </div>
+        )}
+      </div>
+
+      {/* ── Agents List ────────────────────────────────────────────────── */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Users size={16} /> Liste des agents ({agents.length})
+          </h3>
+          <button style={btnOutline} onClick={fetchAgents}>
+            <RefreshCw size={12} /> Actualiser
+          </button>
+        </div>
+
+        {agentsLoading ? (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <Loader2 size={28} color={C.primary} style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : agents.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: C.textSecondary, fontSize: 14 }}>
+            Aucun agent enregistre
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${C.headerStart}, ${C.headerEnd})` }}>
+                  {['Nom', 'Email', 'Telephone', 'Niveau', 'Code', 'Clients', 'Total gagne', 'Statut', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#fff', fontSize: 12, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((ag, i) => (
+                  <React.Fragment key={ag.id}>
+                    <tr
+                      style={{ background: i % 2 ? C.stripe : C.card, cursor: 'pointer' }}
+                      onClick={() => {
+                        const newId = expandedAgent === ag.id ? null : ag.id
+                        setExpandedAgent(newId)
+                        if (newId && !agentReferrals[ag.id]) fetchAgentReferrals(ag.id)
+                      }}
+                    >
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {expandedAgent === ag.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          {ag.name}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', color: C.textSecondary }}>{ag.email}</td>
+                      <td style={{ padding: '10px 12px', color: C.textSecondary }}>{ag.phone || '—'}</td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600,
+                          background: ag.tier === 'gold' ? C.warningLight : ag.tier === 'silver' ? '#E2E8F0' : '#FED7AA',
+                          color: ag.tier === 'gold' ? '#92400E' : ag.tier === 'silver' ? '#475569' : '#9A3412',
+                        }}>
+                          {ag.tier?.charAt(0).toUpperCase() + ag.tier?.slice(1)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 12, background: C.primaryLight, padding: '2px 6px', borderRadius: 4, color: C.primary }}>
+                          {ag.referral_code}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{agentReferralCounts[ag.id] ?? '—'}</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{(ag.total_earned || 0).toLocaleString()} FCFA</td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600,
+                          background: ag.is_active ? C.successLight : C.errorLight,
+                          color: ag.is_active ? C.success : C.error,
+                        }}>
+                          {ag.is_active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px' }}>
+                        <button
+                          style={{ ...btnOutline, fontSize: 11, padding: '4px 8px' }}
+                          onClick={e => { e.stopPropagation(); handleToggleAgent(ag.id, ag.is_active) }}
+                        >
+                          {ag.is_active ? <UserX size={12} /> : <UserCheck size={12} />}
+                          {ag.is_active ? 'Desactiver' : 'Activer'}
+                        </button>
+                      </td>
+                    </tr>
+
+                    {/* Expanded referrals row */}
+                    {expandedAgent === ag.id && (
+                      <tr>
+                        <td colSpan={9} style={{ padding: '0 12px 12px', background: C.stripe }}>
+                          <div style={{ padding: 14, background: C.card, borderRadius: 8, border: `1px solid ${C.border}` }}>
+                            <h4 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: C.text }}>
+                              Clients parraines par {ag.name}
+                            </h4>
+                            {!agentReferrals[ag.id] ? (
+                              <Loader2 size={16} color={C.primary} style={{ animation: 'spin 1s linear infinite' }} />
+                            ) : agentReferrals[ag.id].length === 0 ? (
+                              <p style={{ fontSize: 12, color: C.textSecondary, margin: 0 }}>Aucun parrainage</p>
+                            ) : (
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                                <thead>
+                                  <tr>
+                                    {['Organisation', 'Proprietaire', 'Email', 'Date'].map(h => (
+                                      <th key={h} style={{ padding: '6px 10px', textAlign: 'left', borderBottom: `1px solid ${C.border}`, fontWeight: 600, color: C.textSecondary }}>{h}</th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {agentReferrals[ag.id].map((ref: any) => (
+                                    <tr key={ref.id}>
+                                      <td style={{ padding: '6px 10px' }}>{ref.organizations?.name || '—'}</td>
+                                      <td style={{ padding: '6px 10px' }}>{ref.organizations?.owner_name || '—'}</td>
+                                      <td style={{ padding: '6px 10px', color: C.textSecondary }}>{ref.organizations?.owner_email || '—'}</td>
+                                      <td style={{ padding: '6px 10px', color: C.textSecondary }}>{new Date(ref.created_at).toLocaleDateString()}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Commission Management ──────────────────────────────────────── */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <DollarSign size={16} /> Commissions en attente ({pendingCommissions.length})
+          </h3>
+          <button style={btnOutline} onClick={fetchPendingCommissions}>
+            <RefreshCw size={12} /> Actualiser
+          </button>
+        </div>
+
+        {commissionsLoading ? (
+          <div style={{ textAlign: 'center', padding: 40 }}>
+            <Loader2 size={28} color={C.primary} style={{ animation: 'spin 1s linear infinite' }} />
+          </div>
+        ) : pendingCommissions.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: C.textSecondary, fontSize: 14 }}>
+            Aucune commission en attente
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${C.headerStart}, ${C.headerEnd})` }}>
+                  {['Agent', 'Organisation', 'Montant', 'Date', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#fff', fontSize: 12, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pendingCommissions.map((c, i) => (
+                  <tr key={c.id} style={{ background: i % 2 ? C.stripe : C.card }}>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{c.agents?.name || '—'}</td>
+                    <td style={{ padding: '10px 12px', color: C.textSecondary }}>{c.organizations?.name || '—'}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600 }}>{(c.amount || 0).toLocaleString()} FCFA</td>
+                    <td style={{ padding: '10px 12px', color: C.textSecondary }}>{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding: '10px 12px', display: 'flex', gap: 6 }}>
+                      <button style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: C.success, borderColor: C.success }} onClick={() => handleApproveCommission(c.id)}>
+                        <CheckCircle2 size={12} /> Approuver
+                      </button>
+                      <button style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: C.primary, borderColor: C.primary }} onClick={() => handleMarkPaid(c.id)}>
+                        <DollarSign size={12} /> Marquer paye
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Tier Configuration ─────────────────────────────────────────── */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <BarChart3 size={16} /> Configuration des niveaux
+          </h3>
+          <button
+            style={{ ...btnPrimary, opacity: tierSaving || Object.keys(tierEdits).length === 0 ? 0.5 : 1 }}
+            onClick={handleSaveTierConfigs}
+            disabled={tierSaving || Object.keys(tierEdits).length === 0}
+          >
+            {tierSaving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
+            Enregistrer
+          </button>
+        </div>
+
+        {tierConfigs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: C.textSecondary, fontSize: 14 }}>
+            Aucune configuration de niveaux
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${C.headerStart}, ${C.headerEnd})` }}>
+                  {['Niveau', 'Parrainages min.', 'Taux de commission (%)'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#fff', fontSize: 12, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {tierConfigs.map((tier, i) => (
+                  <tr key={tier.id} style={{ background: i % 2 ? C.stripe : C.card }}>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 140 }}
+                        value={tierEdits[tier.id]?.tier_name ?? tier.tier_name}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], tier_name: e.target.value } }))}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 100 }}
+                        type="number"
+                        value={tierEdits[tier.id]?.min_referrals ?? tier.min_referrals}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], min_referrals: parseInt(e.target.value) || 0 } }))}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 100 }}
+                        type="number"
+                        step="0.1"
+                        value={tierEdits[tier.id]?.commission_rate ?? tier.commission_rate}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], commission_rate: parseFloat(e.target.value) || 0 } }))}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   // ── Main render ──────────────────────────────────────────────────────
 
   return (
@@ -1207,6 +1674,7 @@ export default function SuperAdminPage() {
         {activeTab === 'plans' && renderPlansTab()}
         {activeTab === 'licenses' && renderLicensesTab()}
         {activeTab === 'analytics' && renderAnalyticsTab()}
+        {activeTab === 'agents' && renderAgentsTab()}
       </div>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>

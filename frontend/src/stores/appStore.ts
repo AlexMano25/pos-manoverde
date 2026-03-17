@@ -22,6 +22,7 @@ interface AppState {
   planStatus: PlanStatus | null
   planWarningDismissed: boolean
   sidebarCollapsed: boolean
+  referralCode: string | null
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ interface AppActions {
   setPlanStatus: (status: PlanStatus | null) => void
   setPlanWarningDismissed: (v: boolean) => void
   toggleSidebar: () => void
+  setReferralCode: (code: string | null) => void
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -69,6 +71,7 @@ export const useAppStore = create<AppState & AppActions>()(
       planStatus: null,
       planWarningDismissed: false,
       sidebarCollapsed: false,
+      referralCode: null,
 
       // Actions
       setMode: (mode) => set({ mode, section: mode === 'client' ? 'pos' : 'dashboard' }),
@@ -88,6 +91,7 @@ export const useAppStore = create<AppState & AppActions>()(
       setPlanStatus: (status) => set({ planStatus: status }),
       setPlanWarningDismissed: (v) => set({ planWarningDismissed: v }),
       toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      setReferralCode: (code) => set({ referralCode: code }),
     }),
     {
       name: 'pos-app-store',
