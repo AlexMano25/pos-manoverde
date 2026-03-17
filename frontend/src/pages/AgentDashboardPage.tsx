@@ -217,7 +217,8 @@ export default function AgentDashboardPage() {
   // ── Computed values ──────────────────────────────────────────────────
 
   const referralLink = `https://pos.manoverde.com/?ref=${agent?.referral_code || ''}`
-  const currentTier = tiers.find((t) => t.tier === (agent?.tier || 1)) || tiers[0]
+  const defaultTier = { tier: 1, name_fr: 'Débutant', name_en: 'Beginner', min_referrals: 10, commission_rate: 0.05, name: 'Débutant' }
+  const currentTier = tiers.find((t) => t.tier === (agent?.tier || 1)) || tiers[0] || defaultTier
   const nextTier = tiers.find((t) => t.tier === (agent?.tier || 1) + 1)
 
   const activeClients = referrals.filter((r: any) => r.status === 'active').length
@@ -304,7 +305,7 @@ export default function AgentDashboardPage() {
               fontWeight: 600,
             }}
           >
-            {currentTier.name}
+            {currentTier.name_fr || currentTier.name || 'Débutant'}
           </span>
           <button
             onClick={handleLogout}
@@ -477,10 +478,10 @@ export default function AgentDashboardPage() {
                 fontWeight: 600,
               }}
             >
-              {currentTier.name}
+              {currentTier.name_fr || currentTier.name || 'Débutant'}
             </span>
             <span style={{ fontSize: 13, color: C.textSecondary }}>
-              {currentTier.commission_rate}% {(t as any).agent?.commissionRate || 'de commission'}
+              {Math.round((currentTier.commission_rate || 0) * 100)}% {(t as any).agent?.commissionRate || 'de commission'}
             </span>
           </div>
 
@@ -535,13 +536,13 @@ export default function AgentDashboardPage() {
                   }}
                 >
                   <div style={{ fontWeight: 600, fontSize: 13, color: TIER_COLORS[tier.tier] }}>
-                    {tier.name}
+                    {tier.name_fr || tier.name || `Niveau ${tier.tier}`}
                   </div>
                   <div style={{ fontSize: 12, color: C.textSecondary, marginTop: 2 }}>
                     {tier.min_referrals} clients
                   </div>
                   <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>
-                    {tier.commission_rate}%
+                    {Math.round((tier.commission_rate || 0) * 100)}%
                   </div>
                 </div>
               )
