@@ -203,6 +203,9 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
               // Agent login — redirect to agent dashboard
               const appStore = useAppStore.getState()
               appStore.setSection('agent_dashboard')
+              appStore.setShowLogin(false)
+              // Set a dummy activity so the app doesn't think user is unregistered
+              if (!appStore.activity) appStore.setActivity('supermarket')
               set({
                 user: {
                   id: agentProfile.id,
