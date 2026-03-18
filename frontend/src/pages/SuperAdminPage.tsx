@@ -1392,6 +1392,59 @@ export default function SuperAdminPage() {
     }
   }
 
+  const handleSendWelcomeEmail = async (agent: any) => {
+    if (!supabase) return
+    setAgentMsg(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      if (!token) throw new Error('Session expirée')
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vnxrspaeptbspoxpzxbn.supabase.co'
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+      const resp = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({
+          to: agent.email,
+          subject: 'Bienvenue dans le programme partenaire POS Mano Verde',
+          html: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+              <div style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:30px;border-radius:12px 12px 0 0;text-align:center">
+                <h1 style="color:#fff;margin:0;font-size:24px">POS Mano Verde</h1>
+                <p style="color:#93c5fd;margin:8px 0 0;font-size:14px">Programme Partenaire</p>
+              </div>
+              <div style="background:#fff;padding:30px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+                <h2 style="color:#1e293b;margin:0 0 16px">Bonjour ${agent.name},</h2>
+                <p style="color:#475569;line-height:1.6">Bienvenue dans le programme partenaire POS Mano Verde !</p>
+                <div style="background:#eff6ff;border-radius:8px;padding:16px;margin:20px 0">
+                  <p style="margin:0;font-size:13px;color:#1e40af"><strong>Votre code parrainage :</strong> ${agent.referral_code}</p>
+                  <p style="margin:8px 0 0;font-size:13px"><strong>Lien :</strong> <a href="https://pos.manovende.com/?ref=${agent.referral_code}" style="color:#2563eb">https://pos.manovende.com/?ref=${agent.referral_code}</a></p>
+                </div>
+                <p style="color:#475569;line-height:1.6">Connectez-vous sur <a href="https://pos.manovende.com" style="color:#2563eb">pos.manovende.com</a> avec votre email pour acceder a votre tableau de bord agent.</p>
+                <div style="text-align:center;margin:24px 0">
+                  <a href="https://pos.manovende.com" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Acceder au tableau de bord</a>
+                </div>
+              </div>
+              <p style="text-align:center;color:#94a3b8;font-size:11px;margin:16px 0 0">Team TERRASOCIAL - POS Mano Verde</p>
+            </div>
+          `,
+        }),
+      })
+
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data.error || `Erreur ${resp.status}`)
+      setAgentMsg({ type: 'success', text: `Email de bienvenue envoye a ${agent.email}` })
+    } catch (err: any) {
+      setAgentMsg({ type: 'error', text: `Echec envoi email: ${err.message}` })
+    }
+  }
+
   const handleSaveTierConfigs = async () => {
     if (!supabase) return
     setTierSaving(true)
@@ -1580,7 +1633,7 @@ export default function SuperAdminPage() {
                           {ag.is_active ? 'Actif' : 'Inactif'}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 12px' }}>
+                      <td style={{ padding: '10px 12px', display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         <button
                           style={{ ...btnOutline, fontSize: 11, padding: '4px 8px' }}
                           onClick={e => { e.stopPropagation(); handleToggleAgent(ag.id, ag.is_active) }}
@@ -1588,6 +1641,14 @@ export default function SuperAdminPage() {
                           {ag.is_active ? <UserX size={12} /> : <UserCheck size={12} />}
                           {ag.is_active ? 'Desactiver' : 'Activer'}
                         </button>
+                        {ag.is_active && ag.auth_id && (
+                          <button
+                            style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: '#2563eb', borderColor: '#93c5fd' }}
+                            onClick={e => { e.stopPropagation(); handleSendWelcomeEmail(ag) }}
+                          >
+                            <Mail size={12} /> Email
+                          </button>
+                        )}
                       </td>
                     </tr>
 
