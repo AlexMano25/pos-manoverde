@@ -6,6 +6,7 @@ import { supabase } from '../services/supabase'
 import { useAppStore } from './appStore'
 import { getNextReceiptNumber } from '../utils/receiptCounter'
 import { triggerWebhookEvent } from '../utils/webhookEngine'
+import { useKdsStore } from './kdsStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -223,6 +224,41 @@ export const useOrderStore = create<OrderState & OrderActions>()(
           }
         } catch (e) {
           console.error('[orderStore] Webhook trigger error:', e)
+        }
+
+        // ── Send to Kitchen Display (KDS) ──────────────────────────
+        // Auto-create KDS order for restaurant/food activities
+        try {
+          const activity = useAppStore.getState().activity
+          const foodActivities = [
+            'restaurant', 'bakery', 'bar', 'fast_food', 'coffee_shop',
+            'food_truck', 'catering', 'ice_cream', 'juice_bar', 'hotel',
+          ]
+          const isFood = activity && foodActivities.includes(activity)
+
+          if (isFood && items.length > 0) {
+            const kdsItems = items.map((item) => ({
+              product_name: item.name,
+              quantity: item.qty,
+              notes: item.notes || undefined,
+              station: 'all' as const,
+              done: false,
+            }))
+
+            useKdsStore.getState().addOrder(storeId, {
+              order_id: order.id,
+              order_number: order.receipt_number || `#${order.id.slice(-4)}`,
+              table_number: options?.table_name || options?.table_id || undefined,
+              items: kdsItems,
+              status: 'new',
+              station: 'all',
+              priority: false,
+            }).catch((err) => {
+              console.error('[orderStore] KDS order creation failed:', err)
+            })
+          }
+        } catch (kdsErr) {
+          console.error('[orderStore] KDS integration error:', kdsErr)
         }
 
         return order
