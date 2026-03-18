@@ -53,15 +53,19 @@ const STATUS_STYLES: Record<string, React.CSSProperties> = {
 
 interface AgentRecord {
   id: string
-  user_id: string
+  name: string
   email: string
-  full_name: string
+  phone: string
   referral_code: string
+  auth_id: string
   tier: number
-  total_referrals: number
-  active_clients: number
-  total_earned: number
+  commission_rate: number
+  is_active: boolean
+  total_earned_usd: number
+  total_paid_usd: number
   created_at: string
+  updated_at: string
+  [key: string]: any
 }
 
 interface Referral {
@@ -74,40 +78,40 @@ interface Referral {
     owner_name: string
     owner_email: string
   }
-  subscriptions?: {
-    plan: string
-    status: string
-  }
 }
 
 interface Commission {
   id: string
   organization_id: string
-  type: string
-  gross_amount: number
-  rate: number
-  commission_amount: number
+  source_type: string
+  source_id?: string
+  gross_amount_usd: number
+  commission_rate: number
+  commission_usd: number
   status: string
   created_at: string
   organizations?: {
     name: string
   }
+  [key: string]: any
 }
 
 interface TierConfig {
   tier: number
-  name: string
+  name_fr: string
+  name_en: string
   min_referrals: number
   commission_rate: number
+  [key: string]: any
 }
 
 // ── Default tiers ────────────────────────────────────────────────────────
 
 const DEFAULT_TIERS: TierConfig[] = [
-  { tier: 1, name: 'Debutant', min_referrals: 10, commission_rate: 5 },
-  { tier: 2, name: 'Intermediaire', min_referrals: 25, commission_rate: 10 },
-  { tier: 3, name: 'Avance', min_referrals: 50, commission_rate: 15 },
-  { tier: 4, name: 'Expert', min_referrals: 100, commission_rate: 20 },
+  { tier: 1, name_fr: 'Débutant', name_en: 'Beginner', min_referrals: 10, commission_rate: 0.05 },
+  { tier: 2, name_fr: 'Intermédiaire', name_en: 'Intermediate', min_referrals: 25, commission_rate: 0.10 },
+  { tier: 3, name_fr: 'Avancé', name_en: 'Advanced', min_referrals: 50, commission_rate: 0.15 },
+  { tier: 4, name_fr: 'Expert', name_en: 'Expert', min_referrals: 100, commission_rate: 0.20 },
 ]
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -294,7 +298,7 @@ export default function AgentDashboardPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 14 }}>{agent?.full_name || user?.name || ''}</span>
+          <span style={{ fontSize: 14 }}>{agent?.name || user?.name || ''}</span>
           <span
             style={{
               background: TIER_COLORS[agent?.tier || 1],
@@ -706,13 +710,13 @@ export default function AgentDashboardPage() {
                             fontSize: 12,
                           }}
                         >
-                          {comm.type}
+                          {comm.source_type}
                         </span>
                       </td>
                       <td style={{ padding: '8px 10px' }}>
                         {Number(comm.gross_amount_usd || 0).toLocaleString()} $
                       </td>
-                      <td style={{ padding: '8px 10px' }}>{comm.rate}%</td>
+                      <td style={{ padding: '8px 10px' }}>{Math.round((comm.commission_rate || 0) * 100)}%</td>
                       <td style={{ padding: '8px 10px', fontWeight: 600 }}>
                         {Number(comm.commission_usd || 0).toLocaleString()} $
                       </td>
