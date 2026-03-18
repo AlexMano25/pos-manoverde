@@ -42,7 +42,7 @@ export type Activity =
 
 // -- Restaurant / Bar table management ----------------------------------------
 
-export type TableStatus = 'free' | 'occupied' | 'reserved' | 'bill_requested'
+export type TableStatus = 'free' | 'occupied' | 'reserved' | 'bill_requested' | 'food_ready'
 
 export type RestaurantTable = {
   id: string
@@ -1233,6 +1233,7 @@ export type KdsOrder = {
   order_id: string
   order_number: string
   table_number?: string
+  table_id?: string
   items: KdsOrderItem[]
   status: KdsOrderStatus
   station: KdsStation
@@ -1395,7 +1396,7 @@ export type CommissionRule = {
 // ---------------------------------------------------------------------------
 
 // Notifications & Alerts
-export type NotificationType = 'low_stock' | 'new_order' | 'payment_due' | 'appointment_reminder' | 'employee_clock' | 'delivery_update' | 'return_request' | 'system' | 'campaign' | 'custom'
+export type NotificationType = 'low_stock' | 'new_order' | 'order_ready' | 'payment_due' | 'appointment_reminder' | 'employee_clock' | 'delivery_update' | 'return_request' | 'system' | 'campaign' | 'custom'
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export type PosNotification = {

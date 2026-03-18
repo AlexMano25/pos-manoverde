@@ -38,6 +38,7 @@ const STATUS_COLORS: Record<TableStatus, string> = {
   occupied: C.danger,
   reserved: C.warning,
   bill_requested: C.blue,
+  food_ready: '#22c55e',
 }
 
 type IdentifyMode = 'table' | 'customer'
@@ -311,6 +312,7 @@ export default function ServerOrderPage() {
       occupied: t.tables?.occupied || 'Occupied',
       reserved: t.tables?.reserved || 'Reserved',
       bill_requested: t.tables?.billRequested || 'Bill',
+      food_ready: (t.tables as any)?.foodReady || 'Prêt à servir',
     }
     return map[status]
   }

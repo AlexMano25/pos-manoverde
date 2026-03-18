@@ -37,6 +37,7 @@ const STATUS_COLORS: Record<TableStatus, string> = {
   occupied: C.danger,
   reserved: C.warning,
   bill_requested: C.blue,
+  food_ready: '#22c55e',
 }
 
 type WaiterStep = 'tables' | 'order' | 'payment'
@@ -267,6 +268,7 @@ export default function WaiterPOSPage() {
       occupied: t.tables.occupied,
       reserved: t.tables.reserved,
       bill_requested: t.tables.billRequested,
+      food_ready: (t.tables as any).foodReady || 'Prêt à servir',
     }
     return map[status]
   }

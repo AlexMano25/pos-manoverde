@@ -62,6 +62,7 @@ const C = {
 const TYPE_CONFIG: Record<NotificationType, { icon: typeof Bell; color: string; bg: string }> = {
   low_stock:             { icon: Package,       color: '#ea580c', bg: '#fff7ed' },
   new_order:             { icon: ShoppingCart,   color: '#2563eb', bg: '#eff6ff' },
+  order_ready:           { icon: Bell,           color: '#16a34a', bg: '#f0fdf4' },
   payment_due:           { icon: AlertTriangle,  color: '#dc2626', bg: '#fef2f2' },
   appointment_reminder:  { icon: Calendar,       color: '#7c3aed', bg: '#f5f3ff' },
   employee_clock:        { icon: Clock,          color: '#0d9488', bg: '#f0fdfa' },

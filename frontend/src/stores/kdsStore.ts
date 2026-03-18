@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { KdsOrder, KdsOrderStatus, KdsStation, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
+import { useTableStore } from './tableStore'
+import { useNotificationStore } from './notificationStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -27,6 +29,7 @@ interface KdsActions {
   deleteOrder: (id: string) => Promise<void>
   setStationFilter: (station: KdsStation) => void
   getOrdersByStatus: (storeId: string, status: KdsOrderStatus) => KdsOrder[]
+  getHistory: () => KdsOrder[]
 }
 
 // ── Sync helper ──────────────────────────────────────────────────────────────
@@ -141,6 +144,31 @@ export const useKdsStore = create<KdsState & KdsActions>()(
       const order = await db.kds_orders.get(id)
       if (order) {
         await addToSyncQueue('kds_order', id, 'update', order, order.store_id)
+
+        // Update table status to 'food_ready' if order has a table_id
+        if (order.table_id) {
+          try {
+            useTableStore.getState().setTableStatus(order.table_id, 'food_ready')
+          } catch (e) {
+            console.error('[kdsStore] Failed to update table status:', e)
+          }
+        }
+
+        // Create notification for servers
+        try {
+          const tableLabel = order.table_number || order.table_id || ''
+          const title = tableLabel
+            ? `Commande prête - ${tableLabel}`
+            : `Commande prête - #${order.order_number}`
+          useNotificationStore.getState().addNotification(order.store_id, {
+            type: 'order_ready',
+            title,
+            message: `La commande #${order.order_number} est prête à servir.`,
+            priority: 'high',
+          }).catch(() => {})
+        } catch (e) {
+          console.error('[kdsStore] Failed to create notification:', e)
+        }
       }
 
       set((state) => ({
@@ -179,6 +207,15 @@ export const useKdsStore = create<KdsState & KdsActions>()(
       const order = await db.kds_orders.get(id)
       if (order) {
         await addToSyncQueue('kds_order', id, 'update', order, order.store_id)
+
+        // Update table status back to 'occupied' (waiting for payment)
+        if (order.table_id) {
+          try {
+            useTableStore.getState().setTableStatus(order.table_id, 'occupied')
+          } catch (e) {
+            console.error('[kdsStore] Failed to update table status:', e)
+          }
+        }
       }
 
       set((state) => ({
@@ -227,6 +264,15 @@ export const useKdsStore = create<KdsState & KdsActions>()(
       return get().orders.filter(
         (o) => o.store_id === storeId && o.status === status
       )
+    },
+
+    getHistory: () => {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      return get()
+        .orders.filter(
+          (o) => o.status === 'served' && o.completed_at && o.completed_at >= cutoff
+        )
+        .sort((a, b) => (b.completed_at || '').localeCompare(a.completed_at || ''))
     },
   })
 )

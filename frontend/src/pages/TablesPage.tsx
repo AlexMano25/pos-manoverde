@@ -31,6 +31,7 @@ const STATUS_COLORS: Record<TableStatus, string> = {
   occupied: C.danger,
   reserved: C.warning,
   bill_requested: C.blue,
+  food_ready: '#22c55e',
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ export default function TablesPage() {
   const occupiedCount = tables.filter(t => t.status === 'occupied').length
   const reservedCount = tables.filter(t => t.status === 'reserved').length
   const billCount = tables.filter(t => t.status === 'bill_requested').length
+  const foodReadyCount = tables.filter(t => t.status === 'food_ready').length
 
   const getStatusLabel = (status: TableStatus): string => {
     const map: Record<TableStatus, string> = {
@@ -73,6 +75,7 @@ export default function TablesPage() {
       occupied: t.tables.occupied,
       reserved: t.tables.reserved,
       bill_requested: t.tables.billRequested,
+      food_ready: (t.tables as any).foodReady || 'Prêt à servir',
     }
     return map[status]
   }
@@ -132,6 +135,11 @@ export default function TablesPage() {
   }
 
   const toggleStatus = async (table: RestaurantTable) => {
+    // If food_ready, clicking means food was served -> go to occupied (waiting for payment)
+    if (table.status === 'food_ready') {
+      await setTableStatus(table.id, 'occupied')
+      return
+    }
     const cycle: TableStatus[] = ['free', 'occupied', 'reserved', 'bill_requested']
     const currentIdx = cycle.indexOf(table.status)
     const nextStatus = cycle[(currentIdx + 1) % cycle.length]
@@ -213,13 +221,15 @@ export default function TablesPage() {
   }
 
   const tableCardStyle = (status: TableStatus): React.CSSProperties => ({
-    backgroundColor: C.card,
+    backgroundColor: status === 'food_ready' ? '#f0fdf4' : C.card,
     borderRadius: 12,
-    border: `2px solid ${STATUS_COLORS[status]}40`,
+    border: `2px solid ${STATUS_COLORS[status]}${status === 'food_ready' ? '' : '40'}`,
     padding: rv(12, 16, 18),
     cursor: 'pointer',
     transition: 'transform 0.15s, box-shadow 0.15s',
     position: 'relative',
+    animation: status === 'food_ready' ? 'table-food-ready-pulse 1.5s ease-in-out infinite' : undefined,
+    boxShadow: status === 'food_ready' ? '0 0 12px rgba(34,197,94,0.3)' : undefined,
   })
 
   const tableNumberStyle: React.CSSProperties = {
@@ -401,6 +411,12 @@ export default function TablesPage() {
 
   return (
     <div style={pageStyle}>
+      <style>{`
+        @keyframes table-food-ready-pulse {
+          0%, 100% { box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+          50% { box-shadow: 0 0 20px rgba(34,197,94,0.5); }
+        }
+      `}</style>
       {/* Header */}
       <div style={headerStyle}>
         <div>
@@ -425,6 +441,11 @@ export default function TablesPage() {
         {reservedCount > 0 && (
           <div style={statBadge(C.warning)}>
             <span style={statusDot('reserved')} /> {t.tables.reserved}: {reservedCount}
+          </div>
+        )}
+        {foodReadyCount > 0 && (
+          <div style={statBadge('#22c55e')}>
+            <span style={statusDot('food_ready')} /> {(t.tables as any).foodReady || 'Prêt'}: {foodReadyCount}
           </div>
         )}
         {billCount > 0 && (
@@ -475,15 +496,19 @@ export default function TablesPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 5,
-              padding: '3px 8px',
+              padding: table.status === 'food_ready' ? '4px 10px' : '3px 8px',
               borderRadius: 6,
-              backgroundColor: STATUS_COLORS[table.status] + '15',
-              fontSize: 11,
-              fontWeight: 500,
-              color: STATUS_COLORS[table.status],
+              backgroundColor: table.status === 'food_ready' ? '#22c55e' : STATUS_COLORS[table.status] + '15',
+              fontSize: table.status === 'food_ready' ? 12 : 11,
+              fontWeight: table.status === 'food_ready' ? 700 : 500,
+              color: table.status === 'food_ready' ? '#fff' : STATUS_COLORS[table.status],
               marginBottom: 6,
             }}>
-              <span style={statusDot(table.status)} />
+              <span style={{
+                ...statusDot(table.status),
+                backgroundColor: table.status === 'food_ready' ? '#fff' : STATUS_COLORS[table.status],
+                animation: table.status === 'food_ready' ? 'table-food-ready-pulse 1s ease-in-out infinite' : undefined,
+              }} />
               {getStatusLabel(table.status)}
             </div>
 

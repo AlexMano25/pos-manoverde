@@ -274,6 +274,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
               order_id: order.id,
               order_number: order.receipt_number || `#${order.id.slice(-4)}`,
               table_number: options?.table_name || options?.table_id || undefined,
+              table_id: options?.table_id || undefined,
               items: kdsItems,
               status: 'new',
               station: 'all',

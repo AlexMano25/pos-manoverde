@@ -74,7 +74,7 @@ export default function KitchenDisplayPage() {
   const {
     orders, loading, stationFilter,
     loadOrders, updateItemStatus, bumpOrder, startOrder,
-    togglePriority, setStationFilter,
+    markServed, togglePriority, setStationFilter, getHistory,
   } = useKdsStore()
   const { t } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
@@ -106,6 +106,9 @@ export default function KitchenDisplayPage() {
     fullscreen: kl.fullscreen || 'Toggle fullscreen',
     sound: kl.sound || 'Toggle sound',
     min: kl.min || 'min',
+    served: kl.served || 'SERVI',
+    history: kl.history || 'Historique',
+    servedCount: kl.servedCount || 'servis',
   }
 
   const STATION_LABELS: Record<KdsStation, string> = {
@@ -119,6 +122,7 @@ export default function KitchenDisplayPage() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [now, setNow] = useState(Date.now())
+  const [showHistory, setShowHistory] = useState(false)
 
   // ── Load orders on mount + auto-refresh every 5s ───────────────────────────
   useEffect(() => {
@@ -188,8 +192,10 @@ export default function KitchenDisplayPage() {
       avgMinutes = Math.floor(totalElapsed / inProgressOrders.length / 60)
     }
 
-    return { newCount, progressCount, readyCount, avgMinutes }
-  }, [orders, now])
+    const servedCount = getHistory().length
+
+    return { newCount, progressCount, readyCount, avgMinutes, servedCount }
+  }, [orders, now, getHistory])
 
   // ── Elapsed time helper ───────────────────────────────────────────────────
   const getElapsed = useCallback((createdAt: string) => {
@@ -240,6 +246,11 @@ export default function KitchenDisplayPage() {
   const handleToggleItem = useCallback(async (orderId: string, itemIndex: number, currentDone: boolean) => {
     await updateItemStatus(orderId, itemIndex, !currentDone)
   }, [updateItemStatus])
+
+  const handleServed = useCallback(async (id: string) => {
+    await markServed(id)
+    playBumpSound()
+  }, [markServed, playBumpSound])
 
   const handleTogglePriority = useCallback(async (id: string) => {
     await togglePriority(id)
@@ -404,6 +415,8 @@ export default function KitchenDisplayPage() {
         flex: 1,
         padding: rv(10, 16, 20),
         overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
       }}>
         {filteredOrders.length === 0 ? (
           <div style={{
@@ -433,12 +446,77 @@ export default function KitchenDisplayPage() {
                 getItemProgress={getItemProgress}
                 onStart={handleStart}
                 onBump={handleBump}
+                onServed={handleServed}
                 onToggleItem={handleToggleItem}
                 onTogglePriority={handleTogglePriority}
                 labels={L}
                 rv={rv}
               />
             ))}
+          </div>
+        )}
+
+        {/* ── HISTORY TOGGLE ─────────────────────────────────────────── */}
+        {stats.servedCount > 0 && (
+          <div style={{ marginTop: 16, flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '8px 16px', borderRadius: 8,
+                border: `1px solid ${C.border}`,
+                backgroundColor: showHistory ? `${C.textSecondary}22` : C.bgDarker,
+                color: C.textSecondary, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}
+            >
+              <Check size={14} />
+              {L.history} ({stats.servedCount} {L.servedCount})
+            </button>
+
+            {showHistory && (
+              <div style={{
+                marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6,
+                maxHeight: 200, overflowY: 'auto',
+              }}>
+                {getHistory().map((order) => (
+                  <div key={order.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 14px', borderRadius: 8,
+                    backgroundColor: C.bgDarker, border: `1px solid ${C.border}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
+                        #{order.order_number}
+                      </span>
+                      {order.table_number && (
+                        <span style={{
+                          fontSize: 11, color: C.blueLight, fontWeight: 500,
+                        }}>
+                          {order.table_number}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 11, color: C.textSecondary }}>
+                        {order.completed_at
+                          ? new Date(order.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : ''}
+                      </span>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: 4,
+                        backgroundColor: `${C.textSecondary}22`,
+                        color: C.textSecondary, fontSize: 10, fontWeight: 600,
+                        textTransform: 'uppercase',
+                      }}>
+                        {L.served}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -510,6 +588,7 @@ interface OrderCardProps {
   getItemProgress: (order: KdsOrder) => { total: number; done: number; allDone: boolean }
   onStart: (id: string) => void
   onBump: (id: string) => void
+  onServed: (id: string) => void
   onToggleItem: (orderId: string, itemIndex: number, currentDone: boolean) => void
   onTogglePriority: (id: string) => void
   labels: Record<string, string>
@@ -518,7 +597,7 @@ interface OrderCardProps {
 
 function OrderCard({
   order, getElapsed, getItemProgress,
-  onStart, onBump, onToggleItem, onTogglePriority,
+  onStart, onBump, onServed, onToggleItem, onTogglePriority,
   labels, rv,
 }: OrderCardProps) {
   const { minutes, seconds } = getElapsed(order.created_at)
@@ -761,16 +840,15 @@ function OrderCard({
           />
         )}
         {order.status === 'ready' && (
-          <div style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: rv('10px 0', '12px 0', '14px 0'),
-            borderRadius: 10, backgroundColor: `${C.success}22`,
-            color: C.successLight, fontSize: rv(14, 16, 18),
-            fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase',
-          }}>
-            <Check size={20} color={C.successLight} style={{ marginRight: 8 }} />
-            {labels.ready}
-          </div>
+          <ActionButton
+            onClick={() => onServed(order.id)}
+            bgColor={C.success}
+            hoverColor={C.successLight}
+            label={labels.served}
+            icon={<Check size={rv(16, 18, 20)} color="#fff" strokeWidth={3} />}
+            rv={rv}
+            pulse
+          />
         )}
       </div>
     </div>
