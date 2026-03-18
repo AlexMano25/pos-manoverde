@@ -1397,13 +1397,13 @@ export default function SuperAdminPage() {
     setTierSaving(true)
     try {
       for (const tier of tierConfigs) {
-        const edits = tierEdits[tier.id]
+        const edits = tierEdits[tier.tier]
         if (edits) {
           await supabase.from('agent_tier_config').update({
-            tier_name: edits.tier_name ?? tier.tier_name,
+            name_fr: edits.name_fr ?? tier.name_fr,
             min_referrals: edits.min_referrals ?? tier.min_referrals,
             commission_rate: edits.commission_rate ?? tier.commission_rate,
-          }).eq('id', tier.id)
+          }).eq('tier', tier.tier)
         }
       }
       setTierEdits({})
@@ -1719,34 +1719,37 @@ export default function SuperAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {tierConfigs.map((tier, i) => (
-                  <tr key={tier.id} style={{ background: i % 2 ? C.stripe : C.card }}>
+                {tierConfigs.map((tier, i) => {
+                  const key = tier.tier // use tier number (1,2,3,4) as unique key
+                  return (
+                  <tr key={key} style={{ background: i % 2 ? C.stripe : C.card }}>
                     <td style={{ padding: '8px 12px' }}>
                       <input
                         style={{ ...inputStyle, width: 140 }}
-                        value={tierEdits[tier.id]?.tier_name ?? tier.tier_name}
-                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], tier_name: e.target.value } }))}
+                        value={tierEdits[key]?.name_fr ?? tier.name_fr}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], name_fr: e.target.value } }))}
                       />
                     </td>
                     <td style={{ padding: '8px 12px' }}>
                       <input
                         style={{ ...inputStyle, width: 100 }}
                         type="number"
-                        value={tierEdits[tier.id]?.min_referrals ?? tier.min_referrals}
-                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], min_referrals: parseInt(e.target.value) || 0 } }))}
+                        value={tierEdits[key]?.min_referrals ?? tier.min_referrals}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], min_referrals: parseInt(e.target.value) || 0 } }))}
                       />
                     </td>
                     <td style={{ padding: '8px 12px' }}>
                       <input
                         style={{ ...inputStyle, width: 100 }}
                         type="number"
-                        step="0.1"
-                        value={tierEdits[tier.id]?.commission_rate ?? tier.commission_rate}
-                        onChange={e => setTierEdits(prev => ({ ...prev, [tier.id]: { ...prev[tier.id], commission_rate: parseFloat(e.target.value) || 0 } }))}
+                        step="0.01"
+                        value={tierEdits[key]?.commission_rate ?? tier.commission_rate}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_rate: parseFloat(e.target.value) || 0 } }))}
                       />
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
