@@ -221,7 +221,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent, setReferralCode, section } = useAppStore()
+  const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent, setReferralCode } = useAppStore()
   const { user, token } = useAuthStore()
 
   // Capture ?ref= referral code from URL on first load
