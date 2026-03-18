@@ -1243,10 +1243,26 @@ export default function SuperAdminPage() {
 
   const callCreateAgentEdge = async (payload: any) => {
     if (!supabase) throw new Error('Supabase not configured')
-    const resp = await supabase.functions.invoke('create-agent', { body: payload })
-    if (resp.error) throw new Error(resp.error.message || 'Edge function error')
-    if (resp.data?.error) throw new Error(resp.data.error)
-    return resp.data
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) throw new Error('Session expirée, reconnectez-vous')
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://vnxrspaeptbspoxpzxbn.supabase.co'
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+    const resp = await fetch(`${supabaseUrl}/functions/v1/create-agent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'apikey': anonKey,
+      },
+      body: JSON.stringify(payload),
+    })
+
+    const data = await resp.json()
+    if (!resp.ok) throw new Error(data.error || `Erreur ${resp.status}`)
+    return data
   }
 
   const handleCreateAgent = async () => {
