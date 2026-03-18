@@ -1557,10 +1557,10 @@ export default function SuperAdminPage() {
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600,
-                          background: ag.tier === 'gold' ? C.warningLight : ag.tier === 'silver' ? '#E2E8F0' : '#FED7AA',
-                          color: ag.tier === 'gold' ? '#92400E' : ag.tier === 'silver' ? '#475569' : '#9A3412',
+                          background: ag.tier >= 4 ? C.warningLight : ag.tier >= 3 ? '#E2E8F0' : '#FED7AA',
+                          color: ag.tier >= 4 ? '#92400E' : ag.tier >= 3 ? '#475569' : '#9A3412',
                         }}>
-                          {ag.tier?.charAt(0).toUpperCase() + ag.tier?.slice(1)}
+                          {ag.tier === 1 ? 'Débutant' : ag.tier === 2 ? 'Intermédiaire' : ag.tier === 3 ? 'Avancé' : ag.tier === 4 ? 'Expert' : `Niveau ${ag.tier || 0}`}
                         </span>
                       </td>
                       <td style={{ padding: '10px 12px' }}>
@@ -1569,7 +1569,7 @@ export default function SuperAdminPage() {
                         </span>
                       </td>
                       <td style={{ padding: '10px 12px', fontWeight: 600 }}>{agentReferralCounts[ag.id] ?? '—'}</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{(ag.total_earned || 0).toLocaleString()} FCFA</td>
+                      <td style={{ padding: '10px 12px', fontWeight: 600 }}>{Number(ag.total_earned_usd || 0).toLocaleString()} $</td>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600,

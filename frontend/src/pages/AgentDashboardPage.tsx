@@ -534,7 +534,7 @@ export default function AgentDashboardPage() {
               </div>
               <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 16 }}>
                 {activeClients}/{nextTier.min_referrals} {(t as any).agent?.clientsFor || 'clients pour'}{' '}
-                <strong style={{ color: TIER_COLORS[nextTier.tier] }}>{nextTier.name}</strong>
+                <strong style={{ color: TIER_COLORS[nextTier.tier] }}>{nextTier.name_fr || nextTier.name_en || `Niveau ${nextTier.tier}`}</strong>
               </div>
             </>
           )}
