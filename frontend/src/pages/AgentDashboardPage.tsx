@@ -11,6 +11,7 @@ import {
   Award,
   Loader,
   Leaf,
+  AlertCircle,
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -277,6 +278,21 @@ export default function AgentDashboardPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: C.bg }}>
         <Loader size={40} style={{ animation: 'spin 1s linear infinite', color: C.primary }} />
+      </div>
+    )
+  }
+
+  if (!agent) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: C.bg, gap: 16 }}>
+        <AlertCircle size={48} color="#ef4444" />
+        <p style={{ fontSize: 16, color: '#64748b', textAlign: 'center' }}>
+          Aucun profil agent trouve pour cet email.<br />
+          Veuillez vous connecter avec votre compte agent.
+        </p>
+        <button onClick={handleLogout} style={{ padding: '10px 24px', background: C.primary, color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+          Se deconnecter
+        </button>
       </div>
     )
   }

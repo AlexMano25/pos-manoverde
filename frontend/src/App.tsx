@@ -277,7 +277,7 @@ export default function App() {
   }
 
   // Agent dashboard — agents don't need activity or store, intercept early
-  if (user && token && (user.role === 'agent' || section === 'agent_dashboard')) {
+  if (user && token && user.role === 'agent') {
     return <AgentDashboardPage />
   }
 
