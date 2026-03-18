@@ -1241,34 +1241,28 @@ export default function SuperAdminPage() {
     return pwd
   }
 
+  const callCreateAgentEdge = async (payload: any) => {
+    if (!supabase) throw new Error('Supabase not configured')
+    const resp = await supabase.functions.invoke('create-agent', { body: payload })
+    if (resp.error) throw new Error(resp.error.message || 'Edge function error')
+    if (resp.data?.error) throw new Error(resp.data.error)
+    return resp.data
+  }
+
   const handleCreateAgent = async () => {
     if (!supabase || !agentForm.name || !agentForm.email) return
     setAgentCreating(true)
     setAgentMsg(null)
     const password = agentForm.password || generatePassword()
+    const refCode = generateReferralCode()
     try {
-      // Create Supabase auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      await callCreateAgentEdge({
         email: agentForm.email,
         password,
-        email_confirm: true,
-        user_metadata: { role: 'agent', name: agentForm.name },
-      })
-      if (authError) throw authError
-
-      const refCode = generateReferralCode()
-      // Insert into agents table
-      const { error: insertError } = await supabase.from('agents').insert({
-        auth_id: authData.user.id,
         name: agentForm.name,
-        email: agentForm.email,
         phone: agentForm.phone || null,
         referral_code: refCode,
-        tier: 1,
-        commission_rate: 0.05,
-        is_active: true,
       })
-      if (insertError) throw insertError
 
       setAgentForm({ name: '', email: '', phone: '', password: '' })
       setAgentMsg({ type: 'success', text: `Agent cree! Code: ${refCode} | Mot de passe: ${password}` })
@@ -1304,24 +1298,15 @@ export default function SuperAdminPage() {
     setAgentMsg(null)
     const password = generatePassword()
     try {
-      // Create auth user for pending agent
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      const refCode = agent.referral_code || generateReferralCode()
+      await callCreateAgentEdge({
         email: agent.email,
         password,
-        email_confirm: true,
-        user_metadata: { role: 'agent', name: agent.name },
-      })
-      if (authError) throw authError
-
-      // Update agent record
-      const refCode = agent.referral_code || generateReferralCode()
-      await supabase.from('agents').update({
-        auth_id: authData.user.id,
+        name: agent.name,
+        phone: agent.phone || null,
         referral_code: refCode,
-        is_active: true,
-        tier: 1,
-        commission_rate: 0.05,
-      }).eq('id', agent.id)
+        agent_id: agent.id,
+      })
 
       setAgentMsg({ type: 'success', text: `Agent ${agent.name} approuve! Mot de passe: ${password}` })
       fetchAgents()
