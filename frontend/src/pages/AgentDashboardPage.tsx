@@ -78,6 +78,11 @@ interface Referral {
     owner_name: string
     owner_email: string
   }
+  subscriptions?: {
+    plan: string
+    status: string
+  }
+  [key: string]: any
 }
 
 interface Commission {
