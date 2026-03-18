@@ -454,9 +454,9 @@ export default function LandingPage() {
         phone: partnerForm.phone,
         motivation: partnerForm.motivation || partnerForm.city || null,
         is_active: false,
-        tier: 0,
+        tier: 1,
         commission_rate: 0,
-        referral_code: '',
+        referral_code: 'PENDING-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase(),
       })
       if (error) throw error
       setPartnerForm({ name: '', email: '', phone: '', city: '', motivation: '' })
