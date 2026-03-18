@@ -183,6 +183,58 @@ async function syncToCloud(entries: SyncEntry[]): Promise<string[]> {
           }
           break
         }
+        case 'customer': {
+          if (entry.operation === 'create' || entry.operation === 'update') {
+            const { error: e } = await supabase.from('customers').upsert(entityData as never)
+            error = e
+          } else if (entry.operation === 'delete') {
+            const { error: e } = await supabase
+              .from('customers')
+              .delete()
+              .eq('id', entry.entity_id)
+            error = e
+          }
+          break
+        }
+        case 'kds_order': {
+          if (entry.operation === 'create' || entry.operation === 'update') {
+            const { error: e } = await supabase.from('kds_orders').upsert(entityData as never)
+            error = e
+          } else if (entry.operation === 'delete') {
+            const { error: e } = await supabase
+              .from('kds_orders')
+              .delete()
+              .eq('id', entry.entity_id)
+            error = e
+          }
+          break
+        }
+        case 'online_order': {
+          if (entry.operation === 'create' || entry.operation === 'update') {
+            const { error: e } = await supabase.from('online_orders').upsert(entityData as never)
+            error = e
+          } else if (entry.operation === 'delete') {
+            const { error: e } = await supabase
+              .from('online_orders')
+              .delete()
+              .eq('id', entry.entity_id)
+            error = e
+          }
+          break
+        }
+        case 'notification': {
+          if (entry.operation === 'create' || entry.operation === 'update') {
+            const { error: e } = await supabase.from('notifications').upsert(entityData as never)
+            error = e
+          } else if (entry.operation === 'delete') {
+            const { error: e } = await supabase
+              .from('notifications')
+              .delete()
+              .eq('id', entry.entity_id)
+            error = e
+          }
+          break
+        }
       }
 
       if (!error) {

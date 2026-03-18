@@ -11,6 +11,8 @@ import { useTableStore } from '../stores/tableStore'
 import { useOrderStore } from '../stores/orderStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useCustomerStore } from '../stores/customerStore'
+import { usePromotionStore } from '../stores/promotionStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, RestaurantTable, TableStatus } from '../types'
@@ -49,6 +51,9 @@ export default function WaiterPOSPage() {
   const { createOrder } = useOrderStore()
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
+  const { recordVisit } = useCustomerStore()
+  const { calculateTotalDiscount, loadPromotions } = usePromotionStore()
+  const selectedCustomer = useCustomerStore(s => s.selectedCustomer)
   const { rv } = useResponsive()
 
   const currencyCode = currentStore?.currency || 'XAF'
@@ -65,8 +70,9 @@ export default function WaiterPOSPage() {
     if (storeId) {
       loadProducts(storeId)
       loadTables(storeId)
+      loadPromotions(storeId)
     }
-  }, [storeId, loadProducts, loadTables])
+  }, [storeId, loadProducts, loadTables, loadPromotions])
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -102,7 +108,20 @@ export default function WaiterPOSPage() {
     if (!user || !storeId || !selectedTable) return
 
     try {
-      await createOrder(items, paymentMethod, user.id, storeId)
+      // Calculate promotion discount
+      const promoResult = calculateTotalDiscount(items, storeId)
+      const promoDiscount = promoResult.total
+      const promoNames = promoResult.applied.map(a => a.promotion.name)
+
+      const order = await createOrder(items, paymentMethod, user.id, storeId, {
+        promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
+        promotion_names: promoNames.length > 0 ? promoNames : undefined,
+      })
+
+      // Record customer visit if a customer is selected
+      if (selectedCustomer) {
+        recordVisit(selectedCustomer.id, order.total).catch(() => {})
+      }
 
       // Free the table after payment
       await setTableStatus(selectedTable.id, 'free')

@@ -11,6 +11,8 @@ import { useTableStore } from '../stores/tableStore'
 import { useOrderStore } from '../stores/orderStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useCustomerStore } from '../stores/customerStore'
+import { usePromotionStore } from '../stores/promotionStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
 import type { PaymentMethod, RestaurantTable, TableStatus, Order } from '../types'
@@ -54,6 +56,9 @@ export default function ServerOrderPage() {
   const { createOrder, orders, loadOrders, updateOrderStatus } = useOrderStore()
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
+  const { recordVisit } = useCustomerStore()
+  const selectedCustomer = useCustomerStore(s => s.selectedCustomer)
+  const { calculateTotalDiscount, loadPromotions } = usePromotionStore()
   const { rv } = useResponsive()
 
   const currencyCode = currentStore?.currency || 'XAF'
@@ -98,6 +103,7 @@ export default function ServerOrderPage() {
     if (storeId) {
       loadProducts(storeId)
       loadOrders(storeId)
+      loadPromotions(storeId)
       if (hasTableSupport) loadTables(storeId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,15 +153,28 @@ export default function ServerOrderPage() {
     if (items.length === 0 || !user || !storeId) return
 
     try {
-      await createOrder(items, 'cash', user.id, storeId, {
+      // Calculate promotion discount
+      const promoResult = calculateTotalDiscount(items, storeId)
+      const promoDiscount = promoResult.total
+      const promoNames = promoResult.applied.map(a => a.promotion.name)
+
+      const order = await createOrder(items, 'cash', user.id, storeId, {
         table_id: selectedTable?.id,
         table_name: selectedTable ? `${lbl.tableLabel} #${selectedTable.number}` : undefined,
         customer_name: identifyMode === 'customer' ? customerName : undefined,
         status: 'pending',
+        promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
+        promotion_names: promoNames.length > 0 ? promoNames : undefined,
       })
 
+      // Set table to occupied right after order creation (same try block)
       if (selectedTable) {
         await setTableStatus(selectedTable.id, 'occupied')
+      }
+
+      // Record customer visit if a customer is selected
+      if (selectedCustomer) {
+        recordVisit(selectedCustomer.id, order.total).catch(() => {})
       }
 
       clear()
@@ -173,14 +192,27 @@ export default function ServerOrderPage() {
     if (!user || !storeId) return
 
     try {
-      await createOrder(items, paymentMethod, user.id, storeId, {
+      // Calculate promotion discount
+      const promoResult = calculateTotalDiscount(items, storeId)
+      const promoDiscount = promoResult.total
+      const promoNames = promoResult.applied.map(a => a.promotion.name)
+
+      const order = await createOrder(items, paymentMethod, user.id, storeId, {
         table_id: selectedTable?.id,
         table_name: selectedTable ? `${lbl.tableLabel} #${selectedTable.number}` : undefined,
         customer_name: identifyMode === 'customer' ? customerName : undefined,
+        promotion_discount: promoDiscount > 0 ? promoDiscount : undefined,
+        promotion_names: promoNames.length > 0 ? promoNames : undefined,
       })
 
+      // Free the table right after order creation (same try block)
       if (selectedTable) {
         await setTableStatus(selectedTable.id, 'free')
+      }
+
+      // Record customer visit if a customer is selected
+      if (selectedCustomer) {
+        recordVisit(selectedCustomer.id, order.total).catch(() => {})
       }
 
       setShowPaymentModal(false)

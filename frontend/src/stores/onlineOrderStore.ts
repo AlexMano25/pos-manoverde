@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { OnlineOrder, OnlineOrderStatus, OnlineOrderChannel, SyncEntry } from '../types'
 import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
+import { useKdsStore } from './kdsStore'
+import { useAppStore } from './appStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -121,6 +123,51 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
 
         await db.online_orders.add(order)
         await addToSyncQueue('online_order', order.id, 'create', order, storeId)
+
+        // Decrement product stock for each item
+        for (const item of order.items) {
+          const product = await db.products.get(item.product_id)
+          if (product) {
+            const newStock = Math.max(0, product.stock - item.quantity)
+            await db.products.update(item.product_id, {
+              stock: newStock,
+              updated_at: now,
+            })
+          }
+        }
+
+        // Create KDS order for food activities
+        try {
+          const activity = useAppStore.getState().activity
+          const foodActivities = [
+            'restaurant', 'bakery', 'bar', 'fast_food', 'coffee_shop',
+            'food_truck', 'catering', 'ice_cream', 'juice_bar', 'hotel',
+          ]
+          const isFood = activity && foodActivities.includes(activity)
+
+          if (isFood && order.items.length > 0) {
+            const kdsItems = order.items.map((item) => ({
+              product_name: item.product_name,
+              quantity: item.quantity,
+              notes: item.notes || undefined,
+              station: 'all' as const,
+              done: false,
+            }))
+
+            useKdsStore.getState().addOrder(storeId, {
+              order_id: order.id,
+              order_number: order.order_number,
+              items: kdsItems,
+              status: 'new',
+              station: 'all',
+              priority: false,
+            }).catch((err) => {
+              console.error('[onlineOrderStore] KDS order creation failed:', err)
+            })
+          }
+        } catch (kdsErr) {
+          console.error('[onlineOrderStore] KDS integration error:', kdsErr)
+        }
 
         set((state) => ({
           orders: [order, ...state.orders],

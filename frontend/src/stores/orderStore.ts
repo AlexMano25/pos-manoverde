@@ -7,6 +7,7 @@ import { useAppStore } from './appStore'
 import { getNextReceiptNumber } from '../utils/receiptCounter'
 import { triggerWebhookEvent } from '../utils/webhookEngine'
 import { useKdsStore } from './kdsStore'
+import { useNotificationStore } from './notificationStore'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -164,6 +165,8 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         updated_at: now,
       }
 
+      const lowStockProducts: { name: string; stock: number; min_stock: number }[] = []
+
       try {
         await db.transaction(
           'rw',
@@ -174,7 +177,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
             // 1. Save the order
             await db.orders.add(order)
 
-            // 2. Decrement product stock for each cart item
+            // 2. Decrement product stock for each cart item + check low stock
             for (const item of items) {
               const product = await db.products.get(item.product_id)
               if (product) {
@@ -183,6 +186,10 @@ export const useOrderStore = create<OrderState & OrderActions>()(
                   stock: newStock,
                   updated_at: now,
                 })
+                // Check low stock threshold
+                if (product.min_stock != null && newStock <= product.min_stock) {
+                  lowStockProducts.push({ name: product.name, stock: newStock, min_stock: product.min_stock })
+                }
               }
             }
 
@@ -190,6 +197,24 @@ export const useOrderStore = create<OrderState & OrderActions>()(
             await addToSyncQueue('order', order.id, 'create', order, storeId)
           }
         )
+
+        // Create low stock notifications (non-blocking)
+        if (lowStockProducts.length > 0) {
+          try {
+            const notifStore = useNotificationStore.getState()
+            for (const lsp of lowStockProducts) {
+              notifStore.addNotification(storeId, {
+                type: 'low_stock',
+                title: `Low stock: ${lsp.name}`,
+                message: `${lsp.name} is at ${lsp.stock} units (min: ${lsp.min_stock}).`,
+                priority: lsp.stock === 0 ? 'high' : 'medium',
+                action_url: 'stock',
+              }).catch(() => {})
+            }
+          } catch (notifErr) {
+            console.error('[orderStore] Low stock notification error:', notifErr)
+          }
+        }
 
         // Update in-memory state
         set((state) => ({
@@ -240,7 +265,7 @@ export const useOrderStore = create<OrderState & OrderActions>()(
             const kdsItems = items.map((item) => ({
               product_name: item.name,
               quantity: item.qty,
-              notes: item.notes || undefined,
+              notes: (item as any).notes || undefined,
               station: 'all' as const,
               done: false,
             }))
