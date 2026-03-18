@@ -5,6 +5,7 @@ import { languages } from '../i18n/types'
 import type { Language } from '../i18n/types'
 import type { Activity } from '../types'
 import LegalModal from '../components/common/LegalModal'
+import { supabase } from '../services/supabase'
 import { ACTIVITY_ICONS, ALL_ACTIVITIES, ACTIVITY_COLORS } from '../data/activityIcons'
 import { ACTIVITY_WALLPAPERS } from '../data/activityThemes'
 
@@ -408,6 +409,10 @@ export default function LandingPage() {
   const [sectorModal, setSectorModal] = useState<Activity | null>(null)
   const [sectorTab, setSectorTab] = useState(0)
   const [activeCategory, setActiveCategory] = useState('all')
+  // Partner application form
+  const [partnerForm, setPartnerForm] = useState({ name: '', email: '', phone: '', city: '', motivation: '' })
+  const [partnerSubmitting, setPartnerSubmitting] = useState(false)
+  const [partnerResult, setPartnerResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const { t } = useLanguageStore()
 
   // Animated counters for hero stats
@@ -425,6 +430,42 @@ export default function LandingPage() {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handlePartnerSubmit = async () => {
+    if (!partnerForm.name || !partnerForm.email || !partnerForm.phone) return
+    if (!supabase) {
+      setPartnerResult({ type: 'error', text: 'Service indisponible' })
+      return
+    }
+    setPartnerSubmitting(true)
+    setPartnerResult(null)
+    try {
+      // Check if email already exists
+      const { data: existing } = await supabase.from('agents').select('id').eq('email', partnerForm.email).maybeSingle()
+      if (existing) {
+        setPartnerResult({ type: 'error', text: 'Cette adresse email est deja enregistree.' })
+        return
+      }
+      // Insert as pending agent (no auth_id = pending)
+      const { error } = await supabase.from('agents').insert({
+        name: partnerForm.name,
+        email: partnerForm.email,
+        phone: partnerForm.phone,
+        motivation: partnerForm.motivation || partnerForm.city || null,
+        is_active: false,
+        tier: 0,
+        commission_rate: 0,
+        referral_code: '',
+      })
+      if (error) throw error
+      setPartnerForm({ name: '', email: '', phone: '', city: '', motivation: '' })
+      setPartnerResult({ type: 'success', text: 'Candidature envoyee! Vous recevrez une notification WhatsApp apres validation.' })
+    } catch (err: any) {
+      setPartnerResult({ type: 'error', text: err.message || 'Erreur, veuillez reessayer.' })
+    } finally {
+      setPartnerSubmitting(false)
+    }
   }
 
   const scrollToSection = (id: string) => {
@@ -3328,29 +3369,96 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* CTA Button */}
-          <div style={{ textAlign: 'center' }}>
-            <a
-              href="mailto:direction@manoverde.com?subject=Devenir Partenaire"
+          {/* Partner Application Form */}
+          <div style={{
+            maxWidth: 520,
+            margin: '0 auto',
+            background: 'rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 16,
+            padding: 24,
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#4ade80', textAlign: 'center' }}>
+              {(t.landing as any)?.partnerFormTitle || 'Postuler maintenant'}
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <input
+                placeholder={(t.landing as any)?.partnerName || 'Nom complet *'}
+                value={partnerForm.name}
+                onChange={e => setPartnerForm(f => ({ ...f, name: e.target.value }))}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <input
+                placeholder={(t.landing as any)?.partnerEmail || 'Email *'}
+                type="email"
+                value={partnerForm.email}
+                onChange={e => setPartnerForm(f => ({ ...f, email: e.target.value }))}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <input
+                placeholder={(t.landing as any)?.partnerPhone || 'WhatsApp (6XXXXXXXX) *'}
+                value={partnerForm.phone}
+                onChange={e => setPartnerForm(f => ({ ...f, phone: e.target.value }))}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <input
+                placeholder={(t.landing as any)?.partnerCity || 'Ville'}
+                value={partnerForm.city}
+                onChange={e => setPartnerForm(f => ({ ...f, city: e.target.value }))}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <textarea
+              placeholder={(t.landing as any)?.partnerMotivation || 'Pourquoi souhaitez-vous devenir partenaire ? (optionnel)'}
+              value={partnerForm.motivation}
+              onChange={e => setPartnerForm(f => ({ ...f, motivation: e.target.value }))}
+              rows={3}
+              style={{ width: '100%', marginTop: 12, padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+            <button
+              onClick={handlePartnerSubmit}
+              disabled={partnerSubmitting || !partnerForm.name || !partnerForm.email || !partnerForm.phone}
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '16px 40px',
-                background: 'linear-gradient(135deg, #16a34a, #4ade80)',
+                width: '100%',
+                marginTop: 16,
+                padding: '14px 24px',
+                background: (!partnerForm.name || !partnerForm.email || !partnerForm.phone) ? '#475569' : 'linear-gradient(135deg, #16a34a, #4ade80)',
                 color: '#fff',
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: 700,
-                borderRadius: 12,
-                textDecoration: 'none',
+                borderRadius: 10,
+                border: 'none',
+                cursor: (!partnerForm.name || !partnerForm.email || !partnerForm.phone) ? 'not-allowed' : 'pointer',
                 fontFamily: pageFont,
                 boxShadow: '0 4px 24px rgba(74,222,128,0.3)',
-                transition: 'transform 0.2s, box-shadow 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
               }}
             >
-              <IconMail size={20} />
-              {(t.landing as any)?.partnerCta || 'Rejoindre le programme'}
-            </a>
+              {partnerSubmitting ? (
+                <span style={{ display: 'inline-block', width: 18, height: 18, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              ) : (
+                <IconMail size={18} />
+              )}
+              {(t.landing as any)?.partnerCta || 'Envoyer ma candidature'}
+            </button>
+            {partnerResult && (
+              <div style={{
+                marginTop: 12,
+                padding: '10px 14px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                background: partnerResult.type === 'success' ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)',
+                color: partnerResult.type === 'success' ? '#4ade80' : '#f87171',
+                textAlign: 'center',
+              }}>
+                {partnerResult.text}
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -4,7 +4,7 @@ import {
   Copy, CheckCircle2, AlertTriangle, Loader2, ChevronDown, ChevronUp,
   Package, ShoppingCart, Users, Edit3, Lock, Unlock,
   Mail, Store, Eye, EyeOff, Save, X,
-  UserCheck, UserX, KeyRound, DollarSign,
+  UserCheck, UserX, KeyRound, DollarSign, Clock, XCircle,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -177,9 +177,11 @@ export default function SuperAdminPage() {
   // ── Agents state ────────────────────────────────────────────────────
   const [agents, setAgents] = useState<any[]>([])
   const [agentsLoading, setAgentsLoading] = useState(false)
-  const [agentForm, setAgentForm] = useState({ name: '', email: '', phone: '' })
+  const [agentForm, setAgentForm] = useState({ name: '', email: '', phone: '', password: '' })
   const [agentCreating, setAgentCreating] = useState(false)
   const [agentMsg, setAgentMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [pendingAgents, setPendingAgents] = useState<any[]>([])
+  const [agentFilter, setAgentFilter] = useState<'all' | 'active' | 'pending' | 'inactive'>('all')
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null)
   const [agentReferrals, setAgentReferrals] = useState<Record<string, any[]>>({})
   const [agentReferralCounts, setAgentReferralCounts] = useState<Record<string, number>>({})
@@ -311,10 +313,11 @@ export default function SuperAdminPage() {
       const { data } = await supabase.from('agents').select('*').order('created_at', { ascending: false })
       const agentsList = data || []
       setAgents(agentsList)
+      setPendingAgents(agentsList.filter((a: any) => !a.is_active && !a.auth_id))
 
       // Fetch referral counts per agent
       const counts: Record<string, number> = {}
-      for (const ag of agentsList) {
+      for (const ag of agentsList.filter((a: any) => a.is_active)) {
         const { count } = await supabase.from('agent_referrals').select('*', { count: 'exact', head: true }).eq('agent_id', ag.id)
         counts[ag.id] = count || 0
       }
@@ -1231,38 +1234,130 @@ export default function SuperAdminPage() {
     return code
   }
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+    let pwd = ''
+    for (let i = 0; i < 10; i++) pwd += chars.charAt(Math.floor(Math.random() * chars.length))
+    return pwd
+  }
+
   const handleCreateAgent = async () => {
     if (!supabase || !agentForm.name || !agentForm.email) return
     setAgentCreating(true)
     setAgentMsg(null)
+    const password = agentForm.password || generatePassword()
     try {
       // Create Supabase auth user
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: agentForm.email,
-        password: 'agent123',
+        password,
         email_confirm: true,
+        user_metadata: { role: 'agent', name: agentForm.name },
       })
       if (authError) throw authError
 
+      const refCode = generateReferralCode()
       // Insert into agents table
       const { error: insertError } = await supabase.from('agents').insert({
         auth_id: authData.user.id,
         name: agentForm.name,
         email: agentForm.email,
         phone: agentForm.phone || null,
-        referral_code: generateReferralCode(),
-        tier: 'bronze',
+        referral_code: refCode,
+        tier: 1,
+        commission_rate: 0.05,
         is_active: true,
       })
       if (insertError) throw insertError
 
-      setAgentForm({ name: '', email: '', phone: '' })
-      setAgentMsg({ type: 'success', text: 'Agent cree avec succes (mot de passe: agent123)' })
+      setAgentForm({ name: '', email: '', phone: '', password: '' })
+      setAgentMsg({ type: 'success', text: `Agent cree! Code: ${refCode} | Mot de passe: ${password}` })
       fetchAgents()
+
+      // Open WhatsApp with agent credentials
+      if (agentForm.phone) {
+        const phone = agentForm.phone.replace(/[^0-9]/g, '')
+        const waPhone = phone.startsWith('237') ? phone : `237${phone}`
+        const msg = encodeURIComponent(
+          `Bonjour ${agentForm.name},\n\n` +
+          `Bienvenue dans le programme partenaire POS Mano Verde!\n\n` +
+          `Vos identifiants:\n` +
+          `Email: ${agentForm.email}\n` +
+          `Mot de passe: ${password}\n` +
+          `Code parrainage: ${refCode}\n\n` +
+          `Lien parrainage: https://pos.manovende.com/?ref=${refCode}\n\n` +
+          `Connexion: https://pos.manoverde.com\n` +
+          `Merci et bon partenariat!`
+        )
+        window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank')
+      }
     } catch (err: any) {
       setAgentMsg({ type: 'error', text: err.message || 'Erreur lors de la creation' })
     } finally {
       setAgentCreating(false)
+    }
+  }
+
+  const handleApproveAgent = async (agent: any) => {
+    if (!supabase) return
+    setAgentCreating(true)
+    setAgentMsg(null)
+    const password = generatePassword()
+    try {
+      // Create auth user for pending agent
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: agent.email,
+        password,
+        email_confirm: true,
+        user_metadata: { role: 'agent', name: agent.name },
+      })
+      if (authError) throw authError
+
+      // Update agent record
+      const refCode = agent.referral_code || generateReferralCode()
+      await supabase.from('agents').update({
+        auth_id: authData.user.id,
+        referral_code: refCode,
+        is_active: true,
+        tier: 1,
+        commission_rate: 0.05,
+      }).eq('id', agent.id)
+
+      setAgentMsg({ type: 'success', text: `Agent ${agent.name} approuve! Mot de passe: ${password}` })
+      fetchAgents()
+
+      // Open WhatsApp
+      if (agent.phone) {
+        const phone = agent.phone.replace(/[^0-9]/g, '')
+        const waPhone = phone.startsWith('237') ? phone : `237${phone}`
+        const msg = encodeURIComponent(
+          `Bonjour ${agent.name},\n\n` +
+          `Votre candidature au programme partenaire POS Mano Verde a ete approuvee!\n\n` +
+          `Vos identifiants:\n` +
+          `Email: ${agent.email}\n` +
+          `Mot de passe: ${password}\n` +
+          `Code parrainage: ${refCode}\n\n` +
+          `Lien parrainage: https://pos.manovende.com/?ref=${refCode}\n\n` +
+          `Connexion: https://pos.manoverde.com\n` +
+          `Merci et bon partenariat!`
+        )
+        window.open(`https://wa.me/${waPhone}?text=${msg}`, '_blank')
+      }
+    } catch (err: any) {
+      setAgentMsg({ type: 'error', text: err.message || 'Erreur lors de l\'approbation' })
+    } finally {
+      setAgentCreating(false)
+    }
+  }
+
+  const handleRejectAgent = async (agentId: string) => {
+    if (!supabase) return
+    try {
+      await supabase.from('agents').delete().eq('id', agentId)
+      setAgentMsg({ type: 'success', text: 'Candidature rejetee' })
+      fetchAgents()
+    } catch (err: any) {
+      setAgentMsg({ type: 'error', text: err.message })
     }
   }
 
@@ -1319,29 +1414,71 @@ export default function SuperAdminPage() {
     }
   }
 
-  const renderAgentsTab = () => (
+  const renderAgentsTab = () => {
+    const filtered = agentFilter === 'all' ? agents
+      : agentFilter === 'active' ? agents.filter(a => a.is_active)
+      : agentFilter === 'pending' ? agents.filter(a => !a.is_active && !a.auth_id)
+      : agents.filter(a => !a.is_active && a.auth_id)
+
+    return (
     <div>
+      {/* ── Pending Applications ───────────────────────────────────────── */}
+      {pendingAgents.length > 0 && (
+        <div style={{ background: '#fffbeb', borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #fbbf24', marginBottom: 20 }}>
+          <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 700, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Clock size={16} /> Candidatures en attente ({pendingAgents.length})
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {pendingAgents.map((pa: any) => (
+              <div key={pa.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fff', borderRadius: 8, border: '1px solid #fde68a', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 120 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{pa.name}</div>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>{pa.email}</div>
+                </div>
+                <div style={{ fontSize: 13, color: '#64748b' }}>{pa.phone || '-'}</div>
+                {pa.motivation && <div style={{ fontSize: 12, color: '#475569', fontStyle: 'italic', flex: '0 0 100%', marginTop: 4 }}>"{pa.motivation}"</div>}
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>{new Date(pa.created_at).toLocaleDateString('fr-FR')}</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button style={{ ...btnPrimary, height: 32, fontSize: 12, background: '#16a34a' }} onClick={() => handleApproveAgent(pa)}>
+                    <UserCheck size={13} /> Approuver
+                  </button>
+                  <button style={{ ...btnOutline, height: 32, fontSize: 12, color: '#dc2626', borderColor: '#fca5a5' }} onClick={() => handleRejectAgent(pa.id)}>
+                    <XCircle size={13} /> Rejeter
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Create Agent Form ──────────────────────────────────────────── */}
       <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginBottom: 20 }}>
         <h3 style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
           <Users size={16} /> Creer un agent
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: rv('1fr', '1fr 1fr 1fr', '1fr 1fr 1fr auto'), gap: 10, alignItems: 'end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: rv('1fr', '1fr 1fr', '1fr 1fr 1fr 1fr'), gap: 10, alignItems: 'end' }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Nom</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Nom *</label>
             <input style={inputStyle} placeholder="Nom complet" value={agentForm.name} onChange={e => setAgentForm(f => ({ ...f, name: e.target.value }))} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Email</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Email *</label>
             <input style={inputStyle} placeholder="email@example.com" type="email" value={agentForm.email} onChange={e => setAgentForm(f => ({ ...f, email: e.target.value }))} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Telephone</label>
-            <input style={inputStyle} placeholder="+237..." value={agentForm.phone} onChange={e => setAgentForm(f => ({ ...f, phone: e.target.value }))} />
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>WhatsApp *</label>
+            <input style={inputStyle} placeholder="6XXXXXXXX" value={agentForm.phone} onChange={e => setAgentForm(f => ({ ...f, phone: e.target.value }))} />
           </div>
-          <button style={{ ...btnPrimary, height: 38 }} onClick={handleCreateAgent} disabled={agentCreating || !agentForm.name || !agentForm.email}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Mot de passe (auto)</label>
+            <input style={inputStyle} placeholder="Auto-genere si vide" value={agentForm.password} onChange={e => setAgentForm(f => ({ ...f, password: e.target.value }))} />
+          </div>
+        </div>
+        <div style={{ marginTop: 12 }}>
+          <button style={{ ...btnPrimary, height: 38 }} onClick={handleCreateAgent} disabled={agentCreating || !agentForm.name || !agentForm.email || !agentForm.phone}>
             {agentCreating ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <UserCheck size={14} />}
-            Creer Agent
+            Creer et notifier via WhatsApp
           </button>
         </div>
         {agentMsg && (
@@ -1349,20 +1486,32 @@ export default function SuperAdminPage() {
             marginTop: 10, padding: '8px 12px', borderRadius: 6, fontSize: 13,
             background: agentMsg.type === 'success' ? C.successLight : C.errorLight,
             color: agentMsg.type === 'success' ? C.success : C.error,
-            display: 'flex', alignItems: 'center', gap: 6,
+            display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
           }}>
             {agentMsg.type === 'success' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
-            {agentMsg.text}
+            <span style={{ wordBreak: 'break-all' }}>{agentMsg.text}</span>
           </div>
         )}
       </div>
 
       {/* ── Agents List ────────────────────────────────────────────────── */}
       <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginBottom: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Users size={16} /> Liste des agents ({agents.length})
+            <Users size={16} /> Agents ({filtered.length})
           </h3>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['all', 'active', 'pending', 'inactive'] as const).map(f => (
+              <button key={f} onClick={() => setAgentFilter(f)} style={{
+                padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, cursor: 'pointer',
+                border: `1px solid ${agentFilter === f ? '#3b82f6' : C.border}`,
+                background: agentFilter === f ? '#eff6ff' : 'transparent',
+                color: agentFilter === f ? '#3b82f6' : C.textSecondary,
+              }}>
+                {f === 'all' ? `Tous (${agents.length})` : f === 'active' ? `Actifs (${agents.filter(a => a.is_active).length})` : f === 'pending' ? `En attente (${pendingAgents.length})` : `Inactifs (${agents.filter(a => !a.is_active && a.auth_id).length})`}
+              </button>
+            ))}
+          </div>
           <button style={btnOutline} onClick={fetchAgents}>
             <RefreshCw size={12} /> Actualiser
           </button>
@@ -1387,7 +1536,7 @@ export default function SuperAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {agents.map((ag, i) => (
+                {filtered.map((ag, i) => (
                   <React.Fragment key={ag.id}>
                     <tr
                       style={{ background: i % 2 ? C.stripe : C.card, cursor: 'pointer' }}
@@ -1604,6 +1753,7 @@ export default function SuperAdminPage() {
       </div>
     </div>
   )
+  }
 
   // ── Main render ──────────────────────────────────────────────────────
 
