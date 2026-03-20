@@ -231,7 +231,6 @@ export default function QROrderPage() {
       const order = {
         id: orderId,
         store_id: realSid,
-        user_id: 'qr-customer', // anonymous QR order
         items: cart.map(i => ({
           product_id: i.product_id,
           name: i.name,
@@ -242,13 +241,9 @@ export default function QROrderPage() {
         discount: 0,
         tax,
         total,
-        payment_method: 'cash' as const, // will be settled at table
-        status: 'pending' as const,
-        note: `QR Order - ${tableName} (#${tableNumber})`,
-        synced: true,
-        device_id: 'qr-order',
-        table_id: tableId,
-        table_name: tableName,
+        payment_method: 'cash',
+        status: 'pending',
+        device_id: `qr-order-${tableName}`,
         receipt_number: receiptNum,
         created_at: now,
         updated_at: now,

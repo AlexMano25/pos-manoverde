@@ -236,7 +236,6 @@ export default function CatalogPage() {
       const order = {
         id: orderId,
         store_id: realSid,
-        user_id: 'catalog-customer',
         items: cart.map(i => ({
           product_id: i.product_id,
           name: i.name,
@@ -247,11 +246,9 @@ export default function CatalogPage() {
         discount: 0,
         tax,
         total,
-        payment_method: 'cash' as const,
-        status: 'pending' as const,
-        note: `Commande catalogue en ligne - ${store.name}`,
-        synced: true,
-        device_id: 'catalog-order',
+        payment_method: 'cash',
+        status: 'pending',
+        device_id: `catalog-${store.name}`,
         receipt_number: receiptNum,
         created_at: now,
         updated_at: now,
