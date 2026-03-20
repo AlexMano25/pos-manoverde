@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { Search, Share2, ShoppingBag, X, Filter, ExternalLink } from 'lucide-react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { Search, Share2, ShoppingBag, ShoppingCart, X, Filter, Plus, Minus, Trash2, Send, ChevronUp, ChevronDown } from 'lucide-react'
 import { supabase } from '../services/supabase'
 import { formatCurrency } from '../utils/currency'
+import { generateUUID } from '../utils/uuid'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,13 @@ interface CatalogProduct {
   description?: string
 }
 
+interface CartItem {
+  product_id: string
+  name: string
+  price: number
+  qty: number
+}
+
 interface StoreInfo {
   id: string
   name: string
@@ -21,6 +29,8 @@ interface StoreInfo {
   activity: string
   phone?: string
   logo_url?: string
+  organization_id?: string
+  tax_rate?: number
 }
 
 // ── Colors ────────────────────────────────────────────────────────────────
@@ -35,6 +45,9 @@ const C = {
   textMuted: '#94a3b8',
   border: '#e2e8f0',
   success: '#16a34a',
+  successBg: '#f0fdf4',
+  danger: '#dc2626',
+  dangerBg: '#fef2f2',
   headerBg: '#0f172a',
   headerText: '#ffffff',
   accent: '#f59e0b',
@@ -54,6 +67,11 @@ export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showShareToast, setShowShareToast] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640)
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [showCart, setShowCart] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [orderConfirmed, setOrderConfirmed] = useState(false)
+  const [orderNumber, setOrderNumber] = useState('')
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640)
@@ -75,7 +93,7 @@ export default function CatalogPage() {
         let storeData: any = null
         const { data: byId } = await supabase
           .from('stores')
-          .select('id, name, currency, activity, phone, logo_url, organization_id')
+          .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
           .eq('id', storeId)
           .maybeSingle()
         if (byId) {
@@ -83,7 +101,7 @@ export default function CatalogPage() {
         } else {
           const { data: byOrg } = await supabase
             .from('stores')
-            .select('id, name, currency, activity, phone, logo_url, organization_id')
+            .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
             .eq('organization_id', storeId)
             .limit(1)
             .maybeSingle()
@@ -153,18 +171,113 @@ export default function CatalogPage() {
 
   const currencyCode = store?.currency || 'XAF'
 
+  // ── Cart operations ─────────────────────────────────────────────────────
+
+  const addToCart = useCallback((product: CatalogProduct) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.product_id === product.id)
+      if (existing) {
+        return prev.map(i =>
+          i.product_id === product.id ? { ...i, qty: i.qty + 1 } : i
+        )
+      }
+      return [...prev, { product_id: product.id, name: product.name, price: product.price, qty: 1 }]
+    })
+  }, [])
+
+  const updateQty = useCallback((productId: string, delta: number) => {
+    setCart(prev =>
+      prev.map(i =>
+        i.product_id === productId ? { ...i, qty: Math.max(0, i.qty + delta) } : i
+      ).filter(i => i.qty > 0)
+    )
+  }, [])
+
+  const removeFromCart = useCallback((productId: string) => {
+    setCart(prev => prev.filter(i => i.product_id !== productId))
+  }, [])
+
+  const cartTotal = useMemo(() => cart.reduce((sum, i) => sum + i.price * i.qty, 0), [cart])
+  const cartItemCount = useMemo(() => cart.reduce((sum, i) => sum + i.qty, 0), [cart])
+
   // ── Handlers ───────────────────────────────────────────────────────────
 
-  const handleOrder = (product: CatalogProduct) => {
-    const storePhone = store?.phone || ''
-    const priceFormatted = formatCurrency(product.price, currencyCode)
-    const message = `Bonjour, je souhaite commander: ${product.name} - ${priceFormatted}. (from catalog ${store?.name || ''})`
+  const handleWhatsAppOrder = () => {
+    if (cart.length === 0 || !store) return
+    const storePhone = store.phone || ''
+    const itemLines = cart.map(i =>
+      `- ${i.qty}x ${i.name} (${formatCurrency(i.price * i.qty, currencyCode)})`
+    ).join('\n')
+    const totalFormatted = formatCurrency(cartTotal, currencyCode)
+    const message = `Bonjour, je souhaite commander:\n${itemLines}\nTotal: ${totalFormatted}\n(Catalogue: ${store.name})`
     const encoded = encodeURIComponent(message)
-    // If store has a phone, use it. Otherwise open WhatsApp without a number.
     const waUrl = storePhone
       ? `https://wa.me/${storePhone.replace(/[^0-9+]/g, '')}?text=${encoded}`
       : `https://wa.me/?text=${encoded}`
     window.open(waUrl, '_blank')
+  }
+
+  const handleSendOrder = async () => {
+    if (!supabase || cart.length === 0 || !store) return
+    setSending(true)
+    setError('')
+
+    try {
+      const taxRate = store.tax_rate || 0
+      const subtotal = cartTotal
+      const tax = Math.round(subtotal * taxRate / 100)
+      const total = subtotal + tax
+
+      const orderId = generateUUID()
+      const now = new Date().toISOString()
+      const receiptNum = `CAT-${Date.now().toString(36).toUpperCase()}`
+
+      const realSid = store.id || storeId
+      const order = {
+        id: orderId,
+        store_id: realSid,
+        user_id: 'catalog-customer',
+        items: cart.map(i => ({
+          product_id: i.product_id,
+          name: i.name,
+          price: i.price,
+          qty: i.qty,
+        })),
+        subtotal,
+        discount: 0,
+        tax,
+        total,
+        payment_method: 'cash' as const,
+        status: 'pending' as const,
+        note: `Commande catalogue en ligne - ${store.name}`,
+        synced: true,
+        device_id: 'catalog-order',
+        receipt_number: receiptNum,
+        created_at: now,
+        updated_at: now,
+      }
+
+      const { error: insertErr } = await supabase
+        .from('orders')
+        .insert(order)
+
+      if (insertErr) {
+        console.error('[Catalog] Insert error:', insertErr)
+        setError('Erreur lors de l\'envoi de la commande. Veuillez r\u00e9essayer.')
+        setSending(false)
+        return
+      }
+
+      setOrderNumber(receiptNum)
+      setOrderConfirmed(true)
+      setCart([])
+      setShowCart(false)
+      setSending(false)
+    } catch (err) {
+      console.error('[Catalog] Send error:', err)
+      setError('Erreur lors de l\'envoi. Veuillez r\u00e9essayer.')
+      setSending(false)
+    }
   }
 
   const handleShare = async () => {
@@ -214,7 +327,7 @@ export default function CatalogPage() {
     )
   }
 
-  if (error || !store) {
+  if (error && !store) {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -229,6 +342,50 @@ export default function CatalogPage() {
           <p style={{ color: C.textSecondary, fontSize: 14, maxWidth: 320, margin: '0 auto' }}>
             {error || 'Ce catalogue n\'est pas accessible pour le moment.'}
           </p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Order confirmed ─────────────────────────────────────────────────────
+
+  if (orderConfirmed) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', backgroundColor: C.bg,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: 360, padding: 24 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%', backgroundColor: C.successBg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto 16px',
+          }}>
+            <ShoppingCart size={32} color={C.success} />
+          </div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 22, color: C.text, fontWeight: 700 }}>
+            Commande envoy{'\u00e9'}e !
+          </h2>
+          <p style={{ color: C.textSecondary, fontSize: 14, marginBottom: 4 }}>
+            Votre commande a {'\u00e9'}t{'\u00e9'} transmise au magasin.
+          </p>
+          <p style={{ color: C.text, fontSize: 16, fontWeight: 600, marginBottom: 20 }}>
+            Commande #{orderNumber}
+          </p>
+          <p style={{ color: C.textSecondary, fontSize: 13, marginBottom: 24 }}>
+            {store?.name}
+          </p>
+          <button
+            style={{
+              padding: '14px 24px', borderRadius: 12, border: 'none',
+              backgroundColor: C.primary, color: '#fff', fontSize: 15,
+              fontWeight: 600, cursor: 'pointer', width: '100%',
+            }}
+            onClick={() => { setOrderConfirmed(false); setOrderNumber('') }}
+          >
+            Passer une autre commande
+          </button>
         </div>
       </div>
     )
@@ -253,6 +410,7 @@ export default function CatalogPage() {
       minHeight: '100vh',
       backgroundColor: C.bg,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      paddingBottom: cart.length > 0 ? 80 : 20,
     }}>
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div style={{
@@ -261,10 +419,10 @@ export default function CatalogPage() {
         padding: isMobile ? '24px 16px 20px' : '32px 24px 28px',
         textAlign: 'center',
       }}>
-        {store.logo_url && (
+        {store?.logo_url && (
           <img
             src={store.logo_url}
-            alt={store.name}
+            alt={store?.name}
             style={{
               width: 56, height: 56, borderRadius: 12,
               objectFit: 'cover', margin: '0 auto 12px', display: 'block',
@@ -276,7 +434,7 @@ export default function CatalogPage() {
           margin: 0, fontSize: isMobile ? 22 : 28, fontWeight: 700,
           letterSpacing: '-0.02em',
         }}>
-          {store.name}
+          {store?.name}
         </h1>
         <p style={{
           margin: '6px 0 0', fontSize: 14, color: 'rgba(255,255,255,0.65)',
@@ -367,6 +525,32 @@ export default function CatalogPage() {
         )}
       </div>
 
+      {/* ── Error banner ──────────────────────────────────────────────────── */}
+      {error && (
+        <div style={{
+          margin: '0 12px 8px',
+          padding: '10px 14px',
+          borderRadius: 8,
+          backgroundColor: C.dangerBg,
+          color: C.danger,
+          fontSize: 13,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          maxWidth: 1200,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}>
+          {error}
+          <button
+            onClick={() => setError('')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: C.danger, marginLeft: 'auto' }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* ── Product grid ────────────────────────────────────────────────── */}
       <div style={{
         padding: isMobile ? '8px 12px 100px' : '12px 24px 100px',
@@ -389,128 +573,354 @@ export default function CatalogPage() {
               : 'repeat(auto-fill, minmax(260px, 1fr))',
             gap: isMobile ? 10 : 16,
           }}>
-            {filteredProducts.map(product => (
-              <div key={product.id} style={{
-                backgroundColor: C.card,
-                borderRadius: 12,
-                border: `1px solid ${C.border}`,
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                transition: 'box-shadow 0.2s, transform 0.2s',
-                display: 'flex',
-                flexDirection: 'column',
-              }}>
-                {/* Image */}
-                {product.image_url ? (
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    style={{
-                      width: '100%',
-                      height: isMobile ? 160 : 180,
-                      objectFit: 'cover',
-                      borderRadius: '12px 12px 0 0',
-                    }}
-                    loading="lazy"
-                  />
-                ) : (
-                  <div style={placeholderStyle}>
-                    <ShoppingBag size={36} color={C.textMuted} strokeWidth={1.5} />
-                  </div>
-                )}
-
-                {/* Info */}
-                <div style={{
-                  padding: isMobile ? '10px 10px 12px' : '14px 16px 16px',
-                  flex: 1,
+            {filteredProducts.map(product => {
+              const inCart = cart.find(i => i.product_id === product.id)
+              return (
+                <div key={product.id} style={{
+                  backgroundColor: C.card,
+                  borderRadius: 12,
+                  border: `1px solid ${inCart ? C.primary : C.border}`,
+                  overflow: 'hidden',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                  transition: 'box-shadow 0.2s, transform 0.2s',
                   display: 'flex',
                   flexDirection: 'column',
                 }}>
-                  {product.category && (
-                    <span style={{
-                      fontSize: 11, fontWeight: 600, color: C.primary,
-                      textTransform: 'uppercase', letterSpacing: '0.05em',
-                      marginBottom: 4,
-                    }}>
-                      {product.category}
-                    </span>
+                  {/* Image */}
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      style={{
+                        width: '100%',
+                        height: isMobile ? 160 : 180,
+                        objectFit: 'cover',
+                        borderRadius: '12px 12px 0 0',
+                      }}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div style={placeholderStyle}>
+                      <ShoppingBag size={36} color={C.textMuted} strokeWidth={1.5} />
+                    </div>
                   )}
-                  <h3 style={{
-                    margin: '0 0 4px', fontSize: isMobile ? 14 : 16,
-                    fontWeight: 600, color: C.text,
-                    lineHeight: 1.3,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
+
+                  {/* Info */}
+                  <div style={{
+                    padding: isMobile ? '10px 10px 12px' : '14px 16px 16px',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
                   }}>
-                    {product.name}
-                  </h3>
-                  {product.description && (
-                    <p style={{
-                      margin: '0 0 8px', fontSize: 12,
-                      color: C.textSecondary, lineHeight: 1.4,
+                    {product.category && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 600, color: C.primary,
+                        textTransform: 'uppercase', letterSpacing: '0.05em',
+                        marginBottom: 4,
+                      }}>
+                        {product.category}
+                      </span>
+                    )}
+                    <h3 style={{
+                      margin: '0 0 4px', fontSize: isMobile ? 14 : 16,
+                      fontWeight: 600, color: C.text,
+                      lineHeight: 1.3,
                       display: '-webkit-box',
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
-                      flex: 1,
                     }}>
-                      {product.description}
-                    </p>
-                  )}
-                  <div style={{
-                    fontSize: isMobile ? 16 : 18, fontWeight: 700,
-                    color: C.text, marginTop: 'auto', marginBottom: 10,
-                  }}>
-                    {formatCurrency(product.price, currencyCode)}
+                      {product.name}
+                    </h3>
+                    {product.description && (
+                      <p style={{
+                        margin: '0 0 8px', fontSize: 12,
+                        color: C.textSecondary, lineHeight: 1.4,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        flex: 1,
+                      }}>
+                        {product.description}
+                      </p>
+                    )}
+                    <div style={{
+                      fontSize: isMobile ? 16 : 18, fontWeight: 700,
+                      color: C.text, marginTop: 'auto', marginBottom: 10,
+                    }}>
+                      {formatCurrency(product.price, currencyCode)}
+                    </div>
+
+                    {/* Add to cart / quantity controls */}
+                    {inCart ? (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      }}>
+                        <button
+                          onClick={() => updateQty(product.id, -1)}
+                          style={{
+                            width: 32, height: 32, borderRadius: '50%',
+                            border: `1px solid ${C.border}`, backgroundColor: C.card,
+                            cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', padding: 0,
+                          }}
+                        >
+                          <Minus size={15} color={C.text} />
+                        </button>
+                        <span style={{
+                          fontSize: 16, fontWeight: 700, color: C.text,
+                          minWidth: 24, textAlign: 'center',
+                        }}>
+                          {inCart.qty}
+                        </span>
+                        <button
+                          onClick={() => updateQty(product.id, 1)}
+                          style={{
+                            width: 32, height: 32, borderRadius: '50%',
+                            border: 'none', backgroundColor: C.primary,
+                            cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', padding: 0,
+                          }}
+                        >
+                          <Plus size={15} color="#fff" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => addToCart(product)}
+                        style={{
+                          width: '100%', padding: isMobile ? '10px' : '11px 16px',
+                          borderRadius: 8, border: 'none',
+                          backgroundColor: C.success, color: '#fff',
+                          fontSize: 14, fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex', alignItems: 'center',
+                          justifyContent: 'center', gap: 6,
+                          transition: 'background-color 0.2s',
+                        }}
+                      >
+                        <Plus size={15} />
+                        Ajouter
+                      </button>
+                    )}
                   </div>
-                  <button
-                    onClick={() => handleOrder(product)}
-                    style={{
-                      width: '100%', padding: isMobile ? '10px' : '11px 16px',
-                      borderRadius: 8, border: 'none',
-                      backgroundColor: C.success, color: '#fff',
-                      fontSize: 14, fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', gap: 6,
-                      transition: 'background-color 0.2s',
-                    }}
-                  >
-                    <ExternalLink size={15} />
-                    Commander
-                  </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
 
+      {/* ── Floating cart bar ──────────────────────────────────────────────── */}
+      {cart.length > 0 && !showCart && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0, left: 0, right: 0,
+            backgroundColor: C.primary,
+            color: '#fff',
+            padding: '14px 20px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            cursor: 'pointer',
+            zIndex: 100,
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
+          }}
+          onClick={() => setShowCart(true)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <ShoppingCart size={16} />
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>
+              {cartItemCount} article{cartItemCount > 1 ? 's' : ''}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16, fontWeight: 700 }}>
+              {formatCurrency(cartTotal, currencyCode)}
+            </span>
+            <ChevronUp size={18} />
+          </div>
+        </div>
+      )}
+
+      {/* ── Cart overlay ──────────────────────────────────────────────────── */}
+      {showCart && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 200,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+          }}
+          onClick={() => setShowCart(false)}
+        >
+          <div
+            style={{
+              backgroundColor: C.card,
+              borderRadius: '20px 20px 0 0',
+              padding: 20,
+              maxHeight: '75vh',
+              overflowY: 'auto',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Cart header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>
+                Votre commande
+              </h3>
+              <button
+                onClick={() => setShowCart(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.textSecondary }}
+              >
+                <ChevronDown size={22} />
+              </button>
+            </div>
+
+            {/* Cart items */}
+            {cart.map(item => (
+              <div
+                key={item.product_id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '10px 0',
+                  borderBottom: `1px solid ${C.border}`,
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: C.text }}>{item.name}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 13, color: C.textSecondary }}>
+                    {formatCurrency(item.price, currencyCode)} / unit{'\u00e9'}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => updateQty(item.product_id, -1)}
+                    style={{
+                      width: 30, height: 30, borderRadius: '50%', border: `1px solid ${C.border}`,
+                      backgroundColor: C.card, cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', padding: 0,
+                    }}
+                  >
+                    <Minus size={14} color={C.text} />
+                  </button>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: C.text, minWidth: 24, textAlign: 'center' }}>
+                    {item.qty}
+                  </span>
+                  <button
+                    onClick={() => updateQty(item.product_id, 1)}
+                    style={{
+                      width: 30, height: 30, borderRadius: '50%', border: 'none',
+                      backgroundColor: C.primary, cursor: 'pointer', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', padding: 0,
+                    }}
+                  >
+                    <Plus size={14} color="#fff" />
+                  </button>
+                </div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text, minWidth: 70, textAlign: 'right' }}>
+                  {formatCurrency(item.price * item.qty, currencyCode)}
+                </p>
+                <button
+                  onClick={() => removeFromCart(item.product_id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.danger }}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+
+            {/* Total */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '14px 0', marginTop: 4,
+            }}>
+              <span style={{ fontSize: 16, fontWeight: 600, color: C.text }}>Total</span>
+              <span style={{ fontSize: 20, fontWeight: 700, color: C.text }}>
+                {formatCurrency(cartTotal, currencyCode)}
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4 }}>
+              {/* WhatsApp order */}
+              <button
+                style={{
+                  padding: '14px 24px', borderRadius: 12, border: 'none',
+                  backgroundColor: C.success, color: '#fff', fontSize: 15,
+                  fontWeight: 600, cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
+                }}
+                onClick={handleWhatsAppOrder}
+              >
+                <Send size={18} />
+                Commander via WhatsApp
+              </button>
+
+              {/* Direct order (only if store param exists = embedded catalog) */}
+              {storeId && (
+                <button
+                  style={{
+                    padding: '14px 24px', borderRadius: 12, border: 'none',
+                    backgroundColor: C.primary, color: '#fff', fontSize: 15,
+                    fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: 8, width: '100%',
+                    opacity: sending ? 0.7 : 1,
+                  }}
+                  onClick={handleSendOrder}
+                  disabled={sending || cart.length === 0}
+                >
+                  {sending ? (
+                    <>Envoi en cours...</>
+                  ) : (
+                    <>
+                      <ShoppingCart size={18} />
+                      Envoyer la commande
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Floating share button ───────────────────────────────────────── */}
-      <button
-        onClick={handleShare}
-        style={{
-          position: 'fixed',
-          bottom: 24, right: 24,
-          width: 56, height: 56,
-          borderRadius: 28,
-          backgroundColor: C.primary,
-          color: '#fff',
-          border: 'none',
-          boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          transition: 'transform 0.2s, box-shadow 0.2s',
-        }}
-        title="Partager le catalogue"
-      >
-        <Share2 size={22} />
-      </button>
+      {cart.length === 0 && (
+        <button
+          onClick={handleShare}
+          style={{
+            position: 'fixed',
+            bottom: 24, right: 24,
+            width: 56, height: 56,
+            borderRadius: 28,
+            backgroundColor: C.primary,
+            color: '#fff',
+            border: 'none',
+            boxShadow: '0 4px 14px rgba(37,99,235,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+          title="Partager le catalogue"
+        >
+          <Share2 size={22} />
+        </button>
+      )}
 
       {/* ── Share toast ──────────────────────────────────────────────────── */}
       {showShareToast && (
