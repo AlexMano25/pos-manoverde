@@ -227,9 +227,10 @@ export default function QROrderPage() {
       const now = new Date().toISOString()
       const receiptNum = `QR-${Date.now().toString(36).toUpperCase()}`
 
+      const realSid = store.id || storeId
       const order = {
         id: orderId,
-        store_id: storeId,
+        store_id: realSid,
         user_id: 'qr-customer', // anonymous QR order
         items: cart.map(i => ({
           product_id: i.product_id,
@@ -263,6 +264,25 @@ export default function QROrderPage() {
         setSending(false)
         return
       }
+
+      // Create KDS order for kitchen display
+      await supabase
+        .from('kds_orders')
+        .insert({
+          store_id: realSid,
+          order_number: receiptNum,
+          table_name: `${tableName} (#${tableNumber})`,
+          status: 'new',
+          priority: false,
+          items: cart.map(i => ({
+            product_name: i.name,
+            quantity: i.qty,
+            station: 'all',
+            done: false,
+          })),
+          created_at: now,
+          updated_at: now,
+        })
 
       // Update table status to occupied
       await supabase

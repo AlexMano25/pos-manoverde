@@ -4,6 +4,7 @@ import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { useTableStore } from './tableStore'
 import { useNotificationStore } from './notificationStore'
+import { supabase } from '../services/supabase'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -66,13 +67,60 @@ export const useKdsStore = create<KdsState & KdsActions>()(
     loadOrders: async (storeId: string) => {
       set({ loading: true })
       try {
-        const orders = await db.kds_orders
+        // Load from local IndexedDB
+        const localOrders = await db.kds_orders
           .where('store_id')
           .equals(storeId)
           .toArray()
+
+        // Also fetch from Supabase (for QR/online orders)
+        let cloudOrders: KdsOrder[] = []
+        if (supabase) {
+          try {
+            const { data } = await supabase
+              .from('kds_orders')
+              .select('*')
+              .eq('store_id', storeId)
+              .in('status', ['new', 'preparing', 'ready'])
+              .order('created_at', { ascending: true })
+            if (data && data.length > 0) {
+              // Merge cloud orders into local (avoid duplicates by id)
+              const localIds = new Set(localOrders.map(o => o.id))
+              for (const co of data) {
+                if (!localIds.has(co.id)) {
+                  // Save to local DB for persistence
+                  const kdsOrder = {
+                    id: co.id,
+                    store_id: co.store_id,
+                    order_number: co.order_number || '',
+                    table_number: co.table_name || undefined,
+                    status: co.status as KdsOrderStatus,
+                    priority: co.priority || false,
+                    items: co.items || [],
+                    station: 'all' as KdsStation,
+                    created_at: co.created_at,
+                  } as KdsOrder
+                  try { await db.kds_orders.put(kdsOrder) } catch { /* ignore dupe */ }
+                  cloudOrders.push(kdsOrder)
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('[kdsStore] Cloud fetch failed (offline?):', err)
+          }
+        }
+
+        const allOrders = [...localOrders, ...cloudOrders]
         // Sort by created_at ascending (oldest first for kitchen)
-        orders.sort((a, b) => a.created_at.localeCompare(b.created_at))
-        set({ orders })
+        allOrders.sort((a, b) => a.created_at.localeCompare(b.created_at))
+        // Deduplicate by id
+        const seen = new Set<string>()
+        const uniqueOrders = allOrders.filter(o => {
+          if (seen.has(o.id)) return false
+          seen.add(o.id)
+          return true
+        })
+        set({ orders: uniqueOrders })
       } catch (error) {
         console.error('[kdsStore] Failed to load orders:', error)
       } finally {
