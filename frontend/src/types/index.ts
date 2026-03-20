@@ -143,6 +143,7 @@ export type SidebarSection =
   | 'webhooks'         // webhook endpoints & API keys management
   | 'data_exchange'    // cross-module data import/export
   | 'super_admin'      // super admin dashboard
+  | 'forecast'         // AI forecasting & predictions
 
 /** Which existing page component to render for a sidebar section */
 export type PageComponent =
@@ -215,6 +216,8 @@ export type PageComponent =
   | 'webhooks'
   | 'data_exchange'
   | 'super_admin'
+  | 'forecast'
+  | 'schedule'
 
 /** Sidebar item configuration */
 export type SidebarItemConfig = {

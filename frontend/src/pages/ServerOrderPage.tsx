@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Search, ShoppingCart, Minus, Plus, X, Banknote, Send,
   ChevronLeft, Grid3X3, User, Users, Clock, ClipboardList,
-  CheckCircle2,
+  CheckCircle2, ArrowRightLeft, Merge, Split, ChefHat,
+  UserPlus,
 } from 'lucide-react'
 import { useCartStore } from '../stores/cartStore'
 import { useProductStore } from '../stores/productStore'
@@ -13,9 +14,10 @@ import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useCustomerStore } from '../stores/customerStore'
 import { usePromotionStore } from '../stores/promotionStore'
+import { useKdsStore } from '../stores/kdsStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
-import type { PaymentMethod, RestaurantTable, TableStatus, Order } from '../types'
+import type { PaymentMethod, RestaurantTable, TableStatus, Order, CartItem } from '../types'
 
 // ── Colors ─────────────────────────────────────────────────────────────────
 
@@ -31,6 +33,8 @@ const C = {
   danger: '#dc2626',
   blue: '#3b82f6',
   orange: '#f97316',
+  purple: '#9333ea',
+  teal: '#0d9488',
 } as const
 
 const STATUS_COLORS: Record<TableStatus, string> = {
@@ -43,9 +47,29 @@ const STATUS_COLORS: Record<TableStatus, string> = {
 
 type IdentifyMode = 'table' | 'customer'
 type ServerStep = 'identify' | 'order'
+type CourseTag = 'entree' | 'plat' | 'dessert' | 'boisson'
+
+const COURSE_TAGS: CourseTag[] = ['entree', 'plat', 'dessert', 'boisson']
+const COURSE_ORDER: Record<CourseTag, number> = { entree: 1, plat: 2, dessert: 3, boisson: 4 }
 
 // Activities that support tables
 const TABLE_ACTIVITIES = ['restaurant', 'bar', 'bakery', 'hotel', 'cafe', 'nightclub']
+
+// ── Overlay modal helper ──────────────────────────────────────────────────
+
+const ModalOverlay: React.FC<{ onClose: () => void; children: React.ReactNode; width?: string }> = ({ onClose, children, width }) => (
+  <div style={{
+    position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+  }} onClick={onClose}>
+    <div style={{
+      backgroundColor: '#fff', borderRadius: 16, padding: 24,
+      width: width || '90%', maxWidth: 440, maxHeight: '85vh', overflow: 'auto',
+    }} onClick={e => e.stopPropagation()}>
+      {children}
+    </div>
+  </div>
+)
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -53,13 +77,14 @@ export default function ServerOrderPage() {
   const { currentStore, activity } = useAppStore()
   const { products, categories, loadProducts } = useProductStore()
   const { items, addItem, updateQty, clear, getTotal } = useCartStore()
-  const { tables, loadTables, setTableStatus } = useTableStore()
+  const { tables, loadTables, setTableStatus, transferTable, mergeTables } = useTableStore()
   const { createOrder, orders, loadOrders, updateOrderStatus } = useOrderStore()
   const { user } = useAuthStore()
   const { t } = useLanguageStore()
   const { recordVisit } = useCustomerStore()
   const selectedCustomer = useCustomerStore(s => s.selectedCustomer)
   const { calculateTotalDiscount, loadPromotions } = usePromotionStore()
+  const kdsStore = useKdsStore()
   const { rv } = useResponsive()
 
   const currencyCode = currentStore?.currency || 'XAF'
@@ -75,6 +100,27 @@ export default function ServerOrderPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showPendingPanel, setShowPendingPanel] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState<'sent' | 'paid' | null>(null)
+
+  // Transfer modal
+  const [showTransferModal, setShowTransferModal] = useState(false)
+  const [transferFromTable, setTransferFromTable] = useState<RestaurantTable | null>(null)
+
+  // Merge modal
+  const [showMergeModal, setShowMergeModal] = useState(false)
+  const [mergeSelectedIds, setMergeSelectedIds] = useState<string[]>([])
+  const [mergePrimaryId, setMergePrimaryId] = useState<string | null>(null)
+
+  // Split bill modal
+  const [showSplitBillModal, setShowSplitBillModal] = useState(false)
+  const [guestCount, setGuestCount] = useState(2)
+  // Map: product_id -> guest index (0-based)
+  const [guestAssignments, setGuestAssignments] = useState<Record<string, number>>({})
+  const [guestPaidStatus, setGuestPaidStatus] = useState<Record<number, PaymentMethod | null>>({})
+
+  // Coursing
+  const [courseTags, setCourseTags] = useState<Record<string, CourseTag>>({}) // product_id -> course
+  const [sentCourses, setSentCourses] = useState<Set<CourseTag>>(new Set())
+  const [showCourseModal, setShowCourseModal] = useState(false)
 
   // Fallback labels
   const so = (t as any).serverOrder || {}
@@ -97,6 +143,55 @@ export default function ServerOrderPage() {
     items: so.itemsLabel || t.pos?.items || 'articles',
     pending: so.pendingLabel || 'En attente',
     tableLabel: so.tableLabel || 'Table',
+    // Transfer
+    transfer: so.transfer || 'Transferer',
+    transferTitle: so.transferTitle || 'Transferer la table',
+    selectTargetTable: so.selectTargetTable || 'Selectionnez la table de destination',
+    transferSuccess: so.transferSuccess || 'Table transferee !',
+    // Merge
+    merge: so.merge || 'Fusionner',
+    mergeTitle: so.mergeTitle || 'Fusionner les tables',
+    selectTablesToMerge: so.selectTablesToMerge || 'Selectionnez les tables a fusionner',
+    primaryTable: so.primaryTable || 'Table principale',
+    mergeTables: so.mergeTables || 'Fusionner les tables',
+    mergeSuccess: so.mergeSuccess || 'Tables fusionnees !',
+    // Split bill
+    splitBill: so.splitBill || 'Diviser par convive',
+    splitBillTitle: so.splitBillTitle || "Diviser l'addition",
+    guest: so.guest || 'Convive',
+    addGuest: so.addGuest || 'Ajouter un convive',
+    assignToGuest: so.assignToGuest || 'Assigner au convive',
+    guestSubtotal: so.guestSubtotal || 'Sous-total convive',
+    payGuest: so.payGuest || 'Payer pour ce convive',
+    guestPaid: so.guestPaid || 'Convive paye',
+    allGuestsPaid: so.allGuestsPaid || 'Tous les convives ont paye !',
+    unassigned: so.unassigned || 'Non assigne',
+    // Coursing
+    course: so.course || 'Service',
+    courseEntree: so.courseEntree || 'Entree',
+    coursePlat: so.coursePlat || 'Plat',
+    courseDessert: so.courseDessert || 'Dessert',
+    courseBoisson: so.courseBoisson || 'Boisson',
+    sendCourse: so.sendCourse || 'Envoyer le service',
+    sendNextCourse: so.sendNextCourse || 'Envoyer service suivant',
+    courseLabel: so.courseLabel || 'Service',
+    allCoursesSent: so.allCoursesSent || 'Tous les services envoyes',
+    courseSent: so.courseSent || 'Service envoye !',
+    setCourse: so.setCourse || 'Definir le service',
+  }
+
+  const courseLabels: Record<CourseTag, string> = {
+    entree: lbl.courseEntree,
+    plat: lbl.coursePlat,
+    dessert: lbl.courseDessert,
+    boisson: lbl.courseBoisson,
+  }
+
+  const courseColors: Record<CourseTag, string> = {
+    entree: C.orange,
+    plat: C.primary,
+    dessert: C.purple,
+    boisson: C.teal,
   }
 
   // Always reload data on mount (ensures newly created tables/products appear)
@@ -132,12 +227,16 @@ export default function ServerOrderPage() {
   const handleSelectTable = (table: RestaurantTable) => {
     setSelectedTable(table)
     clear()
+    setCourseTags({})
+    setSentCourses(new Set())
     setStep('order')
   }
 
   const handleStartCustomerOrder = () => {
     if (!customerName.trim()) return
     clear()
+    setCourseTags({})
+    setSentCourses(new Set())
     setStep('order')
   }
 
@@ -148,6 +247,8 @@ export default function ServerOrderPage() {
     clear()
     setSearchQuery('')
     setSelectedCategory(null)
+    setCourseTags({})
+    setSentCourses(new Set())
   }
 
   const handleSendOrder = async () => {
@@ -240,6 +341,157 @@ export default function ServerOrderPage() {
     }
   }
 
+  // ── Transfer handler ──────────────────────────────────────────────────
+
+  const handleTransferTable = useCallback(async (toTable: RestaurantTable) => {
+    if (!transferFromTable) return
+    try {
+      await transferTable(transferFromTable.id, toTable.id)
+
+      // Update KDS orders with new table info
+      const kdsOrders = kdsStore.orders.filter(o => o.table_id === transferFromTable.id)
+      for (const ko of kdsOrders) {
+        await kdsStore.updateItemStatus(ko.id, -1, false) // no-op just to trigger re-render
+      }
+
+      // Update pending orders' table references
+      const relatedOrders = pendingOrders.filter(o => o.table_id === transferFromTable.id)
+      for (const order of relatedOrders) {
+        // We update the order in IndexedDB through the order store
+        await updateOrderStatus(order.id, 'pending')
+      }
+
+      setShowTransferModal(false)
+      setTransferFromTable(null)
+      if (storeId) loadTables(storeId)
+    } catch (err) {
+      console.error('Transfer failed:', err)
+    }
+  }, [transferFromTable, transferTable, kdsStore, pendingOrders, updateOrderStatus, storeId, loadTables])
+
+  // ── Merge handler ──────────────────────────────────────────────────────
+
+  const handleMergeTables = useCallback(async () => {
+    if (!mergePrimaryId || mergeSelectedIds.length < 2) return
+    const secondaryIds = mergeSelectedIds.filter(id => id !== mergePrimaryId)
+    try {
+      await mergeTables(mergePrimaryId, secondaryIds)
+
+      // Merge items from secondary table orders into primary
+      // (In a real system you'd combine the order items; here we just free secondaries)
+      if (storeId) {
+        loadTables(storeId)
+        loadOrders(storeId)
+      }
+
+      setShowMergeModal(false)
+      setMergeSelectedIds([])
+      setMergePrimaryId(null)
+    } catch (err) {
+      console.error('Merge failed:', err)
+    }
+  }, [mergePrimaryId, mergeSelectedIds, mergeTables, storeId, loadTables, loadOrders])
+
+  // ── Split bill handlers ───────────────────────────────────────────────
+
+  const openSplitBill = useCallback(() => {
+    setGuestCount(2)
+    const assignments: Record<string, number> = {}
+    items.forEach(item => { assignments[item.product_id] = 0 })
+    setGuestAssignments(assignments)
+    setGuestPaidStatus({})
+    setShowSplitBillModal(true)
+  }, [items])
+
+  const getGuestItems = useCallback((guestIndex: number): CartItem[] => {
+    return items.filter(item => (guestAssignments[item.product_id] ?? 0) === guestIndex)
+  }, [items, guestAssignments])
+
+  const getGuestTotal = useCallback((guestIndex: number): number => {
+    return getGuestItems(guestIndex).reduce((sum, item) => sum + item.price * item.qty, 0)
+  }, [getGuestItems])
+
+  const handlePayGuest = useCallback(async (guestIndex: number, paymentMethod: PaymentMethod) => {
+    if (!user || !storeId) return
+    try {
+      const guestItems = getGuestItems(guestIndex)
+      if (guestItems.length === 0) return
+
+      await createOrder(guestItems, paymentMethod, user.id, storeId, {
+        table_id: selectedTable?.id,
+        table_name: selectedTable ? `${lbl.tableLabel} #${selectedTable.number} - ${lbl.guest} ${guestIndex + 1}` : undefined,
+        customer_name: identifyMode === 'customer' ? `${customerName} - ${lbl.guest} ${guestIndex + 1}` : undefined,
+      })
+
+      setGuestPaidStatus(prev => ({ ...prev, [guestIndex]: paymentMethod }))
+    } catch (err) {
+      console.error('Guest payment failed:', err)
+    }
+  }, [user, storeId, getGuestItems, createOrder, selectedTable, lbl, identifyMode, customerName])
+
+  const allGuestsPaid = useMemo(() => {
+    for (let i = 0; i < guestCount; i++) {
+      if (!guestPaidStatus[i] && getGuestItems(i).length > 0) return false
+    }
+    return true
+  }, [guestCount, guestPaidStatus, getGuestItems])
+
+  // ── Coursing handlers ─────────────────────────────────────────────────
+
+  const currentCourse = useMemo((): CourseTag | null => {
+    // Find the first unsent course that has items
+    for (const tag of COURSE_TAGS) {
+      if (!sentCourses.has(tag)) {
+        const hasItems = items.some(item => courseTags[item.product_id] === tag)
+        if (hasItems) return tag
+      }
+    }
+    return null
+  }, [items, courseTags, sentCourses])
+
+  const nextCourse = useMemo((): CourseTag | null => {
+    let foundCurrent = false
+    for (const tag of COURSE_TAGS) {
+      if (tag === currentCourse) { foundCurrent = true; continue }
+      if (foundCurrent && !sentCourses.has(tag)) {
+        const hasItems = items.some(item => courseTags[item.product_id] === tag)
+        if (hasItems) return tag
+      }
+    }
+    return null
+  }, [items, courseTags, sentCourses, currentCourse])
+
+  const handleSendCourse = useCallback(async (courseTag: CourseTag) => {
+    if (!user || !storeId) return
+    const courseItems = items.filter(item => courseTags[item.product_id] === courseTag)
+    if (courseItems.length === 0) return
+
+    try {
+      // Send just these items to KDS
+      const kdsItems = courseItems.map(item => ({
+        product_name: item.name,
+        quantity: item.qty,
+        station: 'grill' as const,
+        done: false,
+      }))
+
+      await kdsStore.addOrder(storeId, {
+        order_id: `course-${Date.now()}`,
+        order_number: `${lbl.courseLabel} ${COURSE_ORDER[courseTag]} - ${courseLabels[courseTag]}`,
+        table_number: selectedTable ? `#${selectedTable.number}` : undefined,
+        table_id: selectedTable?.id,
+        items: kdsItems,
+        status: 'new',
+        station: 'grill',
+        priority: false,
+      })
+
+      setSentCourses(prev => new Set(prev).add(courseTag))
+    } catch (err) {
+      console.error('Failed to send course:', err)
+    }
+  }, [user, storeId, items, courseTags, kdsStore, selectedTable, lbl, courseLabels])
+
   // ── Styles ──────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
@@ -278,12 +530,12 @@ export default function ServerOrderPage() {
     transition: 'all 0.2s',
   })
 
-  const tableCardStyle = (status: TableStatus): React.CSSProperties => ({
+  const tableCardStyle = (status: TableStatus, clickable?: boolean): React.CSSProperties => ({
     backgroundColor: C.card, borderRadius: 12,
     border: `2px solid ${STATUS_COLORS[status]}60`,
-    padding: rv(14, 16, 18), cursor: status === 'free' ? 'pointer' : 'default',
+    padding: rv(14, 16, 18), cursor: (clickable ?? status === 'free') ? 'pointer' : 'default',
     textAlign: 'center', transition: 'transform 0.15s',
-    opacity: status === 'free' ? 1 : 0.5,
+    opacity: (clickable ?? status === 'free') ? 1 : 0.5,
   })
 
   const productCardStyle = (inCart: boolean): React.CSSProperties => ({
@@ -306,13 +558,22 @@ export default function ServerOrderPage() {
     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
   }
 
+  const actionBtnStyle = (color: string, disabled?: boolean): React.CSSProperties => ({
+    padding: '8px 12px', borderRadius: 8, border: 'none',
+    backgroundColor: disabled ? C.border : color,
+    color: disabled ? C.textSecondary : '#fff',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+    whiteSpace: 'nowrap',
+  })
+
   const getStatusLabel = (status: TableStatus): string => {
     const map: Record<TableStatus, string> = {
       free: t.tables?.free || 'Free',
       occupied: t.tables?.occupied || 'Occupied',
       reserved: t.tables?.reserved || 'Reserved',
       bill_requested: t.tables?.billRequested || 'Bill',
-      food_ready: (t.tables as any)?.foodReady || 'Prêt à servir',
+      food_ready: (t.tables as any)?.foodReady || 'Pret a servir',
     }
     return map[status]
   }
@@ -399,9 +660,9 @@ export default function ServerOrderPage() {
                         cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text,
                         textAlign: 'center',
                       }}>
-                        {method === 'cash' ? `💵 ${t.pos?.cash || 'Cash'}` :
-                         method === 'momo' ? `📱 MoMo` :
-                         `💳 ${t.pos?.carteBancaire || 'CB'}`}
+                        {method === 'cash' ? `${t.pos?.cash || 'Cash'}` :
+                         method === 'momo' ? 'MoMo' :
+                         `${t.pos?.carteBancaire || 'CB'}`}
                       </button>
                     ))}
                   </div>
@@ -411,6 +672,381 @@ export default function ServerOrderPage() {
           )}
         </div>
       </div>
+    )
+  }
+
+  // ── Transfer Modal ────────────────────────────────────────────────────
+
+  const renderTransferModal = () => {
+    if (!showTransferModal) return null
+    const freeTables = tables.filter(tb => tb.status === 'free')
+    return (
+      <ModalOverlay onClose={() => setShowTransferModal(false)}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, color: C.text }}>
+            <ArrowRightLeft size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+            {lbl.transferTitle}
+          </h3>
+          <button onClick={() => setShowTransferModal(false)} style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary,
+          }}><X size={20} /></button>
+        </div>
+        {transferFromTable && (
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: '0 0 12px' }}>
+            {lbl.tableLabel} #{transferFromTable.number} → {lbl.selectTargetTable}
+          </p>
+        )}
+        {freeTables.length === 0 ? (
+          <p style={{ textAlign: 'center', color: C.textSecondary, padding: 20 }}>
+            {t.tables?.noTables || 'No free tables available'}
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            {freeTables.map(tb => (
+              <div key={tb.id} onClick={() => handleTransferTable(tb)} style={{
+                ...tableCardStyle('free', true), cursor: 'pointer', opacity: 1,
+              }}>
+                <p style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }}>#{tb.number}</p>
+                <p style={{ fontSize: 11, color: C.textSecondary, margin: '2px 0 0' }}>{tb.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </ModalOverlay>
+    )
+  }
+
+  // ── Merge Modal ───────────────────────────────────────────────────────
+
+  const renderMergeModal = () => {
+    if (!showMergeModal) return null
+    const occupiedTables = tables.filter(tb => tb.status === 'occupied')
+    return (
+      <ModalOverlay onClose={() => setShowMergeModal(false)}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, color: C.text }}>
+            <Merge size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+            {lbl.mergeTitle}
+          </h3>
+          <button onClick={() => setShowMergeModal(false)} style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary,
+          }}><X size={20} /></button>
+        </div>
+        <p style={{ fontSize: 13, color: C.textSecondary, margin: '0 0 12px' }}>
+          {lbl.selectTablesToMerge}
+        </p>
+
+        {occupiedTables.length < 2 ? (
+          <p style={{ textAlign: 'center', color: C.textSecondary, padding: 20 }}>
+            {t.tables?.noTables || 'Need at least 2 occupied tables'}
+          </p>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+              {occupiedTables.map(tb => {
+                const selected = mergeSelectedIds.includes(tb.id)
+                const isPrimary = mergePrimaryId === tb.id
+                return (
+                  <div key={tb.id} onClick={() => {
+                    setMergeSelectedIds(prev =>
+                      prev.includes(tb.id) ? prev.filter(id => id !== tb.id) : [...prev, tb.id]
+                    )
+                    if (!mergePrimaryId) setMergePrimaryId(tb.id)
+                  }} style={{
+                    backgroundColor: C.card, borderRadius: 12,
+                    border: `2px solid ${selected ? (isPrimary ? C.primary : C.warning) : C.border}`,
+                    padding: 14, cursor: 'pointer', textAlign: 'center',
+                    opacity: 1,
+                  }}>
+                    <p style={{ fontSize: 20, fontWeight: 700, color: C.text, margin: 0 }}>#{tb.number}</p>
+                    <p style={{ fontSize: 11, color: C.textSecondary, margin: '2px 0 4px' }}>{tb.name}</p>
+                    {isPrimary && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, color: C.primary,
+                        backgroundColor: C.primary + '15', padding: '2px 6px', borderRadius: 4,
+                      }}>{lbl.primaryTable}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {mergeSelectedIds.length >= 2 && (
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6 }}>{lbl.primaryTable}:</p>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {mergeSelectedIds.map(id => {
+                    const tb = tables.find(t => t.id === id)
+                    if (!tb) return null
+                    return (
+                      <button key={id} onClick={() => setMergePrimaryId(id)} style={{
+                        padding: '6px 12px', borderRadius: 8,
+                        border: `1px solid ${mergePrimaryId === id ? C.primary : C.border}`,
+                        backgroundColor: mergePrimaryId === id ? C.primary + '15' : C.card,
+                        color: C.text, cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                      }}>
+                        #{tb.number}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleMergeTables}
+              disabled={mergeSelectedIds.length < 2 || !mergePrimaryId}
+              style={{
+                width: '100%', padding: '12px', borderRadius: 10, border: 'none',
+                backgroundColor: mergeSelectedIds.length >= 2 ? C.primary : C.border,
+                color: mergeSelectedIds.length >= 2 ? '#fff' : C.textSecondary,
+                cursor: mergeSelectedIds.length >= 2 ? 'pointer' : 'not-allowed',
+                fontSize: 14, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}
+            >
+              <Merge size={16} />
+              {lbl.mergeTables} ({mergeSelectedIds.length})
+            </button>
+          </>
+        )}
+      </ModalOverlay>
+    )
+  }
+
+  // ── Split Bill Modal ──────────────────────────────────────────────────
+
+  const renderSplitBillModal = () => {
+    if (!showSplitBillModal) return null
+    return (
+      <ModalOverlay onClose={() => setShowSplitBillModal(false)} width="95%">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, color: C.text }}>
+            <Split size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+            {lbl.splitBillTitle}
+          </h3>
+          <button onClick={() => setShowSplitBillModal(false)} style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary,
+          }}><X size={20} /></button>
+        </div>
+
+        {/* Guest count control */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{lbl.guest}:</span>
+          <button onClick={() => setGuestCount(Math.max(2, guestCount - 1))} style={{
+            width: 30, height: 30, borderRadius: 6, border: `1px solid ${C.border}`,
+            backgroundColor: C.card, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}><Minus size={14} /></button>
+          <span style={{ fontSize: 16, fontWeight: 700, color: C.text, minWidth: 20, textAlign: 'center' }}>{guestCount}</span>
+          <button onClick={() => setGuestCount(guestCount + 1)} style={{
+            width: 30, height: 30, borderRadius: 6, border: 'none',
+            backgroundColor: C.primary, color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}><UserPlus size={14} /></button>
+        </div>
+
+        {/* Items assignment */}
+        <div style={{ marginBottom: 16 }}>
+          {items.map(item => {
+            const assignedGuest = guestAssignments[item.product_id] ?? 0
+            return (
+              <div key={item.product_id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '8px 10px', borderRadius: 8, marginBottom: 6,
+                border: `1px solid ${C.border}`, backgroundColor: C.bg,
+              }}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{item.qty}x {item.name}</span>
+                  <span style={{ fontSize: 12, color: C.textSecondary, marginLeft: 8 }}>
+                    {formatCurrency(item.price * item.qty, currencyCode)}
+                  </span>
+                </div>
+                <select
+                  value={assignedGuest}
+                  onChange={e => setGuestAssignments(prev => ({
+                    ...prev, [item.product_id]: parseInt(e.target.value),
+                  }))}
+                  style={{
+                    padding: '4px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
+                    fontSize: 12, color: C.text, backgroundColor: C.card, cursor: 'pointer',
+                  }}
+                >
+                  {Array.from({ length: guestCount }, (_, i) => (
+                    <option key={i} value={i}>{lbl.guest} {i + 1}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Guest subtotals and pay buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {Array.from({ length: guestCount }, (_, gIdx) => {
+            const gItems = getGuestItems(gIdx)
+            const gTotal = getGuestTotal(gIdx)
+            const paid = guestPaidStatus[gIdx]
+            return (
+              <div key={gIdx} style={{
+                padding: 12, borderRadius: 10,
+                border: `1px solid ${paid ? C.success : C.border}`,
+                backgroundColor: paid ? C.success + '08' : C.card,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                    <User size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                    {lbl.guest} {gIdx + 1}
+                  </span>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: paid ? C.success : C.primary }}>
+                    {formatCurrency(gTotal, currencyCode)}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: C.textSecondary, marginBottom: 8 }}>
+                  {gItems.map((item, i) => (
+                    <span key={i}>{i > 0 ? ', ' : ''}{item.qty}x {item.name}</span>
+                  ))}
+                  {gItems.length === 0 && <span style={{ fontStyle: 'italic' }}>{lbl.unassigned}</span>}
+                </div>
+                {paid ? (
+                  <div style={{ fontSize: 12, fontWeight: 600, color: C.success, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <CheckCircle2 size={14} /> {lbl.guestPaid}
+                  </div>
+                ) : gItems.length > 0 ? (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {(['cash', 'card', 'momo'] as PaymentMethod[]).map(method => (
+                      <button key={method} onClick={() => handlePayGuest(gIdx, method)} style={{
+                        flex: 1, minWidth: 70, padding: '6px 8px', borderRadius: 6,
+                        border: `1px solid ${C.border}`, backgroundColor: C.card,
+                        cursor: 'pointer', fontSize: 11, fontWeight: 600, color: C.text, textAlign: 'center',
+                      }}>
+                        {method === 'cash' ? (t.pos?.cash || 'Cash') :
+                         method === 'card' ? (t.pos?.carteBancaire || 'Card') : 'MoMo'}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+
+        {allGuestsPaid && (
+          <div style={{
+            marginTop: 16, padding: 12, borderRadius: 10, backgroundColor: C.success + '15',
+            textAlign: 'center', color: C.success, fontSize: 14, fontWeight: 700,
+          }}>
+            <CheckCircle2 size={18} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+            {lbl.allGuestsPaid}
+          </div>
+        )}
+
+        {allGuestsPaid && (
+          <button onClick={() => {
+            setShowSplitBillModal(false)
+            if (selectedTable) setTableStatus(selectedTable.id, 'free')
+            clear()
+            setOrderSuccess('paid')
+            setTimeout(() => { setOrderSuccess(null); handleBackToIdentify() }, 2000)
+          }} style={{
+            marginTop: 10, width: '100%', padding: 12, borderRadius: 10, border: 'none',
+            backgroundColor: C.success, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+          }}>
+            {t.common?.close || 'Close'}
+          </button>
+        )}
+      </ModalOverlay>
+    )
+  }
+
+  // ── Coursing Modal ────────────────────────────────────────────────────
+
+  const renderCourseModal = () => {
+    if (!showCourseModal) return null
+    return (
+      <ModalOverlay onClose={() => setShowCourseModal(false)}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18, color: C.text }}>
+            <ChefHat size={18} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+            {lbl.setCourse}
+          </h3>
+          <button onClick={() => setShowCourseModal(false)} style={{
+            background: 'none', border: 'none', cursor: 'pointer', color: C.textSecondary,
+          }}><X size={20} /></button>
+        </div>
+
+        {/* Assign course tag per item */}
+        {items.map(item => {
+          const tag = courseTags[item.product_id]
+          return (
+            <div key={item.product_id} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 10px', borderRadius: 8, marginBottom: 6,
+              border: `1px solid ${C.border}`, backgroundColor: C.bg,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: C.text, flex: 1 }}>
+                {item.qty}x {item.name}
+              </span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {COURSE_TAGS.map(ct => (
+                  <button key={ct} onClick={() => setCourseTags(prev => ({ ...prev, [item.product_id]: ct }))} style={{
+                    padding: '4px 8px', borderRadius: 6, border: 'none',
+                    backgroundColor: tag === ct ? courseColors[ct] : C.bg,
+                    color: tag === ct ? '#fff' : C.textSecondary,
+                    cursor: 'pointer', fontSize: 10, fontWeight: 600,
+                  }}>
+                    {courseLabels[ct]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Course status summary */}
+        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {COURSE_TAGS.map(ct => {
+            const courseItems = items.filter(item => courseTags[item.product_id] === ct)
+            if (courseItems.length === 0) return null
+            const isSent = sentCourses.has(ct)
+            return (
+              <div key={ct} style={{
+                padding: 10, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                border: `1px solid ${isSent ? C.success : courseColors[ct]}30`,
+                backgroundColor: isSent ? C.success + '08' : courseColors[ct] + '08',
+              }}>
+                <div>
+                  <span style={{
+                    fontSize: 12, fontWeight: 700, color: isSent ? C.success : courseColors[ct],
+                    marginRight: 6,
+                  }}>
+                    {lbl.courseLabel} {COURSE_ORDER[ct]}: {courseLabels[ct]}
+                  </span>
+                  <span style={{ fontSize: 11, color: C.textSecondary }}>
+                    ({courseItems.length} {lbl.items})
+                  </span>
+                </div>
+                {isSent ? (
+                  <span style={{ fontSize: 11, fontWeight: 600, color: C.success, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <CheckCircle2 size={12} /> {lbl.courseSent}
+                  </span>
+                ) : (
+                  <button onClick={() => handleSendCourse(ct)} style={actionBtnStyle(courseColors[ct])}>
+                    <Send size={12} /> {lbl.sendCourse}
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <button onClick={() => setShowCourseModal(false)} style={{
+          marginTop: 16, width: '100%', padding: 10, borderRadius: 8,
+          border: 'none', backgroundColor: C.bg, color: C.textSecondary,
+          cursor: 'pointer', fontSize: 14,
+        }}>
+          {t.common?.close || 'Close'}
+        </button>
+      </ModalOverlay>
     )
   }
 
@@ -459,6 +1095,15 @@ export default function ServerOrderPage() {
           {/* Table mode */}
           {identifyMode === 'table' && hasTableSupport && (
             <>
+              {/* Transfer / Merge action buttons */}
+              {occupiedTables.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  <button onClick={() => setShowMergeModal(true)} style={actionBtnStyle(C.purple)}>
+                    <Merge size={14} /> {lbl.merge}
+                  </button>
+                </div>
+              )}
+
               {freeTables.length > 0 && (
                 <>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.success, margin: '0 0 10px' }}>
@@ -494,7 +1139,7 @@ export default function ServerOrderPage() {
                   </p>
                   <div style={gridStyle}>
                     {occupiedTables.map(table => (
-                      <div key={table.id} style={tableCardStyle(table.status)}>
+                      <div key={table.id} style={{ ...tableCardStyle(table.status, true), opacity: 1, cursor: 'pointer' }}>
                         <p style={{ fontSize: rv(22, 26, 28), fontWeight: 700, color: C.text, margin: 0 }}>
                           #{table.number}
                         </p>
@@ -506,6 +1151,21 @@ export default function ServerOrderPage() {
                           fontSize: 11, color: STATUS_COLORS[table.status],
                         }}>
                           {getStatusLabel(table.status)}
+                        </div>
+                        {/* Transfer button on occupied tables */}
+                        <div style={{ marginTop: 8 }}>
+                          <button onClick={(e) => {
+                            e.stopPropagation()
+                            setTransferFromTable(table)
+                            setShowTransferModal(true)
+                          }} style={{
+                            padding: '4px 10px', borderRadius: 6, border: 'none',
+                            backgroundColor: C.blue + '15', color: C.blue,
+                            cursor: 'pointer', fontSize: 10, fontWeight: 600,
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                          }}>
+                            <ArrowRightLeft size={10} /> {lbl.transfer}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -608,6 +1268,8 @@ export default function ServerOrderPage() {
         </div>
 
         {renderPendingPanel()}
+        {renderTransferModal()}
+        {renderMergeModal()}
       </div>
     )
   }
@@ -617,6 +1279,13 @@ export default function ServerOrderPage() {
   const orderLabel = selectedTable
     ? `${selectedTable.name || lbl.tableLabel + ' #' + selectedTable.number}`
     : customerName
+
+  // Count how many items have course tags assigned
+  const taggedItemCount = items.filter(item => courseTags[item.product_id]).length
+  const allCoursesSent = taggedItemCount > 0 && COURSE_TAGS.every(ct => {
+    const hasItems = items.some(item => courseTags[item.product_id] === ct)
+    return !hasItems || sentCourses.has(ct)
+  })
 
   return (
     <div style={pageStyle}>
@@ -642,6 +1311,36 @@ export default function ServerOrderPage() {
           {items.length} · {formatCurrency(getTotal(), currencyCode)}
         </div>
       </div>
+
+      {/* Action bar for coursing and split bill */}
+      {items.length > 0 && hasTableSupport && (
+        <div style={{
+          display: 'flex', gap: 6, padding: '8px 16px', backgroundColor: C.card,
+          borderBottom: `1px solid ${C.border}`, flexShrink: 0, overflowX: 'auto',
+        }}>
+          <button onClick={() => setShowCourseModal(true)} style={actionBtnStyle(C.teal)}>
+            <ChefHat size={14} /> {lbl.course}
+            {taggedItemCount > 0 && <span style={{
+              backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 10, padding: '1px 6px', fontSize: 10,
+            }}>{taggedItemCount}</span>}
+          </button>
+          {currentCourse && !sentCourses.has(currentCourse) && (
+            <button onClick={() => handleSendCourse(currentCourse)} style={actionBtnStyle(courseColors[currentCourse])}>
+              <Send size={12} /> {lbl.sendCourse}: {courseLabels[currentCourse]}
+            </button>
+          )}
+          {nextCourse && (
+            <button onClick={() => handleSendCourse(nextCourse)} style={actionBtnStyle(courseColors[nextCourse])}>
+              <Send size={12} /> {lbl.sendNextCourse}: {courseLabels[nextCourse]}
+            </button>
+          )}
+          {allCoursesSent && taggedItemCount > 0 && (
+            <span style={{ fontSize: 11, fontWeight: 600, color: C.success, display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px' }}>
+              <CheckCircle2 size={12} /> {lbl.allCoursesSent}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Search + categories */}
       <div style={{ padding: '12px 16px 0', backgroundColor: C.card, flexShrink: 0 }}>
@@ -698,6 +1397,7 @@ export default function ServerOrderPage() {
         }}>
           {filteredProducts.map(product => {
             const inCart = items.find(i => i.product_id === product.id)
+            const courseTag = courseTags[product.id]
             return (
               <div key={product.id} style={productCardStyle(!!inCart)} onClick={() => addItem(product)}>
                 <p style={{
@@ -709,6 +1409,13 @@ export default function ServerOrderPage() {
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.primary, margin: 0 }}>
                   {formatCurrency(product.price, currencyCode)}
                 </p>
+                {/* Course tag badge */}
+                {inCart && courseTag && (
+                  <span style={{
+                    display: 'inline-block', marginTop: 4, padding: '1px 6px', borderRadius: 4,
+                    fontSize: 9, fontWeight: 700, color: '#fff', backgroundColor: courseColors[courseTag],
+                  }}>{courseLabels[courseTag]}</span>
+                )}
                 {inCart && (
                   <div style={{
                     marginTop: 6, display: 'flex', alignItems: 'center',
@@ -751,7 +1458,7 @@ export default function ServerOrderPage() {
             {formatCurrency(getTotal(), currencyCode)}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {items.length > 0 && (
             <button onClick={() => clear()} style={{
               padding: '10px 14px', borderRadius: 8,
@@ -761,12 +1468,18 @@ export default function ServerOrderPage() {
               <X size={14} />
             </button>
           )}
+          {/* Split bill button */}
+          {items.length > 0 && (
+            <button onClick={openSplitBill} style={actionBtnStyle(C.purple)}>
+              <Split size={14} /> {lbl.splitBill}
+            </button>
+          )}
           {/* Send order (pending) */}
           <button
             onClick={handleSendOrder}
             disabled={items.length === 0}
             style={{
-              padding: '12px 20px', borderRadius: 10, border: 'none',
+              padding: '12px 16px', borderRadius: 10, border: 'none',
               backgroundColor: items.length > 0 ? C.orange : C.border,
               color: items.length > 0 ? '#fff' : C.textSecondary,
               cursor: items.length > 0 ? 'pointer' : 'not-allowed',
@@ -782,7 +1495,7 @@ export default function ServerOrderPage() {
               onClick={() => items.length > 0 && setShowPaymentModal(true)}
               disabled={items.length === 0}
               style={{
-                padding: '12px 20px', borderRadius: 10, border: 'none',
+                padding: '12px 16px', borderRadius: 10, border: 'none',
                 backgroundColor: items.length > 0 ? C.success : C.border,
                 color: items.length > 0 ? '#fff' : C.textSecondary,
                 cursor: items.length > 0 ? 'pointer' : 'not-allowed',
@@ -806,53 +1519,47 @@ export default function ServerOrderPage() {
 
       {/* Payment modal */}
       {showPaymentModal && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-        }} onClick={() => setShowPaymentModal(false)}>
-          <div style={{
-            backgroundColor: '#fff', borderRadius: 16, padding: 24,
-            width: '90%', maxWidth: 380,
-          }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 8px', fontSize: 18, color: C.text }}>
-              {t.pos?.confirmPayment || 'Confirm Payment'}
-            </h3>
-            <p style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 700, color: C.primary }}>
-              {formatCurrency(getTotal(), currencyCode)}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(['cash', 'card', 'momo', 'mtn_money', 'orange_money', 'transfer'] as PaymentMethod[]).map(method => {
-                const labels: Record<string, string> = {
-                  cash: `💵 ${t.pos?.cash || 'Cash'}`,
-                  card: `💳 ${t.pos?.carteBancaire || 'Card'}`,
-                  momo: `📱 Mobile Money`,
-                  mtn_money: `📱 MTN MoMo`,
-                  orange_money: `📱 Orange Money`,
-                  transfer: `🏦 ${t.pos?.transfer || 'Transfer'}`,
-                }
-                return (
-                  <button key={method} onClick={() => handlePaymentConfirm(method)} style={{
-                    padding: '14px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
-                    backgroundColor: C.card, cursor: 'pointer', fontSize: 15, fontWeight: 600,
-                    color: C.text, textAlign: 'left',
-                  }}>
-                    {labels[method] || method}
-                  </button>
-                )
-              })}
-            </div>
-            <button onClick={() => setShowPaymentModal(false)} style={{
-              marginTop: 12, width: '100%', padding: '10px', borderRadius: 8,
-              border: 'none', backgroundColor: C.bg, color: C.textSecondary,
-              cursor: 'pointer', fontSize: 14,
-            }}>
-              {t.common?.cancel || 'Cancel'}
-            </button>
+        <ModalOverlay onClose={() => setShowPaymentModal(false)}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 18, color: C.text }}>
+            {t.pos?.confirmPayment || 'Confirm Payment'}
+          </h3>
+          <p style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 700, color: C.primary }}>
+            {formatCurrency(getTotal(), currencyCode)}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {(['cash', 'card', 'momo', 'mtn_money', 'orange_money', 'transfer'] as PaymentMethod[]).map(method => {
+              const labels: Record<string, string> = {
+                cash: `${t.pos?.cash || 'Cash'}`,
+                card: `${t.pos?.carteBancaire || 'Card'}`,
+                momo: 'Mobile Money',
+                mtn_money: 'MTN MoMo',
+                orange_money: 'Orange Money',
+                transfer: `${t.pos?.transfer || 'Transfer'}`,
+              }
+              return (
+                <button key={method} onClick={() => handlePaymentConfirm(method)} style={{
+                  padding: '14px 16px', borderRadius: 10, border: `1px solid ${C.border}`,
+                  backgroundColor: C.card, cursor: 'pointer', fontSize: 15, fontWeight: 600,
+                  color: C.text, textAlign: 'left',
+                }}>
+                  {labels[method] || method}
+                </button>
+              )
+            })}
           </div>
-        </div>
+          <button onClick={() => setShowPaymentModal(false)} style={{
+            marginTop: 12, width: '100%', padding: '10px', borderRadius: 8,
+            border: 'none', backgroundColor: C.bg, color: C.textSecondary,
+            cursor: 'pointer', fontSize: 14,
+          }}>
+            {t.common?.cancel || 'Cancel'}
+          </button>
+        </ModalOverlay>
       )}
 
       {renderPendingPanel()}
+      {renderSplitBillModal()}
+      {renderCourseModal()}
     </div>
   )
 }

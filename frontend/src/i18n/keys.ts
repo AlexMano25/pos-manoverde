@@ -256,6 +256,22 @@ export type TranslationKeys = {
     webhooks: string
     dataExchange: string
     superAdmin: string
+    forecast: string
+    planning: string
+  }
+
+  // Employee scheduling
+  schedule: {
+    title: string
+    addShift: string
+    editShift: string
+    weekOf: string
+    totalHours: string
+    noShift: string
+    startTime: string
+    endTime: string
+    notes: string
+    print: string
   }
 
   // Multi-store consolidated
@@ -298,6 +314,44 @@ export type TranslationKeys = {
     itemsLabel: string
     pendingLabel: string
     tableLabel: string
+    // Table transfer
+    transfer: string
+    transferTitle: string
+    transferDesc: string
+    transferSuccess: string
+    selectTargetTable: string
+    // Table merge
+    merge: string
+    mergeTitle: string
+    mergeDesc: string
+    mergeSuccess: string
+    selectTablesToMerge: string
+    primaryTable: string
+    mergeTables: string
+    // Split bill
+    splitBill: string
+    splitBillTitle: string
+    splitBillDesc: string
+    guest: string
+    addGuest: string
+    assignToGuest: string
+    guestSubtotal: string
+    payGuest: string
+    guestPaid: string
+    allGuestsPaid: string
+    unassigned: string
+    // Coursing
+    course: string
+    courseEntree: string
+    coursePlat: string
+    courseDessert: string
+    courseBoisson: string
+    setCourse: string
+    sendCourse: string
+    sendNextCourse: string
+    courseLabel: string
+    allCoursesSent: string
+    courseSent: string
   }
 
   // Dashboard
@@ -1523,6 +1577,32 @@ export type TranslationKeys = {
     anomaly_high_refund_rate: string
     anomaly_round_amount: string
     anomaly_unusual_volume: string
+  }
+
+  // Forecast / Predictions page
+  forecast: {
+    title: string
+    salesForecast: string
+    stockForecast: string
+    peakHours: string
+    trend: string
+    daysUntilStockout: string
+    avgDailySales: string
+    predictedRevenue: string
+    confidence: string
+    next7days: string
+    next30days: string
+    product: string
+    currentStock: string
+    noData: string
+    peakDay: string
+    peakHour: string
+    orderCount: string
+    revenue: string
+    movingAverage: string
+    daily: string
+    heatmapLow: string
+    heatmapHigh: string
   }
 
   // Appointments (hair salon, hotel, travel, education, etc.)

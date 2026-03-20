@@ -4,6 +4,7 @@ import type { Activity, SidebarItemConfig } from '../types'
 const GIFT_CARDS: SidebarItemConfig = { section: 'gift_cards', icon: 'Ticket', i18nKey: 'nav.giftCards', pageComponent: 'gift_cards', allowedRoles: ['admin', 'manager'] }
 const EXPENSES: SidebarItemConfig = { section: 'expenses', icon: 'Wallet', i18nKey: 'nav.expenses', pageComponent: 'expenses', serverOnly: true, allowedRoles: ['admin', 'manager'] }
 const CAMPAIGNS: SidebarItemConfig = { section: 'campaigns', icon: 'Megaphone', i18nKey: 'nav.campaigns', pageComponent: 'campaigns', serverOnly: true, allowedRoles: ['admin', 'manager'] }
+const SCHEDULE: SidebarItemConfig = { section: 'schedule', icon: 'CalendarDays', i18nKey: 'nav.planning', pageComponent: 'schedule', serverOnly: true, allowedRoles: ['admin', 'manager'] }
 const PAYROLL: SidebarItemConfig = { section: 'payroll', icon: 'Coins', i18nKey: 'nav.payroll', pageComponent: 'payroll', serverOnly: true, allowedRoles: ['admin'] }
 
 // ── Phase 6 shared items ─────────────────────────────────────────────────
@@ -45,6 +46,9 @@ const BOOKING_CALENDAR: SidebarItemConfig = { section: 'booking_calendar', icon:
 const VIN_DECODER: SidebarItemConfig = { section: 'vin_decoder', icon: 'ScanSearch', i18nKey: 'nav.vinDecoder', pageComponent: 'vin_decoder', allowedRoles: ['admin', 'manager'] }
 const VEHICLE_HISTORY: SidebarItemConfig = { section: 'vehicle_history', icon: 'CarFront', i18nKey: 'nav.vehicleHistory', pageComponent: 'vehicle_history', allowedRoles: ['admin', 'manager'] }
 const PARTS_CATALOG: SidebarItemConfig = { section: 'parts_catalog', icon: 'Cog', i18nKey: 'nav.partsCatalog', pageComponent: 'parts_catalog', allowedRoles: ['admin', 'manager', 'stock'] }
+
+// ── AI Forecasting ─────────────────────────────────────────────────────
+const FORECAST: SidebarItemConfig = { section: 'forecast', icon: 'TrendingUp', i18nKey: 'nav.forecast', pageComponent: 'forecast', serverOnly: true, allowedRoles: ['admin', 'manager'] }
 
 // ── LT-4/6 BI & Multi-store ──────────────────────────────────────────────
 const MULTI_STORE: SidebarItemConfig = { section: 'multi_store', icon: 'Building2', i18nKey: 'nav.multiStore', pageComponent: 'multi_store', serverOnly: true, allowedRoles: ['admin'] }
@@ -93,6 +97,7 @@ const STANDARD_RETAIL: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -134,6 +139,7 @@ const FOOD_BEVERAGE: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -166,6 +172,7 @@ const SERVICE_POS: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -202,6 +209,7 @@ const HOTEL: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -228,6 +236,7 @@ const REAL_ESTATE: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -257,6 +266,7 @@ const EDUCATION: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -290,6 +300,7 @@ const TRAVEL_AGENCY: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -321,6 +332,7 @@ const WELLNESS: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -360,6 +372,7 @@ const AUTO_REPAIR: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -390,6 +403,7 @@ const HAIR_SALON: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -424,6 +438,7 @@ const BTP: SidebarItemConfig[] = [
   { section: 'employees', icon: 'Users', i18nKey: 'nav.employees', pageComponent: 'employees', serverOnly: true, allowedRoles: ['admin'] },
   { section: 'time_attendance', icon: 'Clock', i18nKey: 'nav.timeAttendance', pageComponent: 'time_attendance', serverOnly: true, allowedRoles: ['admin', 'manager'] },
   PAYROLL,
+  SCHEDULE,
   MAINTENANCE,
   AUDIT_TRAIL,
   TAX,
@@ -494,7 +509,7 @@ export function getSidebarItems(activity: Activity | string | undefined | null):
   }
 
   // Auto-append cross-functional items if not already present
-  const autoItems = [MULTI_STORE, WEBHOOKS, DATA_EXCHANGE, SUPER_ADMIN]
+  const autoItems = [FORECAST, MULTI_STORE, WEBHOOKS, DATA_EXCHANGE, SUPER_ADMIN]
   for (const item of autoItems) {
     if (!items.find(i => i.section === item.section)) {
       const settingsIdx = items.findIndex(i => i.section === 'settings')

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Edit3, X, Users, Grid3X3,
-  CheckCircle2, Save,
+  CheckCircle2, Save, QrCode,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useTableStore } from '../stores/tableStore'
@@ -49,6 +49,8 @@ export default function TablesPage() {
   const [editingTable, setEditingTable] = useState<RestaurantTable | null>(null)
   const [showSetup, setShowSetup] = useState(false)
   const [setupCount, setSetupCount] = useState(10)
+  const [qrTable, setQrTable] = useState<RestaurantTable | null>(null)
+  const qrImgRef = useRef<HTMLImageElement>(null)
 
   // Form state
   const [formNumber, setFormNumber] = useState(1)
@@ -354,6 +356,81 @@ export default function TablesPage() {
     )
   }
 
+  // ── QR Code helpers ──────────────────────────────────────────────────
+
+  const getQrUrl = (table: RestaurantTable): string => {
+    const base = window.location.origin
+    return `${base}/order?table=${table.id}&store=${storeId}`
+  }
+
+  const getQrImageSrc = (url: string, size = 250): string =>
+    `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(url)}&size=${size}x${size}&margin=8`
+
+  const handlePrintQr = () => {
+    if (!qrTable) return
+    const url = getQrUrl(qrTable)
+    const w = window.open('', '_blank', 'width=400,height=500')
+    if (!w) return
+    w.document.write(`<!DOCTYPE html><html><head><title>QR - ${qrTable.name}</title>
+      <style>body{font-family:-apple-system,sans-serif;text-align:center;padding:30px;}
+      img{margin:20px auto;display:block;}h2{margin:0;}p{color:#666;font-size:14px;}</style></head>
+      <body><h2>${currentStore?.name || 'POS'}</h2><p>${qrTable.name} (#${qrTable.number})</p>
+      <img src="${getQrImageSrc(url, 300)}" width="300" height="300" />
+      <p style="font-size:12px;color:#999;">Scan to order</p>
+      <script>window.onload=function(){setTimeout(function(){window.print();},600);}</script>
+      </body></html>`)
+    w.document.close()
+  }
+
+  const renderQrModal = () => {
+    if (!qrTable) return null
+    const url = getQrUrl(qrTable)
+    return (
+      <div style={overlayStyle} onClick={() => setQrTable(null)}>
+        <div style={{ ...modalStyle, textAlign: 'center' as const, maxWidth: 360 }} onClick={e => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: C.text }}>
+              QR Code - {qrTable.name}
+            </h3>
+            <button onClick={() => setQrTable(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.textSecondary }}>
+              <X size={20} />
+            </button>
+          </div>
+
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: '0 0 14px' }}>
+            {t.tables.tableNumber} {qrTable.number} — {t.tables.capacity}: {qrTable.capacity}
+          </p>
+
+          <img
+            ref={qrImgRef}
+            src={getQrImageSrc(url)}
+            alt={`QR Code for ${qrTable.name}`}
+            width={250}
+            height={250}
+            style={{ display: 'block', margin: '0 auto 14px', borderRadius: 8, border: `1px solid ${C.border}` }}
+          />
+
+          <p style={{ fontSize: 11, color: C.textSecondary, margin: '0 0 16px', wordBreak: 'break-all' }}>
+            {url}
+          </p>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              style={{ ...addBtnStyle, backgroundColor: C.textSecondary, flex: 1, justifyContent: 'center' }}
+              onClick={() => setQrTable(null)}
+            >{t.common.cancel}</button>
+            <button
+              style={{ ...addBtnStyle, flex: 1, justifyContent: 'center' }}
+              onClick={handlePrintQr}
+            >
+              <QrCode size={16} /> Print
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   // ── Render modal (add/edit) ────────────────────────────────────────────
 
   const renderModal = () => {
@@ -472,6 +549,13 @@ export default function TablesPage() {
               gap: 4,
             }}>
               <button
+                onClick={e => { e.stopPropagation(); setQrTable(table) }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.primary }}
+                title="QR Code"
+              >
+                <QrCode size={14} />
+              </button>
+              <button
                 onClick={e => { e.stopPropagation(); openEditModal(table) }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.textSecondary }}
               >
@@ -540,6 +624,7 @@ export default function TablesPage() {
       </div>
 
       {renderModal()}
+      {renderQrModal()}
     </div>
   )
 }

@@ -20,6 +20,8 @@ interface TableActions {
   setTableStatus: (id: string, status: TableStatus, orderId?: string) => Promise<void>
   initializeDefaultTables: (storeId: string, count: number) => Promise<void>
   getTableById: (id: string) => RestaurantTable | undefined
+  transferTable: (fromId: string, toId: string) => Promise<void>
+  mergeTables: (primaryId: string, secondaryIds: string[]) => Promise<void>
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -126,6 +128,65 @@ export const useTableStore = create<TableState & TableActions>()(
 
     getTableById: (id) => {
       return get().tables.find((t) => t.id === id)
+    },
+
+    transferTable: async (fromId, toId) => {
+      const now = new Date().toISOString()
+      const fromTable = get().tables.find((t) => t.id === fromId)
+      if (!fromTable) return
+
+      // Move order reference to the target table, mark it occupied
+      const toUpdate: Partial<RestaurantTable> = {
+        status: 'occupied' as TableStatus,
+        current_order_id: fromTable.current_order_id,
+        updated_at: now,
+      }
+      await db.restaurant_tables.update(toId, toUpdate)
+
+      // Free the source table
+      const fromUpdate: Partial<RestaurantTable> = {
+        status: 'free' as TableStatus,
+        current_order_id: undefined,
+        updated_at: now,
+      }
+      await db.restaurant_tables.update(fromId, fromUpdate)
+
+      set((state) => ({
+        tables: state.tables.map((t) => {
+          if (t.id === toId) return { ...t, ...toUpdate }
+          if (t.id === fromId) return { ...t, ...fromUpdate }
+          return t
+        }),
+      }))
+    },
+
+    mergeTables: async (primaryId, secondaryIds) => {
+      const now = new Date().toISOString()
+
+      // Free all secondary tables
+      for (const secId of secondaryIds) {
+        const secUpdate: Partial<RestaurantTable> = {
+          status: 'free' as TableStatus,
+          current_order_id: undefined,
+          updated_at: now,
+        }
+        await db.restaurant_tables.update(secId, secUpdate)
+      }
+
+      // Ensure primary table is occupied
+      const priUpdate: Partial<RestaurantTable> = {
+        status: 'occupied' as TableStatus,
+        updated_at: now,
+      }
+      await db.restaurant_tables.update(primaryId, priUpdate)
+
+      set((state) => ({
+        tables: state.tables.map((t) => {
+          if (t.id === primaryId) return { ...t, ...priUpdate }
+          if (secondaryIds.includes(t.id)) return { ...t, status: 'free' as TableStatus, current_order_id: undefined, updated_at: now }
+          return t
+        }),
+      }))
     },
   })
 )

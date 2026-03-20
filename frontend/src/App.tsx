@@ -74,7 +74,10 @@ import MultiStoreDashboardPage from './pages/MultiStoreDashboardPage'
 import WebhooksPage from './pages/WebhooksPage'
 import DataExchangePage from './pages/DataExchangePage'
 import SuperAdminPage from './pages/SuperAdminPage'
+import SchedulePage from './pages/SchedulePage'
+import ForecastPage from './pages/ForecastPage'
 import AgentDashboardPage from './pages/AgentDashboardPage'
+import QROrderPage from './pages/QROrderPage'
 import PlanWarningBanner from './components/PlanWarningBanner'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -201,7 +204,9 @@ function AppContent() {
       case 'multi_store':      return <MultiStoreDashboardPage />
       case 'webhooks':         return <WebhooksPage />
       case 'data_exchange':    return <DataExchangePage />
+      case 'schedule':         return <SchedulePage />
       case 'super_admin':      return <SuperAdminPage />
+      case 'forecast':         return <ForecastPage />
       default:                 return <DashboardPage />
     }
   }
@@ -270,6 +275,13 @@ export default function App() {
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [setIsAppInstalled, setInstallPromptEvent])
+
+  // QR Code table ordering — public page, no auth required
+  const isQrOrder = window.location.pathname === '/order' ||
+    new URLSearchParams(window.location.search).get('order') === 'qr'
+  if (isQrOrder) {
+    return <QROrderPage />
+  }
 
   // Registration flow (all plans including free)
   if (registrationMode) {
