@@ -86,41 +86,65 @@ export default function QROrderPage() {
     const loadData = async () => {
       if (!supabase) return
       try {
-        // Load store info
-        const { data: storeData, error: storeErr } = await supabase
+        // Load store info - try by store ID first, then by organization_id
+        let storeData: any = null
+        const { data: byId } = await supabase
           .from('stores')
-          .select('id, name, currency, activity, logo_url, tax_rate')
+          .select('id, name, currency, activity, logo_url, tax_rate, organization_id')
           .eq('id', storeId)
-          .single()
+          .maybeSingle()
 
-        if (storeErr || !storeData) {
+        if (byId) {
+          storeData = byId
+        } else {
+          // storeId might be an organization_id — find the first store
+          const { data: byOrg } = await supabase
+            .from('stores')
+            .select('id, name, currency, activity, logo_url, tax_rate, organization_id')
+            .eq('organization_id', storeId)
+            .limit(1)
+            .maybeSingle()
+          if (byOrg) storeData = byOrg
+
+          // Also try organizations table directly
+          if (!storeData) {
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('id, name')
+              .eq('id', storeId)
+              .maybeSingle()
+            if (org) {
+              storeData = { id: org.id, name: org.name, currency: 'XAF', activity: 'restaurant', organization_id: org.id }
+            }
+          }
+        }
+
+        if (!storeData) {
           setError('Store not found. Please scan a valid QR code.')
           setLoading(false)
           return
         }
         setStore(storeData as StoreInfo)
+        const realStoreId = storeData.id
+        void (storeData.organization_id) // org available for future use
 
-        // Load table info
-        const { data: tableData, error: tableErr } = await supabase
+        // Load table info - search by table ID across stores in this org
+        const { data: tableData } = await supabase
           .from('restaurant_tables')
           .select('id, name, number')
           .eq('id', tableId)
-          .eq('store_id', storeId)
-          .single()
+          .maybeSingle()
 
-        if (tableErr || !tableData) {
-          setError('Table not found. Please scan a valid QR code.')
-          setLoading(false)
-          return
+        if (tableData) {
+          setTableName((tableData as { name: string }).name)
+          setTableNumber((tableData as { number: number }).number)
         }
-        setTableName((tableData as { name: string }).name)
-        setTableNumber((tableData as { number: number }).number)
 
-        // Load active products
+        // Load active products - by store ID
         const { data: productData, error: prodErr } = await supabase
           .from('products')
           .select('id, name, price, category, image_url, description')
-          .eq('store_id', storeId)
+          .eq('store_id', realStoreId)
           .eq('is_active', true)
           .order('category')
           .order('name')

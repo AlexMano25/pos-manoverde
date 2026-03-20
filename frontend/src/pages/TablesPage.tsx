@@ -361,7 +361,8 @@ export default function TablesPage() {
 
   const getQrUrl = (table: RestaurantTable): string => {
     const base = window.location.origin
-    return `${base}/order?table=${table.id}&store=${storeId}`
+    const orgId = currentStore?.organization_id || storeId
+    return `${base}/order?table=${table.id}&store=${orgId}`
   }
 
   const getQrImageSrc = (url: string, size = 250): string =>
@@ -505,7 +506,7 @@ export default function TablesPage() {
           <button
             style={{ ...addBtnStyle, backgroundColor: catalogCopied ? C.success : '#7c3aed' }}
             onClick={async () => {
-              const url = `${window.location.origin}/catalog?store=${storeId}`
+              const url = `${window.location.origin}/catalog?store=${currentStore?.organization_id || storeId}`
               try {
                 await navigator.clipboard.writeText(url)
               } catch {

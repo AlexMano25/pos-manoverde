@@ -71,25 +71,46 @@ export default function CatalogPage() {
     }
     ;(async () => {
       try {
-        // Load store
-        const { data: storeData, error: storeErr } = await supabase
+        // Load store - try by ID, then by organization_id
+        let storeData: any = null
+        const { data: byId } = await supabase
           .from('stores')
-          .select('id, name, currency, activity, phone, logo_url')
+          .select('id, name, currency, activity, phone, logo_url, organization_id')
           .eq('id', storeId)
-          .single()
-        if (storeErr || !storeData) {
+          .maybeSingle()
+        if (byId) {
+          storeData = byId
+        } else {
+          const { data: byOrg } = await supabase
+            .from('stores')
+            .select('id, name, currency, activity, phone, logo_url, organization_id')
+            .eq('organization_id', storeId)
+            .limit(1)
+            .maybeSingle()
+          if (byOrg) storeData = byOrg
+          if (!storeData) {
+            const { data: org } = await supabase
+              .from('organizations')
+              .select('id, name')
+              .eq('id', storeId)
+              .maybeSingle()
+            if (org) storeData = { id: org.id, name: org.name, currency: 'XAF', activity: 'restaurant', organization_id: org.id }
+          }
+        }
+        if (!storeData) {
           setError('Magasin introuvable.')
           setLoading(false)
           return
         }
         setStore(storeData)
+        const realStoreId = storeData.id
 
         // Load products
         const { data: prods, error: prodErr } = await supabase
           .from('products')
           .select('id, name, price, category, image_url, description')
-          .eq('store_id', storeId)
-          .eq('available', true)
+          .eq('store_id', realStoreId)
+          .eq('is_active', true)
           .order('category')
           .order('name')
         if (prodErr) {
