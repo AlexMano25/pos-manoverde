@@ -143,14 +143,24 @@ async function syncToCloud(entries: SyncEntry[]): Promise<string[]> {
 
       switch (entry.entity_type) {
         case 'order': {
+          // Strip fields that don't exist in Supabase orders table
+          const od = entityData as any
+          const orderClean: any = {
+            id: od.id, store_id: od.store_id, items: od.items,
+            subtotal: od.subtotal, discount: od.discount || 0, tax: od.tax || 0,
+            total: od.total, payment_method: od.payment_method, status: od.status,
+            amount_received: od.amount_received || 0, change_due: od.change_due || 0,
+            device_id: od.device_id || null, receipt_number: od.receipt_number || null,
+            created_at: od.created_at, updated_at: od.updated_at || new Date().toISOString(),
+          }
+          if (od.user_id && od.user_id.length === 36) orderClean.user_id = od.user_id
           if (entry.operation === 'create') {
-            // Upsert order to Supabase
-            const { error: e } = await supabase.from('orders').upsert(entityData as never)
+            const { error: e } = await supabase.from('orders').upsert(orderClean as never)
             error = e
           } else if (entry.operation === 'update') {
             const { error: e } = await supabase
               .from('orders')
-              .update(entityData as never)
+              .update(orderClean as never)
               .eq('id', entry.entity_id)
             error = e
           }
@@ -198,7 +208,15 @@ async function syncToCloud(entries: SyncEntry[]): Promise<string[]> {
         }
         case 'kds_order': {
           if (entry.operation === 'create' || entry.operation === 'update') {
-            const { error: e } = await supabase.from('kds_orders').upsert(entityData as never)
+            const d = entityData as any
+            const kdsClean = {
+              id: d.id, store_id: d.store_id, order_number: d.order_number,
+              table_name: d.table_number || d.table_name || null, status: d.status,
+              priority: d.priority || false, items: d.items || [],
+              created_at: d.created_at, updated_at: d.updated_at || new Date().toISOString(),
+              started_at: d.started_at || null, completed_at: d.completed_at || null,
+            }
+            const { error: e } = await supabase.from('kds_orders').upsert(kdsClean as never)
             error = e
           } else if (entry.operation === 'delete') {
             const { error: e } = await supabase

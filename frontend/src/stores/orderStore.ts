@@ -257,6 +257,17 @@ export const useOrderStore = create<OrderState & OrderActions>()(
                 if (error) console.error('[orderStore] Credit deduction failed:', error)
                 else if (data === false)
                   console.warn('[orderStore] Insufficient credit balance')
+                else if (data === true) {
+                  // Refresh planStatus credits after successful deduction
+                  const ps = useAppStore.getState().planStatus
+                  if (ps && ps.creditsRemaining != null) {
+                    useAppStore.getState().setPlanStatus({
+                      ...ps,
+                      creditsRemaining: ps.creditsRemaining - 0.02,
+                      creditsPct: ps.creditsPct != null ? Math.max(0, ps.creditsPct - 0.02) : null,
+                    })
+                  }
+                }
               })
           }
         }

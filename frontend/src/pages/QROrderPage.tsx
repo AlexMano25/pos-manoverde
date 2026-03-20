@@ -88,34 +88,37 @@ export default function QROrderPage() {
       try {
         // Load store info - try by store ID first, then by organization_id
         let storeData: any = null
-        const { data: byId } = await supabase
+
+        // Try 1: direct store ID match
+        const { data: byId, error: e1 } = await supabase
           .from('stores')
           .select('id, name, currency, activity, logo_url, tax_rate, organization_id')
           .eq('id', storeId)
-          .maybeSingle()
+        console.log('[QROrder] Store by id:', storeId, byId, e1)
+        if (byId && byId.length > 0) {
+          storeData = byId[0]
+        }
 
-        if (byId) {
-          storeData = byId
-        } else {
-          // storeId might be an organization_id — find the first store
-          const { data: byOrg } = await supabase
+        // Try 2: organization_id match
+        if (!storeData) {
+          const { data: byOrg, error: e2 } = await supabase
             .from('stores')
             .select('id, name, currency, activity, logo_url, tax_rate, organization_id')
             .eq('organization_id', storeId)
             .limit(1)
-            .maybeSingle()
-          if (byOrg) storeData = byOrg
+          console.log('[QROrder] Store by org_id:', storeId, byOrg, e2)
+          if (byOrg && byOrg.length > 0) storeData = byOrg[0]
+        }
 
-          // Also try organizations table directly
-          if (!storeData) {
-            const { data: org } = await supabase
-              .from('organizations')
-              .select('id, name')
-              .eq('id', storeId)
-              .maybeSingle()
-            if (org) {
-              storeData = { id: org.id, name: org.name, currency: 'XAF', activity: 'restaurant', organization_id: org.id }
-            }
+        // Try 3: organizations table directly
+        if (!storeData) {
+          const { data: orgList, error: e3 } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .eq('id', storeId)
+          console.log('[QROrder] Org by id:', storeId, orgList, e3)
+          if (orgList && orgList.length > 0) {
+            storeData = { id: orgList[0].id, name: orgList[0].name, currency: 'XAF', activity: 'restaurant', organization_id: orgList[0].id }
           }
         }
 

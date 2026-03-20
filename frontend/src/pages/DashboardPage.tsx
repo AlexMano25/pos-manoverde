@@ -151,7 +151,7 @@ export default function DashboardPage() {
         if (error) console.error('[DashboardPage] Credit balance fetch failed:', error)
         else if (data) setCreditBalance(data as CreditBalance)
       })
-  }, [currentStore?.organization_id])
+  }, [currentStore?.organization_id, orders.length])
 
   // ── Derived data ──────────────────────────────────────────────────────
 

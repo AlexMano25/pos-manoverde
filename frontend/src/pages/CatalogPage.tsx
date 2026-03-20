@@ -91,28 +91,31 @@ export default function CatalogPage() {
       try {
         // Load store - try by ID, then by organization_id
         let storeData: any = null
+
         const { data: byId } = await supabase
           .from('stores')
           .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
           .eq('id', storeId)
-          .maybeSingle()
-        if (byId) {
-          storeData = byId
-        } else {
+        if (byId && byId.length > 0) {
+          storeData = byId[0]
+        }
+
+        if (!storeData) {
           const { data: byOrg } = await supabase
             .from('stores')
             .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
             .eq('organization_id', storeId)
             .limit(1)
-            .maybeSingle()
-          if (byOrg) storeData = byOrg
-          if (!storeData) {
-            const { data: org } = await supabase
-              .from('organizations')
-              .select('id, name')
-              .eq('id', storeId)
-              .maybeSingle()
-            if (org) storeData = { id: org.id, name: org.name, currency: 'XAF', activity: 'restaurant', organization_id: org.id }
+          if (byOrg && byOrg.length > 0) storeData = byOrg[0]
+        }
+
+        if (!storeData) {
+          const { data: orgList } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .eq('id', storeId)
+          if (orgList && orgList.length > 0) {
+            storeData = { id: orgList[0].id, name: orgList[0].name, currency: 'XAF', activity: 'restaurant', organization_id: orgList[0].id }
           }
         }
         if (!storeData) {
