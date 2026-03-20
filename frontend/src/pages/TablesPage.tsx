@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Edit3, X, Users, Grid3X3,
-  CheckCircle2, Save, QrCode,
+  CheckCircle2, Save, QrCode, ShoppingBag, Check,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useTableStore } from '../stores/tableStore'
@@ -51,6 +51,7 @@ export default function TablesPage() {
   const [setupCount, setSetupCount] = useState(10)
   const [qrTable, setQrTable] = useState<RestaurantTable | null>(null)
   const qrImgRef = useRef<HTMLImageElement>(null)
+  const [catalogCopied, setCatalogCopied] = useState(false)
 
   // Form state
   const [formNumber, setFormNumber] = useState(1)
@@ -500,7 +501,28 @@ export default function TablesPage() {
           <h1 style={titleStyle}>{t.tables.title}</h1>
           <p style={subtitleStyle}>{t.tables.subtitle}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            style={{ ...addBtnStyle, backgroundColor: catalogCopied ? C.success : '#7c3aed' }}
+            onClick={async () => {
+              const url = `${window.location.origin}/catalog?store=${storeId}`
+              try {
+                await navigator.clipboard.writeText(url)
+              } catch {
+                const inp = document.createElement('input')
+                inp.value = url
+                document.body.appendChild(inp)
+                inp.select()
+                document.execCommand('copy')
+                document.body.removeChild(inp)
+              }
+              setCatalogCopied(true)
+              setTimeout(() => setCatalogCopied(false), 2500)
+            }}
+          >
+            {catalogCopied ? <Check size={16} /> : <ShoppingBag size={16} />}
+            {catalogCopied ? 'Lien copi\u00e9 !' : 'Catalogue'}
+          </button>
           <button style={addBtnStyle} onClick={openAddModal}>
             <Plus size={16} /> {t.tables.addTable}
           </button>

@@ -78,6 +78,7 @@ import SchedulePage from './pages/SchedulePage'
 import ForecastPage from './pages/ForecastPage'
 import AgentDashboardPage from './pages/AgentDashboardPage'
 import QROrderPage from './pages/QROrderPage'
+import CatalogPage from './pages/CatalogPage'
 import PlanWarningBanner from './components/PlanWarningBanner'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -281,6 +282,11 @@ export default function App() {
     new URLSearchParams(window.location.search).get('order') === 'qr'
   if (isQrOrder) {
     return <QROrderPage />
+  }
+
+  // Public catalog page — no auth required
+  if (window.location.pathname === '/catalog') {
+    return <CatalogPage />
   }
 
   // Registration flow (all plans including free)

@@ -36,18 +36,56 @@ const C = {
   dangerLight: '#fee2e2',
 } as const
 
-const ROLE_COLORS: Record<ShiftRole, { bg: string; text: string; border: string }> = {
-  admin:   { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
-  manager: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
-  cashier: { bg: '#ffedd5', text: '#9a3412', border: '#fdba74' },
-  stock:   { bg: '#ede9fe', text: '#5b21b6', border: '#c4b5fd' },
+const ROLE_FLAT_COLORS: Record<string, string> = {
+  admin: '#3b82f6',
+  manager: '#16a34a',
+  cashier: '#f59e0b',
+  stock: '#8b5cf6',
+  waiter: '#06b6d4',
+  cook: '#ef4444',
+  dishwasher: '#64748b',
+  welder: '#ea580c',
+  delivery: '#0891b2',
+  receptionist: '#d946ef',
+  cleaner: '#84cc16',
+  security: '#1e293b',
+  mechanic: '#ca8a04',
+  technician: '#6366f1',
+  barista: '#78716c',
+  bartender: '#be185d',
+  other: '#94a3b8',
 }
 
-const ROLE_LABELS: Record<ShiftRole, string> = {
+function makeRoleColor(hex: string): { bg: string; text: string; border: string } {
+  return { bg: hex + '20', text: hex, border: hex + '60' }
+}
+
+const ROLE_COLORS: Record<string, { bg: string; text: string; border: string }> = (() => {
+  const result: Record<string, { bg: string; text: string; border: string }> = {}
+  for (const k of Object.keys(ROLE_FLAT_COLORS)) {
+    result[k] = makeRoleColor(ROLE_FLAT_COLORS[k])
+  }
+  return result
+})()
+
+const ROLE_LABELS: Record<string, string> = {
   admin: 'Admin',
   manager: 'Manager',
-  cashier: 'Cashier',
-  stock: 'Stock',
+  cashier: 'Caissier',
+  stock: 'Stockiste',
+  waiter: 'Serveur',
+  cook: 'Cuisinier',
+  dishwasher: 'Plongeur',
+  welder: 'Soudeur',
+  delivery: 'Livreur',
+  receptionist: 'Réceptionniste',
+  cleaner: 'Agent d\'entretien',
+  security: 'Agent de sécurité',
+  mechanic: 'Mécanicien',
+  technician: 'Technicien',
+  barista: 'Barista',
+  bartender: 'Barman',
+  other: 'Autre',
 }
 
 // ── Date helpers ─────────────────────────────────────────────────────────
@@ -145,11 +183,12 @@ export default function SchedulePage() {
     end_time: '17:00',
     role: 'cashier' as ShiftRole,
     notes: '',
+    customRoleText: '',
   })
 
   const openAdd = (empId: string, empName: string, date: string) => {
     setEditingShift(null)
-    setForm({ employee_id: empId, employee_name: empName, date, start_time: '08:00', end_time: '17:00', role: 'cashier', notes: '' })
+    setForm({ employee_id: empId, employee_name: empName, date, start_time: '08:00', end_time: '17:00', role: 'cashier', notes: '', customRoleText: '' })
     setModalOpen(true)
   }
 
@@ -163,18 +202,22 @@ export default function SchedulePage() {
       end_time: shift.end_time,
       role: shift.role,
       notes: shift.notes,
+      customRoleText: shift.notes && shift.role === 'other' ? '' : '',
     })
     setModalOpen(true)
   }
 
   const handleSave = () => {
     if (!form.employee_id || !form.date || !form.start_time || !form.end_time) return
+    const notes = form.role === 'other' && form.customRoleText
+      ? (form.notes ? `[${form.customRoleText}] ${form.notes}` : `[${form.customRoleText}]`)
+      : form.notes
     if (editingShift) {
       updateShift(editingShift.id, {
         start_time: form.start_time,
         end_time: form.end_time,
         role: form.role,
-        notes: form.notes,
+        notes,
       })
     } else {
       addShift({
@@ -185,7 +228,7 @@ export default function SchedulePage() {
         end_time: form.end_time,
         role: form.role,
         store_id: storeId,
-        notes: form.notes,
+        notes,
       })
     }
     setModalOpen(false)
@@ -326,15 +369,15 @@ export default function SchedulePage() {
     transition: 'background 0.15s',
   }
 
-  const shiftChipStyle = (role: ShiftRole): React.CSSProperties => ({
+  const shiftChipStyle = (role: string): React.CSSProperties => ({
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
     padding: isMobile ? '4px 6px' : '6px 10px',
     borderRadius: 8,
-    background: ROLE_COLORS[role].bg,
-    border: `1px solid ${ROLE_COLORS[role].border}`,
-    color: ROLE_COLORS[role].text,
+    background: (ROLE_COLORS[role] || ROLE_COLORS.other).bg,
+    border: `1px solid ${(ROLE_COLORS[role] || ROLE_COLORS.other).border}`,
+    color: (ROLE_COLORS[role] || ROLE_COLORS.other).text,
     fontSize: isMobile ? 10 : 12,
     fontWeight: 600,
     cursor: 'pointer',
@@ -397,7 +440,7 @@ export default function SchedulePage() {
 
       {/* ── Legend ──────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }} className="no-print">
-        {(Object.keys(ROLE_COLORS) as ShiftRole[]).map(role => (
+        {Object.keys(ROLE_COLORS).map(role => (
           <div key={role} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 14, height: 14, borderRadius: 4, background: ROLE_COLORS[role].bg, border: `1px solid ${ROLE_COLORS[role].border}` }} />
             <span style={{ fontSize: 12, color: C.textSecondary, fontWeight: 500 }}>{ROLE_LABELS[role]}</span>
@@ -459,7 +502,9 @@ export default function SchedulePage() {
                                 >
                                   <span>{s.start_time} - {s.end_time}</span>
                                   <span style={{ fontSize: isMobile ? 9 : 10, fontWeight: 500, opacity: 0.8 }}>
-                                    {ROLE_LABELS[s.role]}
+                                    {s.role === 'other' && s.notes?.match(/^\[([^\]]+)\]/)
+                                      ? s.notes.match(/^\[([^\]]+)\]/)![1]
+                                      : (ROLE_LABELS[s.role] || s.role)}
                                   </span>
                                 </div>
                               ))}
@@ -544,11 +589,24 @@ export default function SchedulePage() {
               value={form.role}
               onChange={e => setForm(f => ({ ...f, role: e.target.value as ShiftRole }))}
             >
-              {(Object.keys(ROLE_COLORS) as ShiftRole[]).map(r => (
+              {Object.keys(ROLE_COLORS).map(r => (
                 <option key={r} value={r}>{ROLE_LABELS[r]}</option>
               ))}
             </select>
           </div>
+
+          {/* Custom role text (when "other" is selected) */}
+          {form.role === 'other' && (
+            <div style={fieldGroup}>
+              <label style={labelStyle}>{language === 'fr' ? 'Précisez le rôle' : 'Specify role'}</label>
+              <input
+                style={inputStyle}
+                value={form.customRoleText}
+                onChange={e => setForm(f => ({ ...f, customRoleText: e.target.value }))}
+                placeholder={language === 'fr' ? 'Ex: Pâtissier, Plombier...' : 'E.g. Pastry chef, Plumber...'}
+              />
+            </div>
+          )}
 
           {/* Notes */}
           <div style={fieldGroup}>

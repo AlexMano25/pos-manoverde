@@ -4,7 +4,7 @@ import { generateUUID } from '../utils/uuid'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type ShiftRole = 'admin' | 'manager' | 'cashier' | 'stock'
+export type ShiftRole = 'admin' | 'manager' | 'cashier' | 'stock' | 'waiter' | 'cook' | 'dishwasher' | 'welder' | 'delivery' | 'receptionist' | 'cleaner' | 'security' | 'mechanic' | 'technician' | 'barista' | 'bartender' | 'other'
 
 export interface Shift {
   id: string

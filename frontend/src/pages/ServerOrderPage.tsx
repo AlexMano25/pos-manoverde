@@ -116,6 +116,8 @@ export default function ServerOrderPage() {
   // Map: product_id -> guest index (0-based)
   const [guestAssignments, setGuestAssignments] = useState<Record<string, number>>({})
   const [guestPaidStatus, setGuestPaidStatus] = useState<Record<number, PaymentMethod | null>>({})
+  // Custom amounts per guest (overrides calculated amount)
+  const [guestCustomAmounts, setGuestCustomAmounts] = useState<Record<number, string>>({})
 
   // Coursing
   const [courseTags, setCourseTags] = useState<Record<string, CourseTag>>({}) // product_id -> course
@@ -400,6 +402,7 @@ export default function ServerOrderPage() {
     items.forEach(item => { assignments[item.product_id] = 0 })
     setGuestAssignments(assignments)
     setGuestPaidStatus({})
+    setGuestCustomAmounts({})
     setShowSplitBillModal(true)
   }, [items])
 
@@ -411,13 +414,49 @@ export default function ServerOrderPage() {
     return getGuestItems(guestIndex).reduce((sum, item) => sum + item.price * item.qty, 0)
   }, [getGuestItems])
 
+  const getGuestEffectiveTotal = useCallback((guestIndex: number): number => {
+    const customStr = guestCustomAmounts[guestIndex]
+    if (customStr !== undefined && customStr !== '') {
+      const parsed = parseFloat(customStr)
+      if (!isNaN(parsed) && parsed >= 0) return parsed
+    }
+    return getGuestTotal(guestIndex)
+  }, [guestCustomAmounts, getGuestTotal])
+
+  const handleEqualSplit = useCallback(() => {
+    const total = getTotal()
+    const perGuest = Math.floor((total / guestCount) * 100) / 100
+    const newAmounts: Record<number, string> = {}
+    let remaining = total
+    for (let i = 0; i < guestCount; i++) {
+      if (i === guestCount - 1) {
+        // Last guest gets the remainder to avoid rounding issues
+        newAmounts[i] = Math.round(remaining * 100 / 100).toString()
+      } else {
+        newAmounts[i] = perGuest.toString()
+        remaining -= perGuest
+      }
+    }
+    setGuestCustomAmounts(newAmounts)
+  }, [guestCount, getTotal])
+
   const handlePayGuest = useCallback(async (guestIndex: number, paymentMethod: PaymentMethod) => {
     if (!user || !storeId) return
     try {
       const guestItems = getGuestItems(guestIndex)
-      if (guestItems.length === 0) return
+      const effectiveTotal = getGuestEffectiveTotal(guestIndex)
+      if (guestItems.length === 0 && effectiveTotal <= 0) return
 
-      await createOrder(guestItems, paymentMethod, user.id, storeId, {
+      // Use guest items or create a placeholder if custom amount differs
+      const orderItems = guestItems.length > 0 ? guestItems : [{
+        product_id: `custom-${guestIndex}`,
+        name: `${lbl.guest} ${guestIndex + 1}`,
+        price: effectiveTotal,
+        qty: 1,
+        category: '',
+      }]
+
+      await createOrder(orderItems, paymentMethod, user.id, storeId, {
         table_id: selectedTable?.id,
         table_name: selectedTable ? `${lbl.tableLabel} #${selectedTable.number} - ${lbl.guest} ${guestIndex + 1}` : undefined,
         customer_name: identifyMode === 'customer' ? `${customerName} - ${lbl.guest} ${guestIndex + 1}` : undefined,
@@ -427,14 +466,16 @@ export default function ServerOrderPage() {
     } catch (err) {
       console.error('Guest payment failed:', err)
     }
-  }, [user, storeId, getGuestItems, createOrder, selectedTable, lbl, identifyMode, customerName])
+  }, [user, storeId, getGuestItems, getGuestEffectiveTotal, createOrder, selectedTable, lbl, identifyMode, customerName])
 
   const allGuestsPaid = useMemo(() => {
     for (let i = 0; i < guestCount; i++) {
-      if (!guestPaidStatus[i] && getGuestItems(i).length > 0) return false
+      const hasItems = getGuestItems(i).length > 0
+      const hasCustomAmount = getGuestEffectiveTotal(i) > 0
+      if (!guestPaidStatus[i] && (hasItems || hasCustomAmount)) return false
     }
     return true
-  }, [guestCount, guestPaidStatus, getGuestItems])
+  }, [guestCount, guestPaidStatus, getGuestItems, getGuestEffectiveTotal])
 
   // ── Coursing handlers ─────────────────────────────────────────────────
 
@@ -830,8 +871,8 @@ export default function ServerOrderPage() {
           }}><X size={20} /></button>
         </div>
 
-        {/* Guest count control */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        {/* Guest count control + equal split */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{lbl.guest}:</span>
           <button onClick={() => setGuestCount(Math.max(2, guestCount - 1))} style={{
             width: 30, height: 30, borderRadius: 6, border: `1px solid ${C.border}`,
@@ -843,6 +884,13 @@ export default function ServerOrderPage() {
             backgroundColor: C.primary, color: '#fff', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><UserPlus size={14} /></button>
+          <button onClick={handleEqualSplit} style={{
+            marginLeft: 'auto', padding: '6px 12px', borderRadius: 8, border: 'none',
+            backgroundColor: C.teal, color: '#fff', cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <Split size={12} /> Diviser en parts égales
+          </button>
         </div>
 
         {/* Items assignment */}
@@ -885,6 +933,8 @@ export default function ServerOrderPage() {
           {Array.from({ length: guestCount }, (_, gIdx) => {
             const gItems = getGuestItems(gIdx)
             const gTotal = getGuestTotal(gIdx)
+            const effectiveTotal = getGuestEffectiveTotal(gIdx)
+            const hasCustomAmount = guestCustomAmounts[gIdx] !== undefined && guestCustomAmounts[gIdx] !== ''
             const paid = guestPaidStatus[gIdx]
             return (
               <div key={gIdx} style={{
@@ -898,20 +948,61 @@ export default function ServerOrderPage() {
                     {lbl.guest} {gIdx + 1}
                   </span>
                   <span style={{ fontSize: 15, fontWeight: 700, color: paid ? C.success : C.primary }}>
-                    {formatCurrency(gTotal, currencyCode)}
+                    {formatCurrency(effectiveTotal, currencyCode)}
+                    {hasCustomAmount && gTotal !== effectiveTotal && (
+                      <span style={{ fontSize: 11, fontWeight: 400, color: C.textSecondary, textDecoration: 'line-through', marginLeft: 6 }}>
+                        {formatCurrency(gTotal, currencyCode)}
+                      </span>
+                    )}
                   </span>
                 </div>
                 <div style={{ fontSize: 12, color: C.textSecondary, marginBottom: 8 }}>
                   {gItems.map((item, i) => (
                     <span key={i}>{i > 0 ? ', ' : ''}{item.qty}x {item.name}</span>
                   ))}
-                  {gItems.length === 0 && <span style={{ fontStyle: 'italic' }}>{lbl.unassigned}</span>}
+                  {gItems.length === 0 && !hasCustomAmount && <span style={{ fontStyle: 'italic' }}>{lbl.unassigned}</span>}
                 </div>
+                {/* Adjustment input */}
+                {!paid && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: C.textSecondary, whiteSpace: 'nowrap' }}>Ajustement:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder={gTotal.toString()}
+                      value={guestCustomAmounts[gIdx] ?? ''}
+                      onChange={e => setGuestCustomAmounts(prev => ({
+                        ...prev, [gIdx]: e.target.value,
+                      }))}
+                      style={{
+                        flex: 1, padding: '5px 8px', borderRadius: 6,
+                        border: `1px solid ${hasCustomAmount ? C.warning : C.border}`,
+                        fontSize: 13, color: C.text, outline: 'none',
+                        backgroundColor: hasCustomAmount ? C.warning + '08' : C.card,
+                        boxSizing: 'border-box' as const,
+                      }}
+                    />
+                    {hasCustomAmount && (
+                      <button onClick={() => setGuestCustomAmounts(prev => {
+                        const next = { ...prev }
+                        delete next[gIdx]
+                        return next
+                      })} style={{
+                        width: 24, height: 24, borderRadius: 6, border: 'none',
+                        backgroundColor: C.danger + '15', color: C.danger,
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+                )}
                 {paid ? (
                   <div style={{ fontSize: 12, fontWeight: 600, color: C.success, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <CheckCircle2 size={14} /> {lbl.guestPaid}
                   </div>
-                ) : gItems.length > 0 ? (
+                ) : (gItems.length > 0 || effectiveTotal > 0) ? (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {(['cash', 'card', 'momo'] as PaymentMethod[]).map(method => (
                       <button key={method} onClick={() => handlePayGuest(gIdx, method)} style={{
@@ -929,6 +1020,30 @@ export default function ServerOrderPage() {
             )
           })}
         </div>
+
+        {/* Total mismatch warning */}
+        {(() => {
+          const orderTotal = getTotal()
+          const customTotal = Array.from({ length: guestCount }, (_, i) => getGuestEffectiveTotal(i))
+            .reduce((sum, v) => sum + v, 0)
+          const diff = Math.abs(orderTotal - customTotal)
+          if (diff > 0.01) {
+            return (
+              <div style={{
+                marginTop: 12, padding: 10, borderRadius: 8,
+                backgroundColor: C.warning + '15', border: `1px solid ${C.warning}40`,
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>
+                <span style={{ fontSize: 16 }}>&#9888;</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: C.warning }}>
+                  Total convives ({formatCurrency(customTotal, currencyCode)}) ≠ Total commande ({formatCurrency(orderTotal, currencyCode)})
+                  {' — '}Différence: {formatCurrency(diff, currencyCode)}
+                </span>
+              </div>
+            )
+          }
+          return null
+        })()}
 
         {allGuestsPaid && (
           <div style={{
@@ -1096,10 +1211,10 @@ export default function ServerOrderPage() {
           {identifyMode === 'table' && hasTableSupport && (
             <>
               {/* Transfer / Merge action buttons */}
-              {occupiedTables.length > 0 && (
+              {occupiedTables.length >= 2 && (
                 <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                   <button onClick={() => setShowMergeModal(true)} style={actionBtnStyle(C.purple)}>
-                    <Merge size={14} /> {lbl.merge}
+                    <Merge size={14} /> {lbl.merge} ({occupiedTables.length})
                   </button>
                 </div>
               )}

@@ -16,6 +16,10 @@ import {
   DollarSign,
   AlertTriangle,
   Receipt,
+  ShoppingBag,
+  Copy,
+  Check,
+  Link,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useSyncStore } from '../stores/syncStore'
@@ -365,6 +369,12 @@ export default function SettingsPage() {
 
   const currentConnectionStatus = connectionStatusMap[connectionStatus] || connectionStatusMap['offline']
 
+  // Catalog link
+  const [catalogCopied, setCatalogCopied] = useState(false)
+  const catalogUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/catalog?store=${currentStore?.id || ''}`
+    : ''
+
   // Build server URL for QR code
   const qrUrl = serverUrl || (typeof window !== 'undefined' ? window.location.origin : '')
 
@@ -571,6 +581,72 @@ export default function SettingsPage() {
       {(mode === 'server' || mode === 'all_in_one') && qrUrl && (
         <div style={sectionCardStyle}>
           <QRCodeDisplay url={qrUrl} />
+        </div>
+      )}
+
+      {/* ── Catalog Link ───────────────────────────────────────────── */}
+      {currentStore?.id && (
+        <div style={sectionCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionIconStyle('#7c3aed')}>
+              <ShoppingBag size={18} color="#7c3aed" />
+            </div>
+            <div>
+              <h3 style={sectionTitleStyle}>Lien catalogue</h3>
+              <p style={sectionDescStyle}>Partagez votre catalogue produits par WhatsApp, email ou QR code</p>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <QRCodeDisplay url={catalogUrl} />
+          </div>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            gap: 8,
+            alignItems: 'stretch',
+          }}>
+            <div style={{
+              flex: 1,
+              padding: '10px 12px',
+              borderRadius: 8,
+              border: `1px solid ${C.border}`,
+              fontSize: 13,
+              color: C.textSecondary,
+              wordBreak: 'break-all',
+              backgroundColor: '#f8fafc',
+              display: 'flex',
+              alignItems: 'center',
+            }}>
+              <Link size={14} style={{ marginRight: 6, flexShrink: 0, color: '#7c3aed' }} />
+              {catalogUrl}
+            </div>
+            <button
+              style={{
+                ...primaryBtnStyle,
+                backgroundColor: catalogCopied ? C.success : '#7c3aed',
+                whiteSpace: 'nowrap',
+              }}
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(catalogUrl)
+                } catch {
+                  const inp = document.createElement('input')
+                  inp.value = catalogUrl
+                  document.body.appendChild(inp)
+                  inp.select()
+                  document.execCommand('copy')
+                  document.body.removeChild(inp)
+                }
+                setCatalogCopied(true)
+                setTimeout(() => setCatalogCopied(false), 2500)
+              }}
+            >
+              {catalogCopied ? <Check size={16} /> : <Copy size={16} />}
+              {catalogCopied ? 'Copi\u00e9 !' : 'Copier le lien'}
+            </button>
+          </div>
         </div>
       )}
 
