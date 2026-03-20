@@ -6,6 +6,7 @@ import { useResponsive } from '../hooks/useLayoutMode'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import PaymentMethodSelector, { RECHARGE_PACKAGES } from '../components/billing/PaymentMethodSelector'
 import SubscriptionManager from '../components/billing/SubscriptionManager'
+import { TICKET_PRICE_USD } from '../config/planLimits'
 import type { CreditBalance, CreditTransaction, RechargePackage, PayPalResult } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -22,14 +23,10 @@ const C = {
   border: '#e2e8f0',
 } as const
 
-// ── Ticket price constant ────────────────────────────────────────────────
-
-const TICKET_PRICE_USD = 0.02
-
 // ── Component ────────────────────────────────────────────────────────────
 
 export default function BillingPage() {
-  const { currentStore } = useAppStore()
+  const { currentStore, selectedPlan } = useAppStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -442,7 +439,7 @@ export default function BillingPage() {
             </div>
             <div>
               <p style={{ fontSize: 13, color: C.textSecondary, margin: 0, fontWeight: 500 }}>
-                {billing.balance}
+                {(billing as any).currentPlan || 'Plan actuel'}: <span style={{ fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>{(selectedPlan || 'free').replace(/_/g, ' ')}</span>
               </p>
               <p style={{ fontSize: 28, fontWeight: 700, color: C.text, margin: 0 }}>
                 ${balance?.balance_usd?.toFixed(2) ?? '0.00'}

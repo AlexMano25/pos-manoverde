@@ -4,10 +4,12 @@ import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { supabase } from '../services/supabase'
 import { useAppStore } from './appStore'
+import { useAuthStore } from './authStore'
 import { getNextReceiptNumber } from '../utils/receiptCounter'
 import { triggerWebhookEvent } from '../utils/webhookEngine'
 import { useKdsStore } from './kdsStore'
 import { useNotificationStore } from './notificationStore'
+import { TICKET_PRICE_USD } from '../config/planLimits'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -120,6 +122,24 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         status?: OrderStatus
       }
     ): Promise<Order> => {
+      // ── Credit / plan validation (block if insufficient) ──────────────
+      const authUser = useAuthStore.getState().user
+      if (authUser?.role !== 'super_admin') {
+        const planStatus = useAppStore.getState().planStatus
+        if (planStatus) {
+          if (planStatus.level === 'expired') {
+            // For credit-based plans: check credit remaining
+            if (planStatus.creditsRemaining != null && planStatus.creditsRemaining < TICKET_PRICE_USD) {
+              throw new Error('Credit insuffisant. Veuillez recharger votre compte.')
+            }
+            // For time-based plans: subscription expired
+            if (planStatus.creditsRemaining == null) {
+              throw new Error('Plan expire. Veuillez renouveler votre abonnement.')
+            }
+          }
+        }
+      }
+
       const deviceId = getDeviceId()
       const now = new Date().toISOString()
 

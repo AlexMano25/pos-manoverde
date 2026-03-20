@@ -25,6 +25,7 @@ import {
   UtensilsCrossed,
   X,
   Info,
+  RefreshCw,
 } from 'lucide-react'
 import { useOrderStore } from '../stores/orderStore'
 import { useProductStore } from '../stores/productStore'
@@ -93,7 +94,7 @@ const LUCIDE_ICONS: Record<string, React.ElementType> = {
 export default function DashboardPage() {
   const { orders, loading: ordersLoading, loadOrders } = useOrderStore()
   const { products, loading: productsLoading, loadProducts } = useProductStore()
-  const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled, setPendingAction } = useAppStore()
+  const { currentStore, setSection, activity, isAppInstalled, installPromptEvent, setInstallPromptEvent, setIsAppInstalled, setPendingAction, selectedPlan } = useAppStore()
   const { user } = useAuthStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
@@ -220,7 +221,14 @@ export default function DashboardPage() {
           extraLabel: `${Math.floor(creditBalance.balance_usd / 0.02).toLocaleString()} ${t.billing.ticketsLabel}`,
         }
       }
-      if (variant === 'credit' && !creditBalance) return null
+      if (variant === 'credit' && !creditBalance) {
+        return {
+          variant,
+          value: 0,
+          meta: getStatCardMeta('credit'),
+          extraLabel: `0 ${t.billing.ticketsLabel}`,
+        }
+      }
 
       const value = computeStatValue(variant, todayOrders, orders, products)
       const meta = getStatCardMeta(variant)
@@ -490,6 +498,59 @@ export default function DashboardPage() {
               )
             })}
           </div>
+
+          {/* ── Plan / Credit Info Card ───────────────────────────────── */}
+          {(() => {
+            const bal = creditBalance?.balance_usd ?? 0
+            const tickets = Math.floor(bal / 0.02)
+            const planName = (selectedPlan || 'free').replace(/_/g, ' ')
+            return (
+              <div style={{
+                backgroundColor: C.card,
+                borderRadius: 12,
+                padding: rv(14, 18, 20),
+                border: `1px solid ${C.border}`,
+                marginBottom: 24,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: isMobile ? 'stretch' : 'center',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 11,
+                    backgroundColor: C.primary + '12',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <CreditCard size={22} color={C.primary} />
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, color: C.textSecondary, fontWeight: 500 }}>
+                      {(t.billing as any).currentPlan || 'Plan actuel'}: <span style={{ fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>{planName}</span>
+                    </p>
+                    <p style={{ margin: '2px 0 0', fontSize: 20, fontWeight: 700, color: C.text }}>
+                      ${bal.toFixed(2)}
+                      <span style={{ fontSize: 13, fontWeight: 500, color: C.textSecondary, marginLeft: 8 }}>
+                        ({tickets.toLocaleString()} {t.billing.ticketsLabel})
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSection('billing')}
+                  style={{
+                    padding: '10px 20px', borderRadius: 8, border: 'none',
+                    backgroundColor: C.primary, color: '#fff', fontSize: 14,
+                    fontWeight: 600, cursor: 'pointer', display: 'flex',
+                    alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
+                  }}
+                >
+                  <RefreshCw size={15} /> {t.billing.recharge}
+                </button>
+              </div>
+            )
+          })()}
 
           {/* ── Quick Actions ─────────────────────────────────────────── */}
           <div style={{ marginBottom: 24 }}>
