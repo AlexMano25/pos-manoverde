@@ -4,6 +4,7 @@ import { db, getDeviceId } from '../db/dexie'
 import { generateUUID } from '../utils/uuid'
 import { useKdsStore } from './kdsStore'
 import { useAppStore } from './appStore'
+import { supabase } from '../services/supabase'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -91,13 +92,73 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
     loadOrders: async (storeId: string) => {
       set({ loading: true })
       try {
-        const orders = await db.online_orders
+        // Load from local IndexedDB
+        const localOrders = await db.online_orders
           .where('store_id')
           .equals(storeId)
           .toArray()
+
+        // Also fetch from Supabase cloud (catalog/QR orders)
+        let cloudOrders: OnlineOrder[] = []
+        if (supabase) {
+          try {
+            const { data } = await supabase
+              .from('online_orders')
+              .select('*')
+              .eq('store_id', storeId)
+              .order('created_at', { ascending: false })
+              .limit(200)
+            if (data && data.length > 0) {
+              const localIds = new Set(localOrders.map(o => o.id))
+              for (const co of data) {
+                if (!localIds.has(co.id)) {
+                  const mapped: OnlineOrder = {
+                    id: co.id,
+                    store_id: co.store_id,
+                    order_number: co.order_number || '',
+                    channel: (co.channel || 'website') as OnlineOrderChannel,
+                    customer_name: co.customer_name || '',
+                    customer_email: co.customer_email || undefined,
+                    customer_phone: co.customer_phone || undefined,
+                    delivery_address: co.delivery_address || undefined,
+                    fulfillment: co.fulfillment || 'delivery',
+                    items: co.items || [],
+                    subtotal: co.subtotal || 0,
+                    delivery_fee: co.delivery_fee || 0,
+                    discount: co.discount || 0,
+                    tax: co.tax || 0,
+                    total: co.total || 0,
+                    payment_status: co.payment_status || 'pending',
+                    payment_method: co.payment_method || undefined,
+                    status: (co.status || 'new') as OnlineOrderStatus,
+                    delivered_at: co.delivered_at || undefined,
+                    pos_order_id: co.pos_order_id || undefined,
+                    notes: co.notes || undefined,
+                    synced: true,
+                    created_at: co.created_at,
+                    updated_at: co.updated_at,
+                  }
+                  try { await db.online_orders.put(mapped) } catch { /* ignore dupe */ }
+                  cloudOrders.push(mapped)
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('[onlineOrderStore] Cloud fetch failed (offline?):', err)
+          }
+        }
+
+        const allOrders = [...localOrders, ...cloudOrders]
+        // Deduplicate
+        const seen = new Set<string>()
+        const unique = allOrders.filter(o => {
+          if (seen.has(o.id)) return false
+          seen.add(o.id)
+          return true
+        })
         // Sort by created_at descending (newest first)
-        orders.sort((a, b) => b.created_at.localeCompare(a.created_at))
-        set({ orders })
+        unique.sort((a, b) => b.created_at.localeCompare(a.created_at))
+        set({ orders: unique })
       } catch (error) {
         console.error('[onlineOrderStore] Failed to load orders:', error)
       } finally {

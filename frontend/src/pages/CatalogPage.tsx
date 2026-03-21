@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { Search, Share2, ShoppingBag, ShoppingCart, X, Filter, Plus, Minus, Trash2, Send, ChevronUp, ChevronDown } from 'lucide-react'
-import { supabase } from '../services/supabase'
+import { Search, Share2, ShoppingBag, ShoppingCart, X, Filter, Plus, Minus, Trash2, Send, ChevronUp, ChevronDown, CreditCard, Truck, MapPin, Phone, User } from 'lucide-react'
+import { supabase, supabaseUrl } from '../services/supabase'
 import { formatCurrency } from '../utils/currency'
 import { generateUUID } from '../utils/uuid'
 
@@ -72,6 +72,15 @@ export default function CatalogPage() {
   const [sending, setSending] = useState(false)
   const [orderConfirmed, setOrderConfirmed] = useState(false)
   const [orderNumber, setOrderNumber] = useState('')
+  // Checkout state
+  const [showCheckout, setShowCheckout] = useState(false)
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [deliveryMode, setDeliveryMode] = useState<'delivery' | 'pickup'>('delivery')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<'mobile_money' | 'card'>('mobile_money')
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle')
+  const [paymentError, setPaymentError] = useState('')
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640)
@@ -220,10 +229,23 @@ export default function CatalogPage() {
     window.open(waUrl, '_blank')
   }
 
-  const handleSendOrder = async () => {
+  const openCheckout = () => {
+    if (cart.length === 0) return
+    setShowCart(false)
+    setShowCheckout(true)
+    setPaymentStatus('idle')
+    setPaymentError('')
+  }
+
+  const handleCheckoutSubmit = async () => {
     if (!supabase || cart.length === 0 || !store) return
+    if (!customerName.trim()) { setPaymentError('Veuillez entrer votre nom.'); return }
+    if (!customerPhone.trim()) { setPaymentError('Veuillez entrer votre num\u00e9ro de t\u00e9l\u00e9phone.'); return }
+    if (deliveryMode === 'delivery' && !deliveryAddress.trim()) { setPaymentError('Veuillez entrer votre adresse de livraison.'); return }
+
     setSending(true)
-    setError('')
+    setPaymentStatus('processing')
+    setPaymentError('')
 
     try {
       const taxRate = store.tax_rate || 0
@@ -234,70 +256,151 @@ export default function CatalogPage() {
       const orderId = generateUUID()
       const now = new Date().toISOString()
       const receiptNum = `CAT-${Date.now().toString(36).toUpperCase()}`
-
       const realSid = store.id || storeId
-      const order = {
+
+      // 1. Initiate payment
+      let paymentRef = ''
+      const phone = customerPhone.replace(/\s/g, '').replace(/^(\+?237)?/, '')
+
+      if (paymentMethod === 'mobile_money') {
+        // CamPay Mobile Money collect
+        const collectRes = await fetch(`${supabaseUrl}/functions/v1/campay-collect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone,
+            amount: total,
+            currency: currencyCode,
+            description: `Commande ${receiptNum} - ${store.name}`,
+            organizationId: store.organization_id,
+          }),
+        })
+        const collectData = await collectRes.json()
+        if (!collectRes.ok || collectData.error) {
+          throw new Error(collectData.error || 'Echec du paiement mobile')
+        }
+        paymentRef = collectData.reference || collectData.transactionId || ''
+      } else {
+        // CamPay Card payment link
+        const linkRes = await fetch(`${supabaseUrl}/functions/v1/campay-payment-link`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: total,
+            currency: currencyCode,
+            description: `Commande ${receiptNum} - ${store.name}`,
+            redirect_url: window.location.href,
+            organizationId: store.organization_id,
+          }),
+        })
+        const linkData = await linkRes.json()
+        if (!linkRes.ok || linkData.error) {
+          throw new Error(linkData.error || 'Echec de cr\u00e9ation du lien de paiement')
+        }
+        paymentRef = linkData.reference || ''
+        // Redirect to payment link
+        if (linkData.link) {
+          // Save order first before redirect
+          const onlineOrder = {
+            id: orderId,
+            store_id: realSid,
+            order_number: receiptNum,
+            channel: 'website',
+            customer_name: customerName.trim(),
+            customer_phone: phone,
+            delivery_address: deliveryMode === 'delivery' ? deliveryAddress.trim() : null,
+            fulfillment: deliveryMode,
+            items: cart.map(i => ({
+              product_id: i.product_id, product_name: i.name,
+              quantity: i.qty, unit_price: i.price, total: i.price * i.qty,
+            })),
+            subtotal, delivery_fee: 0, discount: 0, tax, total,
+            payment_status: 'pending',
+            payment_method: 'card',
+            payment_reference: paymentRef,
+            status: 'new',
+            created_at: now, updated_at: now,
+          }
+          await supabase.from('online_orders').insert(onlineOrder)
+          // Also insert in orders table
+          await supabase.from('orders').insert({
+            id: orderId, store_id: realSid, customer_name: customerName.trim(),
+            items: cart.map(i => ({ product_id: i.product_id, name: i.name, price: i.price, qty: i.qty })),
+            subtotal, discount: 0, tax, total,
+            payment_method: 'card', status: 'pending',
+            device_id: `catalog-${store.name}`, receipt_number: receiptNum,
+            created_at: now, updated_at: now,
+          })
+          // Create KDS order
+          await supabase.from('kds_orders').insert({
+            store_id: realSid, order_number: receiptNum,
+            table_name: `En ligne - ${customerName.trim()}`,
+            status: 'new', priority: false,
+            items: cart.map(i => ({ product_name: i.name, quantity: i.qty, station: 'all', done: false })),
+            created_at: now, updated_at: now,
+          })
+          window.location.href = linkData.link
+          return
+        }
+      }
+
+      // 2. Insert online_order
+      const onlineOrder = {
         id: orderId,
         store_id: realSid,
+        order_number: receiptNum,
+        channel: 'website',
+        customer_name: customerName.trim(),
+        customer_phone: phone,
+        delivery_address: deliveryMode === 'delivery' ? deliveryAddress.trim() : null,
+        fulfillment: deliveryMode,
         items: cart.map(i => ({
-          product_id: i.product_id,
-          name: i.name,
-          price: i.price,
-          qty: i.qty,
+          product_id: i.product_id, product_name: i.name,
+          quantity: i.qty, unit_price: i.price, total: i.price * i.qty,
         })),
-        subtotal,
-        discount: 0,
-        tax,
-        total,
-        payment_method: 'cash',
-        status: 'pending',
-        device_id: `catalog-${store.name}`,
-        receipt_number: receiptNum,
-        created_at: now,
-        updated_at: now,
+        subtotal, delivery_fee: 0, discount: 0, tax, total,
+        payment_status: paymentMethod === 'mobile_money' ? 'pending' : 'pending',
+        payment_method: paymentMethod === 'mobile_money' ? 'mobile_money' : 'card',
+        payment_reference: paymentRef,
+        status: 'new',
+        created_at: now, updated_at: now,
       }
 
-      const { error: insertErr } = await supabase
-        .from('orders')
-        .insert(order)
+      const { error: onlineErr } = await supabase.from('online_orders').insert(onlineOrder)
+      if (onlineErr) console.error('[Catalog] Online order insert error:', onlineErr)
 
-      if (insertErr) {
-        console.error('[Catalog] Insert error:', insertErr)
-        setError('Erreur lors de l\'envoi de la commande. Veuillez r\u00e9essayer.')
-        setSending(false)
-        return
-      }
+      // 3. Also insert in regular orders table for POS visibility
+      await supabase.from('orders').insert({
+        id: orderId, store_id: realSid, customer_name: customerName.trim(),
+        items: cart.map(i => ({ product_id: i.product_id, name: i.name, price: i.price, qty: i.qty })),
+        subtotal, discount: 0, tax, total,
+        payment_method: paymentMethod === 'mobile_money' ? 'mobile_money' : 'card',
+        status: 'pending', device_id: `catalog-${store.name}`,
+        receipt_number: receiptNum, created_at: now, updated_at: now,
+      })
 
-      // Create KDS order for kitchen display
-      await supabase
-        .from('kds_orders')
-        .insert({
-          store_id: realSid,
-          order_number: receiptNum,
-          table_name: 'Catalogue',
-          status: 'new',
-          priority: false,
-          items: cart.map(i => ({
-            product_name: i.name,
-            quantity: i.qty,
-            station: 'all',
-            done: false,
-          })),
-          created_at: now,
-          updated_at: now,
-        })
-        .then(({ error: kdsErr }) => {
-          if (kdsErr) console.error('[Catalog] KDS insert error:', kdsErr)
-        })
+      // 4. Create KDS order for kitchen display
+      await supabase.from('kds_orders').insert({
+        store_id: realSid, order_number: receiptNum,
+        table_name: `En ligne - ${customerName.trim()}`,
+        status: 'new', priority: false,
+        items: cart.map(i => ({ product_name: i.name, quantity: i.qty, station: 'all', done: false })),
+        created_at: now, updated_at: now,
+      }).then(({ error: kdsErr }) => {
+        if (kdsErr) console.error('[Catalog] KDS insert error:', kdsErr)
+      })
 
+      setPaymentStatus('success')
       setOrderNumber(receiptNum)
       setOrderConfirmed(true)
       setCart([])
       setShowCart(false)
+      setShowCheckout(false)
       setSending(false)
     } catch (err) {
-      console.error('[Catalog] Send error:', err)
-      setError('Erreur lors de l\'envoi. Veuillez r\u00e9essayer.')
+      console.error('[Catalog] Checkout error:', err)
+      setPaymentError(err instanceof Error ? err.message : 'Erreur lors du paiement.')
+      setPaymentStatus('failed')
       setSending(false)
     }
   }
@@ -889,30 +992,192 @@ export default function CatalogPage() {
                 Commander via WhatsApp
               </button>
 
-              {/* Direct order (only if store param exists = embedded catalog) */}
+              {/* Proceed to checkout */}
               {storeId && (
                 <button
                   style={{
                     padding: '14px 24px', borderRadius: 12, border: 'none',
                     backgroundColor: C.primary, color: '#fff', fontSize: 15,
-                    fontWeight: 600, cursor: sending ? 'not-allowed' : 'pointer',
+                    fontWeight: 600, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     gap: 8, width: '100%',
-                    opacity: sending ? 0.7 : 1,
                   }}
-                  onClick={handleSendOrder}
-                  disabled={sending || cart.length === 0}
+                  onClick={openCheckout}
+                  disabled={cart.length === 0}
                 >
-                  {sending ? (
-                    <>Envoi en cours...</>
-                  ) : (
-                    <>
-                      <ShoppingCart size={18} />
-                      Envoyer la commande
-                    </>
-                  )}
+                  <CreditCard size={18} />
+                  Passer au paiement
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Checkout Modal ─────────────────────────────────────────────── */}
+      {showCheckout && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 16,
+        }}>
+          <div style={{
+            backgroundColor: C.card, borderRadius: 16, width: '100%', maxWidth: 440,
+            maxHeight: '90vh', overflow: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '20px 20px 0',
+            }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: C.text }}>
+                Finaliser la commande
+              </h2>
+              <button onClick={() => { setShowCheckout(false); setPaymentError('') }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <X size={24} color={C.textSecondary} />
+              </button>
+            </div>
+
+            <div style={{ padding: 20 }}>
+              {/* Order summary */}
+              <div style={{
+                backgroundColor: '#f8fafc', borderRadius: 12, padding: 16, marginBottom: 20,
+              }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: C.textSecondary, margin: '0 0 8px', textTransform: 'uppercase' }}>
+                  R{'\u00e9'}sum{'\u00e9'} ({cartItemCount} article{cartItemCount > 1 ? 's' : ''})
+                </p>
+                {cart.map(i => (
+                  <div key={i.product_id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, color: C.text, marginBottom: 4 }}>
+                    <span>{i.qty}x {i.name}</span>
+                    <span style={{ fontWeight: 600 }}>{formatCurrency(i.price * i.qty, currencyCode)}</span>
+                  </div>
+                ))}
+                <div style={{ borderTop: `1px solid ${C.border}`, marginTop: 8, paddingTop: 8, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16, color: C.text }}>
+                  <span>Total</span>
+                  <span>{formatCurrency(cartTotal + Math.round(cartTotal * (store?.tax_rate || 0) / 100), currencyCode)}</span>
+                </div>
+              </div>
+
+              {/* Customer info */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+                  <User size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                  Nom complet *
+                </label>
+                <input value={customerName} onChange={e => setCustomerName(e.target.value)}
+                  placeholder="Votre nom" style={{
+                    width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
+                    fontSize: 15, color: C.text, outline: 'none', boxSizing: 'border-box',
+                  }} />
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+                  <Phone size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                  Num{'\u00e9'}ro de t{'\u00e9'}l{'\u00e9'}phone *
+                </label>
+                <input value={customerPhone} onChange={e => setCustomerPhone(e.target.value)}
+                  placeholder="6XXXXXXXX" type="tel" style={{
+                    width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
+                    fontSize: 15, color: C.text, outline: 'none', boxSizing: 'border-box',
+                  }} />
+              </div>
+
+              {/* Delivery mode */}
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
+                  Mode de r{'\u00e9'}ception
+                </label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[
+                    { key: 'delivery' as const, icon: <Truck size={18} />, label: 'Livraison' },
+                    { key: 'pickup' as const, icon: <MapPin size={18} />, label: 'Retrait sur place' },
+                  ].map(opt => (
+                    <button key={opt.key}
+                      onClick={() => setDeliveryMode(opt.key)}
+                      style={{
+                        flex: 1, padding: '12px 16px', borderRadius: 10,
+                        border: `2px solid ${deliveryMode === opt.key ? C.primary : C.border}`,
+                        backgroundColor: deliveryMode === opt.key ? C.primary + '10' : C.card,
+                        cursor: 'pointer', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600,
+                        color: deliveryMode === opt.key ? C.primary : C.textSecondary,
+                      }}>
+                      {opt.icon} {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {deliveryMode === 'delivery' && (
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+                    <MapPin size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                    Adresse de livraison *
+                  </label>
+                  <input value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)}
+                    placeholder="Quartier, rue, repere..." style={{
+                      width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
+                      fontSize: 15, color: C.text, outline: 'none', boxSizing: 'border-box',
+                    }} />
+                </div>
+              )}
+
+              {/* Payment method */}
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
+                  Mode de paiement
+                </label>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {[
+                    { key: 'mobile_money' as const, label: 'Mobile Money', desc: 'Orange / MTN' },
+                    { key: 'card' as const, label: 'Carte Visa', desc: 'Visa / Mastercard' },
+                  ].map(opt => (
+                    <button key={opt.key}
+                      onClick={() => setPaymentMethod(opt.key)}
+                      style={{
+                        flex: 1, padding: '12px 16px', borderRadius: 10,
+                        border: `2px solid ${paymentMethod === opt.key ? C.primary : C.border}`,
+                        backgroundColor: paymentMethod === opt.key ? C.primary + '10' : C.card,
+                        cursor: 'pointer', textAlign: 'center',
+                        color: paymentMethod === opt.key ? C.primary : C.textSecondary,
+                      }}>
+                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{opt.label}</div>
+                      <div style={{ fontSize: 12, opacity: 0.7 }}>{opt.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Error */}
+              {paymentError && (
+                <div style={{
+                  padding: '12px 16px', borderRadius: 10, backgroundColor: C.dangerBg,
+                  color: C.danger, fontSize: 14, marginBottom: 16,
+                }}>
+                  {paymentError}
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                onClick={handleCheckoutSubmit}
+                disabled={sending}
+                style={{
+                  width: '100%', padding: '16px 24px', borderRadius: 12, border: 'none',
+                  backgroundColor: sending ? '#94a3b8' : C.primary, color: '#fff', fontSize: 16,
+                  fontWeight: 700, cursor: sending ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
+                {paymentStatus === 'processing' ? (
+                  <>Paiement en cours...</>
+                ) : (
+                  <>
+                    <CreditCard size={20} />
+                    Payer {formatCurrency(cartTotal + Math.round(cartTotal * (store?.tax_rate || 0) / 100), currencyCode)}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

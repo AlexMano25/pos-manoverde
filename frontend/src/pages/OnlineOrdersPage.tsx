@@ -258,10 +258,12 @@ export default function OnlineOrdersPage() {
   const [formNotes, setFormNotes] = useState('')
   const [formSaving, setFormSaving] = useState(false)
 
-  // ── Load data on mount ────────────────────────────────────────────────
+  // ── Load data on mount + auto-refresh every 10s ──────────────────────
 
   useEffect(() => {
     loadOrders(storeId)
+    const interval = setInterval(() => loadOrders(storeId), 10000)
+    return () => clearInterval(interval)
   }, [storeId, loadOrders])
 
   // ── Filtered and searched orders ──────────────────────────────────────

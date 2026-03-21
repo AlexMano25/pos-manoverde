@@ -234,6 +234,8 @@ export default function QROrderPage() {
       const order = {
         id: orderId,
         store_id: realSid,
+        table_id: tableId,
+        table_name: tableName ? `${tableName} (#${tableNumber})` : `Table ${tableNumber}`,
         items: cart.map(i => ({
           product_id: i.product_id,
           name: i.name,
