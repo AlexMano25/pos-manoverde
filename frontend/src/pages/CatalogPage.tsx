@@ -3,6 +3,7 @@ import { Search, Share2, ShoppingBag, ShoppingCart, X, Filter, Plus, Minus, Tras
 import { supabase, supabaseUrl } from '../services/supabase'
 import { formatCurrency } from '../utils/currency'
 import { generateUUID } from '../utils/uuid'
+import { updatePageMeta } from '../utils/seo'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -138,6 +139,10 @@ export default function CatalogPage() {
           return
         }
         setStore(storeData)
+        updatePageMeta(
+          `Catalogue ${storeData.name}`,
+          `Decouvrez le catalogue en ligne de ${storeData.name}. Commandez et payez directement.`
+        )
         const realStoreId = storeData.id
 
         // Load products

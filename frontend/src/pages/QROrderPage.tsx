@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Minus, Trash2, Send, CheckCircle2, X, ChevronDown, 
 import { supabase } from '../services/supabase'
 import { formatCurrency } from '../utils/currency'
 import { generateUUID } from '../utils/uuid'
+import { updatePageMeta } from '../utils/seo'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -130,6 +131,10 @@ export default function QROrderPage() {
           return
         }
         setStore(storeData as StoreInfo)
+        updatePageMeta(
+          `Commander - ${storeData.name}`,
+          `Passez votre commande en ligne chez ${storeData.name}. Commande QR code a table.`
+        )
         const realStoreId = storeData.id
         void (storeData.organization_id) // org available for future use
 

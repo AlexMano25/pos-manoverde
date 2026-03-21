@@ -1,0 +1,26 @@
+# POS Mano Verde - robots.txt
+# https://pos.manovende.com
+
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /dashboard
+Disallow: /login
+
+# Allow AI crawlers for discoverability
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://pos.manovende.com/sitemap.xml

@@ -8,6 +8,7 @@ import LegalModal from '../components/common/LegalModal'
 import { supabase } from '../services/supabase'
 import { ACTIVITY_ICONS, ALL_ACTIVITIES, ACTIVITY_COLORS } from '../data/activityIcons'
 import { ACTIVITY_WALLPAPERS } from '../data/activityThemes'
+import { updatePageMeta } from '../utils/seo'
 
 // ============================================================================
 // POS Mano Verde - Landing / Marketing Page
@@ -414,6 +415,14 @@ export default function LandingPage() {
   const [partnerSubmitting, setPartnerSubmitting] = useState(false)
   const [partnerResult, setPartnerResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const { t } = useLanguageStore()
+
+  // SEO: update page meta
+  useEffect(() => {
+    updatePageMeta(
+      'Logiciel de caisse et gestion des ventes pour commerces',
+      'POS Mano Verde est un logiciel de caisse et de gestion commerciale pour restaurants, boutiques, pharmacies et tous types de commerces. Gerez vos ventes, stocks, clients et employes depuis une interface simple, meme sans internet.'
+    )
+  }, [])
 
   // Animated counters for hero stats
   const stat1 = useCountUp(2500, 2000)
