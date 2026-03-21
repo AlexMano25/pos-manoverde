@@ -56,6 +56,8 @@ export default function QROrderPage() {
   const params = useMemo(() => new URLSearchParams(window.location.search), [])
   const tableId = params.get('table') || ''
   const storeId = params.get('store') || ''
+  const urlTableName = params.get('tn') || ''
+  const urlTableNum = parseInt(params.get('tnum') || '0', 10)
 
   // State
   const [store, setStore] = useState<StoreInfo | null>(null)
@@ -131,16 +133,30 @@ export default function QROrderPage() {
         const realStoreId = storeData.id
         void (storeData.organization_id) // org available for future use
 
-        // Load table info - search by table ID across stores in this org
-        const { data: tableData } = await supabase
-          .from('restaurant_tables')
-          .select('id, name, number')
-          .eq('id', tableId)
-          .maybeSingle()
-
-        if (tableData) {
-          setTableName((tableData as { name: string }).name)
-          setTableNumber((tableData as { number: number }).number)
+        // Load table info from URL params (primary) or Supabase (fallback)
+        if (urlTableName) {
+          setTableName(urlTableName)
+          setTableNumber(urlTableNum)
+        } else {
+          // Fallback: try Supabase (may not exist if tables are local-only)
+          try {
+            const { data: tableData } = await supabase
+              .from('restaurant_tables')
+              .select('id, name, number')
+              .eq('id', tableId)
+              .maybeSingle()
+            if (tableData) {
+              setTableName((tableData as { name: string }).name)
+              setTableNumber((tableData as { number: number }).number)
+            } else {
+              // Last resort: use table ID as name
+              setTableName(`Table`)
+              setTableNumber(1)
+            }
+          } catch {
+            setTableName(`Table`)
+            setTableNumber(1)
+          }
         }
 
         // Load active products - by store ID

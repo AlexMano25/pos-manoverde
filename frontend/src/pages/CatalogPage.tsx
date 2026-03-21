@@ -322,21 +322,13 @@ export default function CatalogPage() {
             created_at: now, updated_at: now,
           }
           await supabase.from('online_orders').insert(onlineOrder)
-          // Also insert in orders table
+          // Also insert in orders table (no KDS until payment confirmed)
           await supabase.from('orders').insert({
             id: orderId, store_id: realSid, customer_name: customerName.trim(),
             items: cart.map(i => ({ product_id: i.product_id, name: i.name, price: i.price, qty: i.qty })),
             subtotal, discount: 0, tax, total,
             payment_method: 'card', status: 'pending',
             device_id: `catalog-${store.name}`, receipt_number: receiptNum,
-            created_at: now, updated_at: now,
-          })
-          // Create KDS order
-          await supabase.from('kds_orders').insert({
-            store_id: realSid, order_number: receiptNum,
-            table_name: `En ligne - ${customerName.trim()}`,
-            status: 'new', priority: false,
-            items: cart.map(i => ({ product_name: i.name, quantity: i.qty, station: 'all', done: false })),
             created_at: now, updated_at: now,
           })
           window.location.href = linkData.link
@@ -379,16 +371,8 @@ export default function CatalogPage() {
         receipt_number: receiptNum, created_at: now, updated_at: now,
       })
 
-      // 4. Create KDS order for kitchen display
-      await supabase.from('kds_orders').insert({
-        store_id: realSid, order_number: receiptNum,
-        table_name: `En ligne - ${customerName.trim()}`,
-        status: 'new', priority: false,
-        items: cart.map(i => ({ product_name: i.name, quantity: i.qty, station: 'all', done: false })),
-        created_at: now, updated_at: now,
-      }).then(({ error: kdsErr }) => {
-        if (kdsErr) console.error('[Catalog] KDS insert error:', kdsErr)
-      })
+      // NOTE: No KDS order created here — kitchen gets notified only when
+      // staff confirms the order from the Online Orders page
 
       setPaymentStatus('success')
       setOrderNumber(receiptNum)

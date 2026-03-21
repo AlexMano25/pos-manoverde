@@ -247,11 +247,22 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
       try {
         const now = new Date().toISOString()
         const merged = { ...updates, updated_at: now }
-        await db.online_orders.update(id, merged)
+
+        // Update local IndexedDB
+        try {
+          await db.online_orders.update(id, merged)
+        } catch { /* order may only exist in cloud */ }
 
         const order = await db.online_orders.get(id)
         if (order) {
           await addToSyncQueue('online_order', id, 'update', order, order.store_id)
+        }
+
+        // Also update in Supabase
+        if (supabase) {
+          await supabase.from('online_orders')
+            .update(merged)
+            .eq('id', id)
         }
 
         set((state) => ({
@@ -289,6 +300,62 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
     confirmOrder: async (id) => {
       try {
         await get().updateOrder(id, { status: 'confirmed' })
+
+        // Also update in Supabase online_orders table
+        if (supabase) {
+          await supabase.from('online_orders')
+            .update({ status: 'confirmed', updated_at: new Date().toISOString() })
+            .eq('id', id)
+        }
+
+        // Create KDS order for kitchen when staff confirms
+        const order = get().orders.find(o => o.id === id)
+        if (order) {
+          const activity = useAppStore.getState().activity
+          const foodActivities = [
+            'restaurant', 'bakery', 'bar', 'fast_food', 'coffee_shop',
+            'food_truck', 'catering', 'ice_cream', 'juice_bar', 'hotel',
+          ]
+          const isFood = activity && foodActivities.includes(activity)
+
+          if (isFood && order.items.length > 0) {
+            const kdsItems = order.items.map(item => ({
+              product_name: item.product_name,
+              quantity: item.quantity,
+              notes: item.notes || undefined,
+              station: 'all' as const,
+              done: false,
+            }))
+
+            useKdsStore.getState().addOrder(order.store_id, {
+              order_id: order.id,
+              order_number: order.order_number,
+              items: kdsItems,
+              status: 'new',
+              station: 'all',
+              priority: false,
+            }).catch(err => {
+              console.error('[onlineOrderStore] KDS order creation failed:', err)
+            })
+
+            // Also insert KDS in Supabase for cloud sync
+            if (supabase) {
+              const now = new Date().toISOString()
+              supabase.from('kds_orders').insert({
+                store_id: order.store_id,
+                order_number: order.order_number,
+                table_name: `${order.fulfillment === 'delivery' ? 'Livraison' : 'Retrait'} - ${order.customer_name}`,
+                status: 'new',
+                priority: false,
+                items: kdsItems,
+                created_at: now,
+                updated_at: now,
+              }).then(({ error: kdsErr }) => {
+                if (kdsErr) console.error('[onlineOrderStore] KDS cloud insert error:', kdsErr)
+              })
+            }
+          }
+        }
       } catch (error) {
         console.error('[onlineOrderStore] Failed to confirm order:', error)
         throw error

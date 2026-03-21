@@ -362,7 +362,7 @@ export default function TablesPage() {
   const getQrUrl = (table: RestaurantTable): string => {
     const base = window.location.origin
     const orgId = currentStore?.organization_id || storeId
-    return `${base}/order?table=${table.id}&store=${orgId}`
+    return `${base}/order?table=${table.id}&store=${orgId}&tn=${encodeURIComponent(table.name)}&tnum=${table.number}`
   }
 
   const getQrImageSrc = (url: string, size = 250): string =>

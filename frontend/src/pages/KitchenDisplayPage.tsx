@@ -634,21 +634,24 @@ function OrderCard({
         borderBottom: `1px solid ${C.border}`,
       }}>
         {/* Order number + table */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-          <span style={{
-            fontSize: rv(22, 26, 28), fontWeight: 900, color: C.text,
-            letterSpacing: -0.5,
-          }}>
-            #{order.order_number}
-          </span>
-          {order.table_number && (
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{
+              fontSize: rv(22, 26, 28), fontWeight: 900, color: C.text,
+              letterSpacing: -0.5,
+            }}>
+              #{order.order_number}
+            </span>
+          </div>
+          {order.table_number && (
+            <div style={{
+              marginTop: 4,
               padding: '3px 8px', borderRadius: 6,
               backgroundColor: `${C.blue}22`, color: C.blueLight,
-              fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
+              fontSize: 13, fontWeight: 600, display: 'inline-block',
             }}>
               {labels.table} {order.table_number}
-            </span>
+            </div>
           )}
         </div>
 
