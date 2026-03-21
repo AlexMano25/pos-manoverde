@@ -37,6 +37,7 @@ import { getReceiptCounterState, resetReceiptCounter } from '../utils/receiptCou
 import { RECEIPT_TEMPLATES, type ReceiptTemplate } from '../utils/receiptTemplates'
 import { generateJournalEntries, exportJournalCSV, exportQuickBooksCSV, exportSAGECSV } from '../utils/accountingExport'
 import { useOrderStore } from '../stores/orderStore'
+import { supabase } from '../services/supabase'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -95,6 +96,14 @@ export default function SettingsPage() {
   const [customCurrency, setCustomCurrency] = useState('')
   const [currencySaved, setCurrencySaved] = useState(false)
 
+  // Payment config for online/catalog orders
+  const [paymentPhone, setPaymentPhone] = useState(currentStore?.payment_phone || '')
+  const [paymentLabel, setPaymentLabel] = useState(currentStore?.payment_label || '')
+  const [merchantCode, setMerchantCode] = useState(currentStore?.merchant_code || '')
+  const [ussdCode, setUssdCode] = useState(currentStore?.ussd_code || '')
+  const [paymentQrUrl, setPaymentQrUrl] = useState(currentStore?.payment_qr_url || '')
+  const [paymentSaved, setPaymentSaved] = useState(false)
+
   // Connection
   const [serverUrlInput, setServerUrlInput] = useState(serverUrl || '')
   const [testingConnection, setTestingConnection] = useState(false)
@@ -123,6 +132,11 @@ export default function SettingsPage() {
     setStoreAddress(currentStore?.address || '')
     setStorePhone(currentStore?.phone || '')
     setStoreCurrency(currentStore?.currency || 'XAF')
+    setPaymentPhone(currentStore?.payment_phone || '')
+    setPaymentLabel(currentStore?.payment_label || '')
+    setMerchantCode(currentStore?.merchant_code || '')
+    setUssdCode(currentStore?.ussd_code || '')
+    setPaymentQrUrl(currentStore?.payment_qr_url || '')
   }, [currentStore])
 
   const handleSaveStore = () => {
@@ -137,6 +151,33 @@ export default function SettingsPage() {
     setCurrentStore(updated)
     setStoreSaved(true)
     setTimeout(() => setStoreSaved(false), 2000)
+  }
+
+  const handleSavePayment = async () => {
+    if (!currentStore) return
+    const updated = {
+      ...currentStore,
+      payment_phone: paymentPhone.trim() || undefined,
+      payment_label: paymentLabel.trim() || undefined,
+      merchant_code: merchantCode.trim() || undefined,
+      ussd_code: ussdCode.trim() || undefined,
+      payment_qr_url: paymentQrUrl.trim() || undefined,
+      updated_at: new Date().toISOString(),
+    }
+    setCurrentStore(updated)
+    // Sync to Supabase
+    if (supabase) {
+      await supabase.from('stores').update({
+        payment_phone: updated.payment_phone || null,
+        payment_label: updated.payment_label || null,
+        merchant_code: updated.merchant_code || null,
+        ussd_code: updated.ussd_code || null,
+        payment_qr_url: updated.payment_qr_url || null,
+        updated_at: updated.updated_at,
+      }).eq('id', currentStore.id)
+    }
+    setPaymentSaved(true)
+    setTimeout(() => setPaymentSaved(false), 2000)
   }
 
   const handleSaveCurrency = () => {
@@ -455,6 +496,87 @@ export default function SettingsPage() {
           </p>
         )}
       </div>
+
+      {/* ── Payment Config (for online/catalog orders) ──────────── */}
+      {(mode === 'server' || mode === 'all_in_one') && (
+        <div style={sectionCardStyle}>
+          <div style={sectionHeaderStyle}>
+            <div style={sectionIconStyle('#16a34a')}>
+              <DollarSign size={18} color="#16a34a" />
+            </div>
+            <div>
+              <h3 style={sectionTitleStyle}>Paiement en ligne</h3>
+              <p style={sectionDescStyle}>Configurez vos coordonn{'\u00e9'}es de paiement pour les commandes catalogue</p>
+            </div>
+          </div>
+
+          <div style={inputRowStyle}>
+            <label style={labelStyle}>Num{'\u00e9'}ro de paiement Mobile Money</label>
+            <input
+              style={inputStyle}
+              value={paymentPhone}
+              onChange={e => setPaymentPhone(e.target.value)}
+              placeholder="6XXXXXXXX"
+              type="tel"
+            />
+          </div>
+
+          <div style={inputRowStyle}>
+            <label style={labelStyle}>Op{'\u00e9'}rateur / Label</label>
+            <input
+              style={inputStyle}
+              value={paymentLabel}
+              onChange={e => setPaymentLabel(e.target.value)}
+              placeholder="Ex: Orange Money, MTN MoMo"
+            />
+          </div>
+
+          <div style={inputRowStyle}>
+            <label style={labelStyle}>Code marchand (optionnel)</label>
+            <input
+              style={inputStyle}
+              value={merchantCode}
+              onChange={e => setMerchantCode(e.target.value)}
+              placeholder="Ex: 12345"
+            />
+          </div>
+
+          <div style={inputRowStyle}>
+            <label style={labelStyle}>Code USSD (optionnel)</label>
+            <input
+              style={inputStyle}
+              value={ussdCode}
+              onChange={e => setUssdCode(e.target.value)}
+              placeholder="Ex: *126*1*237651XXXXXX*MONTANT#"
+            />
+            <p style={{ fontSize: 11, color: C.textSecondary, margin: '4px 0 0' }}>
+              Utilisez MONTANT pour le total de la commande
+            </p>
+          </div>
+
+          <div style={inputRowStyle}>
+            <label style={labelStyle}>URL QR code de paiement (optionnel)</label>
+            <input
+              style={inputStyle}
+              value={paymentQrUrl}
+              onChange={e => setPaymentQrUrl(e.target.value)}
+              placeholder="https://..."
+              type="url"
+            />
+          </div>
+
+          <button
+            style={paymentSaved ? successBtnStyle : primaryBtnStyle}
+            onClick={handleSavePayment}
+          >
+            {paymentSaved ? (
+              <><CheckCircle2 size={16} /> Sauvegard{'\u00e9'} !</>
+            ) : (
+              <><Save size={16} /> Sauvegarder le paiement</>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* ── Currency ──────────────────────────────────────────────── */}
       {(mode === 'server' || mode === 'all_in_one') && (

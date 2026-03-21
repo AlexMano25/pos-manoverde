@@ -243,6 +243,12 @@ export type Store = {
   currency: string // default 'XAF' (FCFA)
   tax_rate: number // percentage, e.g. 19.25
   receipt_prefix?: string // prefix for sequential receipt numbers (e.g., 'MV')
+  // Payment config for online/catalog orders
+  payment_phone?: string    // merchant MoMo/OM number
+  payment_label?: string    // "Orange Money", "MTN MoMo"...
+  merchant_code?: string    // merchant code
+  ussd_code?: string        // USSD code, e.g. *126*1*237XXX*MONTANT#
+  payment_qr_url?: string   // URL to QR code image
   created_at: string
   updated_at: string
 }

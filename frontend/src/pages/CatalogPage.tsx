@@ -31,6 +31,11 @@ interface StoreInfo {
   logo_url?: string
   organization_id?: string
   tax_rate?: number
+  payment_phone?: string
+  payment_label?: string
+  merchant_code?: string
+  ussd_code?: string
+  payment_qr_url?: string
 }
 
 // ── Colors ────────────────────────────────────────────────────────────────
@@ -103,7 +108,7 @@ export default function CatalogPage() {
 
         const { data: byId } = await supabase
           .from('stores')
-          .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
+          .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate, payment_phone, payment_label, merchant_code, ussd_code, payment_qr_url')
           .eq('id', storeId)
         if (byId && byId.length > 0) {
           storeData = byId[0]
@@ -112,7 +117,7 @@ export default function CatalogPage() {
         if (!storeData) {
           const { data: byOrg } = await supabase
             .from('stores')
-            .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate')
+            .select('id, name, currency, activity, phone, logo_url, organization_id, tax_rate, payment_phone, payment_label, merchant_code, ussd_code, payment_qr_url')
             .eq('organization_id', storeId)
             .limit(1)
           if (byOrg && byOrg.length > 0) storeData = byOrg[0]
@@ -1107,31 +1112,79 @@ export default function CatalogPage() {
                 </div>
               )}
 
-              {/* Payment method */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-                  Mode de paiement
-                </label>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {[
-                    { key: 'mobile_money' as const, label: 'Mobile Money', desc: 'Orange / MTN' },
-                    { key: 'card' as const, label: 'Carte Visa', desc: 'Visa / Mastercard' },
-                  ].map(opt => (
-                    <button key={opt.key}
-                      onClick={() => setPaymentMethod(opt.key)}
-                      style={{
-                        flex: 1, padding: '12px 16px', borderRadius: 10,
-                        border: `2px solid ${paymentMethod === opt.key ? C.primary : C.border}`,
-                        backgroundColor: paymentMethod === opt.key ? C.primary + '10' : C.card,
-                        cursor: 'pointer', textAlign: 'center',
-                        color: paymentMethod === opt.key ? C.primary : C.textSecondary,
-                      }}>
-                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{opt.label}</div>
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>{opt.desc}</div>
-                    </button>
-                  ))}
+              {/* Payment instructions */}
+              {store?.payment_phone ? (
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 10 }}>
+                    Instructions de paiement
+                  </label>
+                  <div style={{
+                    backgroundColor: '#f0fdf4', borderRadius: 12, padding: 16,
+                    border: '1px solid #bbf7d0',
+                  }}>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: '#166534', margin: '0 0 8px' }}>
+                      {store.payment_label || 'Mobile Money'}
+                    </p>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#166534', margin: '0 0 4px', letterSpacing: 1 }}>
+                      {store.payment_phone}
+                    </p>
+                    {store.merchant_code && (
+                      <p style={{ fontSize: 13, color: '#166534', margin: '4px 0 0' }}>
+                        Code marchand : <strong>{store.merchant_code}</strong>
+                      </p>
+                    )}
+                    {store.ussd_code && (
+                      <div style={{ marginTop: 10, padding: '10px 14px', backgroundColor: '#dcfce7', borderRadius: 8 }}>
+                        <p style={{ fontSize: 12, color: '#166534', margin: '0 0 4px', fontWeight: 600 }}>
+                          Composez ce code USSD :
+                        </p>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: '#166534', margin: 0, fontFamily: 'monospace' }}>
+                          {store.ussd_code.replace(/MONTANT/gi,
+                            formatCurrency(cartTotal + Math.round(cartTotal * (store?.tax_rate || 0) / 100), currencyCode).replace(/[^\d]/g, '')
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    {store.payment_qr_url && (
+                      <div style={{ marginTop: 10, textAlign: 'center' }}>
+                        <p style={{ fontSize: 12, color: '#166534', margin: '0 0 6px', fontWeight: 600 }}>
+                          Ou scannez ce QR code :
+                        </p>
+                        <img src={store.payment_qr_url} alt="QR paiement"
+                          style={{ width: 160, height: 160, borderRadius: 8 }} />
+                      </div>
+                    )}
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#166534', margin: '12px 0 0', textAlign: 'center' }}>
+                      Montant : {formatCurrency(cartTotal + Math.round(cartTotal * (store?.tax_rate || 0) / 100), currencyCode)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
+                    Mode de paiement
+                  </label>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {[
+                      { key: 'mobile_money' as const, label: 'Mobile Money', desc: 'Orange / MTN' },
+                      { key: 'card' as const, label: 'Carte Visa', desc: 'Visa / Mastercard' },
+                    ].map(opt => (
+                      <button key={opt.key}
+                        onClick={() => setPaymentMethod(opt.key)}
+                        style={{
+                          flex: 1, padding: '12px 16px', borderRadius: 10,
+                          border: `2px solid ${paymentMethod === opt.key ? C.primary : C.border}`,
+                          backgroundColor: paymentMethod === opt.key ? C.primary + '10' : C.card,
+                          cursor: 'pointer', textAlign: 'center',
+                          color: paymentMethod === opt.key ? C.primary : C.textSecondary,
+                        }}>
+                        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{opt.label}</div>
+                        <div style={{ fontSize: 12, opacity: 0.7 }}>{opt.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Error */}
               {paymentError && (
@@ -1149,12 +1202,15 @@ export default function CatalogPage() {
                 disabled={sending}
                 style={{
                   width: '100%', padding: '16px 24px', borderRadius: 12, border: 'none',
-                  backgroundColor: sending ? '#94a3b8' : C.primary, color: '#fff', fontSize: 16,
+                  backgroundColor: sending ? '#94a3b8' : store?.payment_phone ? '#16a34a' : C.primary,
+                  color: '#fff', fontSize: 16,
                   fontWeight: 700, cursor: sending ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
                 {paymentStatus === 'processing' ? (
-                  <>Paiement en cours...</>
+                  <>Envoi en cours...</>
+                ) : store?.payment_phone ? (
+                  <>J'ai effectu{'\u00e9'} le paiement</>
                 ) : (
                   <>
                     <CreditCard size={20} />

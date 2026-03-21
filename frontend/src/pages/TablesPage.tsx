@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Plus, Trash2, Edit3, X, Users, Grid3X3,
-  CheckCircle2, Save, QrCode, ShoppingBag, Check,
+  CheckCircle2, Save, QrCode, ShoppingBag, Check, Share2,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useTableStore } from '../stores/tableStore'
@@ -523,6 +523,16 @@ export default function TablesPage() {
           >
             {catalogCopied ? <Check size={16} /> : <ShoppingBag size={16} />}
             {catalogCopied ? 'Lien copi\u00e9 !' : 'Catalogue'}
+          </button>
+          <button
+            style={{ ...addBtnStyle, backgroundColor: '#25D366' }}
+            onClick={() => {
+              const url = `${window.location.origin}/catalog?store=${currentStore?.organization_id || storeId}`
+              const msg = `Decouvrez notre catalogue en ligne !\n${currentStore?.name || 'Notre boutique'}\n\n${url}`
+              window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+            }}
+          >
+            <Share2 size={16} /> WhatsApp
           </button>
           <button style={addBtnStyle} onClick={openAddModal}>
             <Plus size={16} /> {t.tables.addTable}
