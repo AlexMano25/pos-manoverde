@@ -14,6 +14,8 @@ import { useOrderStore } from '../stores/orderStore'
 import { useAuthStore } from '../stores/authStore'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
+import { useSyncStore } from '../stores/syncStore'
+import { isSupabaseConfigured } from '../services/supabase'
 import ExportMenu from '../components/common/ExportMenu'
 import { exportSalesReport, exportInvoice, exportReceipt } from '../utils/pdfExport'
 import { shareViaWhatsApp, shareViaEmail, formatOrderForSharing } from '../utils/sharing'
@@ -98,11 +100,18 @@ export default function OrdersPage() {
     cancelled: t.orders.cancelled,
   }
 
+  const { syncFromServer } = useSyncStore()
+
   useEffect(() => {
     if (currentStore?.id) {
-      loadOrders(currentStore.id)
+      // Pull cloud orders first (QR/catalog orders), then load from IndexedDB
+      if (isSupabaseConfigured) {
+        syncFromServer().then(() => loadOrders(currentStore.id)).catch(() => loadOrders(currentStore.id))
+      } else {
+        loadOrders(currentStore.id)
+      }
     }
-  }, [currentStore?.id, loadOrders])
+  }, [currentStore?.id, loadOrders, syncFromServer])
 
   const filteredOrders = useMemo(() => {
     let result = orders

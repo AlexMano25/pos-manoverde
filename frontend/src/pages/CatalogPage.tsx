@@ -268,6 +268,28 @@ export default function CatalogPage() {
         return
       }
 
+      // Create KDS order for kitchen display
+      await supabase
+        .from('kds_orders')
+        .insert({
+          store_id: realSid,
+          order_number: receiptNum,
+          table_name: 'Catalogue',
+          status: 'new',
+          priority: false,
+          items: cart.map(i => ({
+            product_name: i.name,
+            quantity: i.qty,
+            station: 'all',
+            done: false,
+          })),
+          created_at: now,
+          updated_at: now,
+        })
+        .then(({ error: kdsErr }) => {
+          if (kdsErr) console.error('[Catalog] KDS insert error:', kdsErr)
+        })
+
       setOrderNumber(receiptNum)
       setOrderConfirmed(true)
       setCart([])
