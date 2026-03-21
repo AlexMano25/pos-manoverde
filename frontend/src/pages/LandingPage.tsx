@@ -4060,23 +4060,24 @@ export default function LandingPage() {
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {[
-                  { label: t.landing.footerCGV, key: 'cgv' as const },
-                  { label: t.landing.footerRGPD, key: 'rgpd' as const },
-                  { label: t.landing.footerTerms, key: 'terms' as const },
-                ].map((link) => (
-                  <li key={link.key} style={{ marginBottom: 12 }}>
-                    <button
-                      onClick={() => setLegalModal(link.key)}
+                  { label: t.landing.footerCGV, href: '/terms' },
+                  { label: t.landing.footerRGPD, href: '/privacy' },
+                  { label: t.landing.footerTerms, href: '/terms' },
+                ].map((link, idx) => (
+                  <li key={idx} style={{ marginBottom: 12 }}>
+                    <a
+                      href={link.href}
                       style={{
-                        background: 'none', border: 'none', color: '#94a3b8',
+                        color: '#94a3b8',
                         fontSize: 14, cursor: 'pointer', padding: 0,
                         fontFamily: pageFont, transition: 'color 0.2s',
+                        textDecoration: 'none',
                       }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8' }}
                     >
                       {link.label}
-                    </button>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -4098,6 +4099,16 @@ export default function LandingPage() {
               <p style={{ fontSize: 13, margin: 0, color: '#64748b' }}>
                 {t.landing.footerCopyright}
               </p>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <a href="/privacy" style={{ fontSize: 13, color: '#64748b', textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b' }}
+                >Privacy Policy</a>
+                <a href="/terms" style={{ fontSize: 13, color: '#64748b', textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#94a3b8' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#64748b' }}
+                >Terms of Service</a>
+              </div>
             </div>
           </div>
         </div>
