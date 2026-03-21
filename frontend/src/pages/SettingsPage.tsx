@@ -413,7 +413,7 @@ export default function SettingsPage() {
   // Catalog link
   const [catalogCopied, setCatalogCopied] = useState(false)
   const catalogUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/catalog?store=${currentStore?.id || ''}`
+    ? `${window.location.origin}/catalog?store=${currentStore?.organization_id || currentStore?.id || ''}`
     : ''
 
   // Build server URL for QR code
@@ -768,6 +768,39 @@ export default function SettingsPage() {
               {catalogCopied ? <Check size={16} /> : <Copy size={16} />}
               {catalogCopied ? 'Copi\u00e9 !' : 'Copier le lien'}
             </button>
+            <button
+              style={{
+                ...primaryBtnStyle,
+                backgroundColor: '#25D366',
+                whiteSpace: 'nowrap',
+              }}
+              onClick={() => {
+                const msg = `D\u00e9couvrez notre catalogue en ligne !\n${currentStore?.name || 'Notre boutique'}\n\n${catalogUrl}`
+                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+              }}
+            >
+              <ShoppingBag size={16} />
+              WhatsApp
+            </button>
+            {typeof navigator !== 'undefined' && navigator.share && (
+              <button
+                style={{
+                  ...primaryBtnStyle,
+                  backgroundColor: '#2563eb',
+                  whiteSpace: 'nowrap',
+                }}
+                onClick={() => {
+                  navigator.share({
+                    title: `Catalogue - ${currentStore?.name || ''}`,
+                    text: `D\u00e9couvrez notre catalogue en ligne !`,
+                    url: catalogUrl,
+                  }).catch(() => {})
+                }}
+              >
+                <Link size={16} />
+                Partager
+              </button>
+            )}
           </div>
         </div>
       )}
