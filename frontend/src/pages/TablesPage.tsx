@@ -361,8 +361,7 @@ export default function TablesPage() {
 
   const getQrUrl = (table: RestaurantTable): string => {
     const base = window.location.origin
-    const orgId = currentStore?.organization_id || storeId
-    return `${base}/order?table=${table.id}&store=${orgId}&tn=${encodeURIComponent(table.name)}&tnum=${table.number}`
+    return `${base}/order?table=${table.id}&store=${storeId}&tn=${encodeURIComponent(table.name)}&tnum=${table.number}`
   }
 
   const getQrImageSrc = (url: string, size = 250): string =>
@@ -506,7 +505,7 @@ export default function TablesPage() {
           <button
             style={{ ...addBtnStyle, backgroundColor: catalogCopied ? C.success : '#7c3aed' }}
             onClick={async () => {
-              const url = `${window.location.origin}/catalog?store=${currentStore?.organization_id || storeId}`
+              const url = `${window.location.origin}/catalog?store=${storeId}`
               try {
                 await navigator.clipboard.writeText(url)
               } catch {
@@ -527,7 +526,7 @@ export default function TablesPage() {
           <button
             style={{ ...addBtnStyle, backgroundColor: '#25D366' }}
             onClick={() => {
-              const url = `${window.location.origin}/catalog?store=${currentStore?.organization_id || storeId}`
+              const url = `${window.location.origin}/catalog?store=${storeId}`
               const msg = `Decouvrez notre catalogue en ligne !\n${currentStore?.name || 'Notre boutique'}\n\n${url}`
               window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
             }}

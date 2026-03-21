@@ -413,7 +413,7 @@ export default function SettingsPage() {
   // Catalog link
   const [catalogCopied, setCatalogCopied] = useState(false)
   const catalogUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/catalog?store=${currentStore?.organization_id || currentStore?.id || ''}`
+    ? `${window.location.origin}/catalog?store=${currentStore?.id || ''}`
     : ''
 
   // Build server URL for QR code
