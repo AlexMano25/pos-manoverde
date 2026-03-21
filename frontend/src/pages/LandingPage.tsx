@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLanguageStore } from '../stores/languageStore'
 import { useAppStore } from '../stores/appStore'
 import { languages } from '../i18n/types'
@@ -106,9 +106,12 @@ const IconArrowRight = ({ size = 18 }: { size?: number }) => (
   </svg>
 )
 
-const IconPlay = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
-    <polygon points="5 3 19 12 5 21 5 3" />
+const IconUsers = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 )
 
@@ -424,8 +427,23 @@ export default function LandingPage() {
     )
   }, [])
 
+  // Deterministic daily counter: grows by 3-13 per day from a base date
+  const dailyCount = useMemo(() => {
+    const baseDate = new Date('2025-01-01').getTime()
+    const now = Date.now()
+    const daysSince = Math.floor((now - baseDate) / 86400000)
+    let total = 2500
+    // Use a simple seeded random per day
+    for (let d = 0; d < daysSince; d++) {
+      const seed = (d * 9301 + 49297) % 233280
+      const rnd = seed / 233280
+      total += Math.floor(rnd * 11) + 3 // 3-13 per day
+    }
+    return total
+  }, [])
+
   // Animated counters for hero stats
-  const stat1 = useCountUp(2500, 2000)
+  const stat1 = useCountUp(dailyCount, 2000)
   const stat2 = useCountUp(27, 1500)
 
   useEffect(() => {
@@ -1512,7 +1530,7 @@ export default function LandingPage() {
                       backdropFilter: 'blur(4px)',
                       fontFamily: pageFont,
                     }}
-                    onClick={() => scrollToSection('video-demo')}
+                    onClick={() => scrollToSection('partner')}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)'
@@ -1522,7 +1540,7 @@ export default function LandingPage() {
                       e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
                     }}
                   >
-                    <IconPlay size={16} />
+                    <IconUsers size={16} />
                     {t.landing.heroCTA2}
                   </button>
                 </div>
@@ -1806,6 +1824,110 @@ export default function LandingPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ================================================================
+          DUAL PATH SECTION — Client vs Partner
+          ================================================================ */}
+      <section style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        padding: '64px 24px',
+      }}>
+        <div style={{ ...containerStyle, maxWidth: 900 }}>
+          <h2 style={{
+            textAlign: 'center', fontSize: 28, fontWeight: 800,
+            color: '#ffffff', margin: '0 0 12px',
+          }}>
+            Deux fa{'\u00e7'}ons de profiter de POS Mano Verde
+          </h2>
+          <p style={{
+            textAlign: 'center', fontSize: 15, color: 'rgba(255,255,255,0.6)',
+            maxWidth: 600, margin: '0 auto 40px',
+          }}>
+            Que vous soyez commer{'\u00e7'}ant ou entrepreneur, POS Mano Verde vous ouvre des opportunit{'\u00e9'}s.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 20,
+          }}>
+            {/* Client path */}
+            <div style={{
+              padding: 28, borderRadius: 16,
+              background: 'linear-gradient(135deg, #16a34a15, #16a34a08)',
+              border: '2px solid #16a34a40',
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: '#16a34a22', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                  <line x1="8" y1="21" x2="16" y2="21"/>
+                  <line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: '#4ade80', margin: '0 0 8px' }}>
+                Vous {'\u00ea'}tes commer{'\u00e7'}ant ?
+              </h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 20px' }}>
+                G{'\u00e9'}rez vos ventes, votre stock et vos clients depuis une seule plateforme. Fonctionne m{'\u00ea'}me sans internet.
+              </p>
+              <button
+                onClick={() => {
+                  const appStore = useAppStore.getState()
+                  appStore.setRegistrationMode(true)
+                }}
+                style={{
+                  padding: '12px 24px', borderRadius: 10, border: 'none',
+                  background: '#16a34a', color: '#fff', fontSize: 15,
+                  fontWeight: 600, cursor: 'pointer', width: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}
+              >
+                D{'\u00e9'}marrer maintenant
+                <IconArrowRight size={16} />
+              </button>
+            </div>
+
+            {/* Partner path */}
+            <div style={{
+              padding: 28, borderRadius: 16,
+              background: 'linear-gradient(135deg, #2563eb15, #2563eb08)',
+              border: '2px solid #2563eb40',
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12,
+                background: '#2563eb22', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+              }}>
+                <IconUsers size={24} />
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 700, color: '#60a5fa', margin: '0 0 8px' }}>
+                Vous voulez gagner de l'argent ?
+              </h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, margin: '0 0 20px' }}>
+                Devenez partenaire Mano Verde. Gagnez des commissions en aidant les commerces {'\u00e0'} se digitaliser.
+              </p>
+              <a
+                href="#partner"
+                onClick={(e) => { e.preventDefault(); scrollToSection('partner') }}
+                style={{
+                  padding: '12px 24px', borderRadius: 10, border: 'none',
+                  background: '#2563eb', color: '#fff', fontSize: 15,
+                  fontWeight: 600, cursor: 'pointer', width: '100%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  textDecoration: 'none',
+                }}
+              >
+                Devenir partenaire
+                <IconArrowRight size={16} />
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -3011,6 +3133,61 @@ export default function LandingPage() {
           }}>
             {(t.landing as any)?.partnerSubtitle || 'Gagnez des commissions en aidant les commerçants à digitaliser leur activité'}
           </p>
+
+          {/* Earnings Example */}
+          <div style={{
+            background: 'linear-gradient(135deg, #16a34a15, #16a34a08)',
+            border: '2px solid #16a34a40',
+            borderRadius: 16, padding: 32,
+            marginBottom: 48, textAlign: 'center',
+          }}>
+            <p style={{ fontSize: 14, color: '#4ade80', fontWeight: 600, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Exemple de gains
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 48, flexWrap: 'wrap' }}>
+              <div>
+                <p style={{ fontSize: 36, fontWeight: 800, color: '#4ade80', margin: 0 }}>10 clients</p>
+                <p style={{ fontSize: 14, color: '#94a3b8', margin: '4px 0 0' }}>recrut{'\u00e9'}s</p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <IconArrowRight size={24} />
+              </div>
+              <div>
+                <p style={{ fontSize: 36, fontWeight: 800, color: '#ffffff', margin: 0 }}>5 000+ FCFA</p>
+                <p style={{ fontSize: 14, color: '#94a3b8', margin: '4px 0 0' }}>/ mois en commissions</p>
+              </div>
+            </div>
+            <p style={{ fontSize: 13, color: '#64748b', margin: '16px 0 0' }}>
+              Plus vous recrutez, plus votre taux de commission augmente (jusqu'{'\u00e0'} 20%)
+            </p>
+          </div>
+
+          {/* How it works - 3 steps */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 20, marginBottom: 48,
+          }}>
+            {[
+              { step: '1', title: 'Inscrivez-vous', desc: 'Cr\u00e9ez votre compte partenaire gratuitement en 30 secondes.' },
+              { step: '2', title: 'Proposez le POS', desc: 'Partagez votre lien de parrainage aux commer\u00e7ants autour de vous.' },
+              { step: '3', title: 'Gagnez', desc: 'Recevez des commissions r\u00e9currentes sur chaque client actif.' },
+            ].map((s, i) => (
+              <div key={i} style={{
+                textAlign: 'center', padding: 20,
+                background: 'rgba(255,255,255,0.03)', borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: '#2563eb', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18, fontWeight: 800, margin: '0 auto 12px',
+                }}>{s.step}</div>
+                <h4 style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', margin: '0 0 6px' }}>{s.title}</h4>
+                <p style={{ fontSize: 13, color: '#94a3b8', margin: 0, lineHeight: 1.5 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
 
           {/* 3 Value Proposition Cards */}
           <div className="landing-features-grid" style={{
