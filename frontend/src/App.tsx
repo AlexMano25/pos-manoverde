@@ -79,6 +79,7 @@ import ForecastPage from './pages/ForecastPage'
 import AgentDashboardPage from './pages/AgentDashboardPage'
 import QROrderPage from './pages/QROrderPage'
 import CatalogPage from './pages/CatalogPage'
+import LegalPage from './pages/LegalPage'
 import PlanWarningBanner from './components/PlanWarningBanner'
 import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
@@ -276,6 +277,14 @@ export default function App() {
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [setIsAppInstalled, setInstallPromptEvent])
+
+  // Public legal pages — no auth required (for Google Cloud branding validation)
+  if (window.location.pathname === '/privacy') {
+    return <LegalPage type="privacy" />
+  }
+  if (window.location.pathname === '/terms') {
+    return <LegalPage type="terms" />
+  }
 
   // QR Code table ordering — public page, no auth required
   const isQrOrder = window.location.pathname === '/order' ||
