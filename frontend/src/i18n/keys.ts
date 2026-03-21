@@ -1028,6 +1028,14 @@ export type TranslationKeys = {
     faqA8: string
     faqQ9: string
     faqA9: string
+    faqQ10: string
+    faqA10: string
+    faqQ11: string
+    faqA11: string
+    faqQ12: string
+    faqA12: string
+    faqQ13: string
+    faqA13: string
     // Install section on landing
     navInstall: string
     installTitle: string

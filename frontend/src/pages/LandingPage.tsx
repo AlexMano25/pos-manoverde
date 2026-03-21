@@ -738,6 +738,10 @@ export default function LandingPage() {
     { question: t.landing.faqQ6, answer: t.landing.faqA6 },
     { question: t.landing.faqQ7, answer: t.landing.faqA7 },
     { question: t.landing.faqQ8, answer: t.landing.faqA8 },
+    { question: (t.landing as any).faqQ10, answer: (t.landing as any).faqA10 },
+    { question: (t.landing as any).faqQ11, answer: (t.landing as any).faqA11 },
+    { question: (t.landing as any).faqQ12, answer: (t.landing as any).faqA12 },
+    { question: (t.landing as any).faqQ13, answer: (t.landing as any).faqA13 },
   ]
 
   // ── Featured sectors (16 most popular) with mockup data for interactive modal ──
