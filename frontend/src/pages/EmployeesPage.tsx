@@ -1028,8 +1028,9 @@ export default function EmployeesPage() {
                     <button
                       style={actionBtnStyle('#25D366')}
                       onClick={() => {
-                        const loginUrl = `${window.location.origin}?store=${currentStore?.id || ''}&email=${encodeURIComponent(emp.email)}`
-                        const msg = `Bonjour ${emp.name},\n\nVotre compte ${currentStore?.name || ''} est pret.\n\nEmail: ${emp.email}\n${emp.pin ? `PIN: ${emp.pin}` : ''}\n\nConnectez-vous ici:\n${loginUrl}`
+                        const pinParam = emp.pin ? `&pin=${emp.pin}` : ''
+                        const loginUrl = `${window.location.origin}?store=${currentStore?.id || ''}&email=${encodeURIComponent(emp.email)}${pinParam}`
+                        const msg = `Bonjour ${emp.name},\n\nVotre compte *${currentStore?.name || ''}* est pret.\n\n${emp.pin ? `Utilisez votre code PIN: *${emp.pin}*\n(Onglet "Connexion par PIN")` : `Email: ${emp.email}`}\n\nConnectez-vous ici:\n${loginUrl}`
                         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
                       }}
                       title="Partager via WhatsApp"
