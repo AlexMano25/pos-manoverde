@@ -246,7 +246,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
             const { data: profile, error: profileError } = await supabase
               .from('users')
               .select(
-                'id, store_id, name, email, role, pin, phone, is_active, created_at, updated_at',
+                'id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at',
               )
               .eq('email', email)
               .eq('is_active', true)

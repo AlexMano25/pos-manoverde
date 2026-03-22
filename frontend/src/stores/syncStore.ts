@@ -280,7 +280,7 @@ async function pullFromCloud(storeId: string, since?: string | null): Promise<vo
     .order('created_at', { ascending: false }).limit(200)
   const usersQuery = supabase
     .from('users')
-    .select('id, store_id, name, email, role, pin, phone, is_active, created_at, updated_at')
+    .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
     .eq('store_id', storeId)
 
   // If we have a last sync timestamp, only fetch newer records

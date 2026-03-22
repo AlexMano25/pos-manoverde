@@ -1022,6 +1022,17 @@ export default function EmployeesPage() {
                       <Edit2 size={16} />
                     </button>
                     <button
+                      style={actionBtnStyle('#25D366')}
+                      onClick={() => {
+                        const loginUrl = `${window.location.origin}?store=${currentStore?.id || ''}&email=${encodeURIComponent(emp.email)}`
+                        const msg = `Bonjour ${emp.name},\n\nVotre compte ${currentStore?.name || ''} est pret.\n\nEmail: ${emp.email}\n${emp.pin ? `PIN: ${emp.pin}` : ''}\n\nConnectez-vous ici:\n${loginUrl}`
+                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
+                      }}
+                      title="Partager via WhatsApp"
+                    >
+                      <StoreIcon size={16} />
+                    </button>
+                    <button
                       style={actionBtnStyle(C.danger)}
                       onClick={() => openDeleteModal(emp)}
                       title={t.common.delete}
