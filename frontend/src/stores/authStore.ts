@@ -21,6 +21,7 @@ interface AuthActions {
   loginWithPin: (pin: string) => Promise<void>
   logout: () => void
   setUser: (user: User) => void
+  refreshProfile: () => Promise<void>
   loadSession: () => void
   register: (data: RegistrationData) => Promise<void>
 }
@@ -464,6 +465,25 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
 
       setUser: (user: User) => {
         set({ user })
+      },
+
+      refreshProfile: async () => {
+        // Re-fetch user profile from Supabase to get latest allowed_pages etc.
+        const currentUser = get().user
+        if (!currentUser || !isSupabaseConfigured || !supabase) return
+        try {
+          const { data: profile } = await supabase
+            .from('users')
+            .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
+            .eq('id', currentUser.id)
+            .eq('is_active', true)
+            .single()
+          if (profile) {
+            set({ user: profile as User })
+          }
+        } catch (err) {
+          console.warn('[authStore] Profile refresh failed:', err)
+        }
       },
 
       loadSession: () => {

@@ -99,6 +99,13 @@ function AppContent() {
   useInventoryAlerts()
   usePlanEnforcement()
 
+  // Refresh user profile on mount to get latest allowed_pages
+  useEffect(() => {
+    if (user) {
+      useAuthStore.getState().refreshProfile()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Client mode: force POS section
   useEffect(() => {
     if (mode === 'client' && section !== 'pos') {

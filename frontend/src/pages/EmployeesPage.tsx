@@ -269,17 +269,29 @@ export default function EmployeesPage() {
     setShowModal(true)
   }
 
-  const openEditModal = (emp: User) => {
-    setEditingEmployee(emp)
+  const openEditModal = async (emp: User) => {
+    // Fetch latest data from Supabase (allowed_pages may have changed)
+    let latestEmp = emp
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
+          .eq('id', emp.id)
+          .single()
+        if (data) latestEmp = data as User
+      } catch { /* use local data as fallback */ }
+    }
+    setEditingEmployee(latestEmp)
     setForm({
-      name: emp.name,
-      email: emp.email,
+      name: latestEmp.name,
+      email: latestEmp.email,
       password: '',
       confirmPassword: '',
-      role: emp.role,
-      phone: emp.phone || '',
-      pin: emp.pin || '',
-      allowed_pages: emp.allowed_pages || [],
+      role: latestEmp.role,
+      phone: latestEmp.phone || '',
+      pin: latestEmp.pin || '',
+      allowed_pages: latestEmp.allowed_pages || [],
     })
     setFormError('')
     setShowModal(true)
