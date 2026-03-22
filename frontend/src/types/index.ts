@@ -267,6 +267,7 @@ export type User = {
   phone?: string
   is_active: boolean
   last_login?: string
+  allowed_pages?: string[] // granular page access (pageComponent keys); undefined = default by role
   created_at: string
   updated_at: string
 }

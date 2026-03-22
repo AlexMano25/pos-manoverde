@@ -28,6 +28,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabase'
 import type { User, UserRole } from '../types'
 import { generateUUID } from '../utils/uuid'
 import { useResponsive } from '../hooks/useLayoutMode'
+import { getSidebarItems } from '../data/sidebarConfig'
 import { formatCurrency } from '../utils/currency'
 import { computeEmployeePerformance, computeTeamSummary } from '../utils/payrollCalculation'
 import { exportPayslip } from '../utils/pdfExport'
@@ -143,6 +144,7 @@ interface EmployeeForm {
   role: UserRole
   phone: string
   pin: string
+  allowed_pages: string[]
 }
 
 const emptyForm: EmployeeForm = {
@@ -153,6 +155,7 @@ const emptyForm: EmployeeForm = {
   role: 'cashier',
   phone: '',
   pin: '',
+  allowed_pages: [],
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -272,6 +275,7 @@ export default function EmployeesPage() {
       role: emp.role,
       phone: emp.phone || '',
       pin: emp.pin || '',
+      allowed_pages: emp.allowed_pages || [],
     })
     setFormError('')
     setShowModal(true)
@@ -323,6 +327,7 @@ export default function EmployeesPage() {
             role: form.role,
             phone: form.phone.trim() || undefined,
             pin: form.pin.trim() || undefined,
+            allowed_pages: form.allowed_pages.length > 0 ? form.allowed_pages : undefined,
             updated_at: now,
           })
         } else {
@@ -334,6 +339,7 @@ export default function EmployeesPage() {
             role: form.role,
             phone: form.phone.trim() || undefined,
             pin: form.pin.trim() || undefined,
+            allowed_pages: form.allowed_pages.length > 0 ? form.allowed_pages : undefined,
             is_active: true,
             created_at: now,
             updated_at: now,
@@ -354,6 +360,7 @@ export default function EmployeesPage() {
               role: form.role,
               phone: form.phone.trim() || null,
               pin: form.pin.trim() || null,
+              allowed_pages: form.allowed_pages.length > 0 ? form.allowed_pages : null,
             }
             if (form.email.trim() !== editingEmployee.email) {
               updates.email = form.email.trim()
@@ -384,6 +391,7 @@ export default function EmployeesPage() {
                 role: form.role,
                 phone: form.phone.trim() || null,
                 pin: form.pin.trim() || null,
+                allowed_pages: form.allowed_pages.length > 0 ? form.allowed_pages : null,
                 store_id: currentStore.id,
               },
             })
@@ -1145,6 +1153,76 @@ export default function EmployeesPage() {
             maxLength={6}
             inputMode="numeric"
           />
+        </div>
+
+        {/* ── Page Access Permissions ─────────────────────────────── */}
+        <div style={{ ...formFieldStyle, marginTop: 8 }}>
+          <label style={{ ...formLabelStyle, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            Acc{'\u00e8'}s aux pages
+            <span style={{ fontSize: 11, color: C.textSecondary, fontWeight: 400 }}>
+              (vide = acc{'\u00e8'}s par d{'\u00e9'}faut selon le r{'\u00f4'}le)
+            </span>
+          </label>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: 6, padding: 12, borderRadius: 10, border: `1px solid ${C.border}`,
+            backgroundColor: '#f8fafc', maxHeight: 220, overflowY: 'auto',
+          }}>
+            {getSidebarItems(currentStore?.activity).map(item => {
+              const pageKey = item.pageComponent
+              const checked = form.allowed_pages.includes(pageKey)
+              const label = (() => {
+                const keys = item.i18nKey.split('.')
+                let val: any = t
+                for (const k of keys) val = val?.[k]
+                return typeof val === 'string' ? val : pageKey
+              })()
+              return (
+                <label key={pageKey} style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 13, color: C.text, cursor: 'pointer',
+                  padding: '4px 6px', borderRadius: 6,
+                  backgroundColor: checked ? C.primary + '10' : 'transparent',
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => {
+                      setForm(prev => ({
+                        ...prev,
+                        allowed_pages: checked
+                          ? prev.allowed_pages.filter(p => p !== pageKey)
+                          : [...prev.allowed_pages, pageKey],
+                      }))
+                    }}
+                    style={{ accentColor: C.primary, width: 16, height: 16 }}
+                  />
+                  {label}
+                </label>
+              )
+            })}
+          </div>
+          {form.allowed_pages.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({
+                  ...prev,
+                  allowed_pages: getSidebarItems(currentStore?.activity).map(i => i.pageComponent),
+                }))}
+                style={{ fontSize: 11, color: C.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                Tout cocher
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({ ...prev, allowed_pages: [] }))}
+                style={{ fontSize: 11, color: C.danger, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                Tout d{'\u00e9'}cocher (d{'\u00e9'}faut r{'\u00f4'}le)
+              </button>
+            </div>
+          )}
         </div>
 
         <div style={formBtnRowStyle}>

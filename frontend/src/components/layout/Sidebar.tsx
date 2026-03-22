@@ -241,13 +241,17 @@ const Sidebar: React.FC = () => {
       if (mode === 'client') return item.allowedRoles?.includes('cashier') ?? false
       // Server-only items hidden in non-server modes
       if (item.serverOnly && mode !== 'server' && mode !== 'all_in_one') return false
-      // Role filter
+      // Per-employee granular page access (takes priority over role-based)
+      if (user?.allowed_pages && user.allowed_pages.length > 0) {
+        return user.allowed_pages.includes(item.pageComponent)
+      }
+      // Fallback: role-based filter
       if (item.allowedRoles && user?.role) {
         return item.allowedRoles.includes(user.role)
       }
       return true // no role restriction = everyone sees it
     })
-  }, [activity, currentStore?.activity, mode, user?.role])
+  }, [activity, currentStore?.activity, mode, user?.role, user?.allowed_pages])
 
   // ── Section validation on activity change ──────────────────────────────
   useEffect(() => {
