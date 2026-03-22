@@ -190,6 +190,8 @@ export default function SuperAdminPage() {
   const [tierConfigs, setTierConfigs] = useState<any[]>([])
   const [tierEdits, setTierEdits] = useState<Record<string, any>>({})
   const [tierSaving, setTierSaving] = useState(false)
+  const [agentWithdrawals, setAgentWithdrawals] = useState<any[]>([])
+  const [withdrawalsLoading, setWithdrawalsLoading] = useState(false)
 
   // ── Data fetching ────────────────────────────────────────────────────
 
@@ -370,6 +372,22 @@ export default function SuperAdminPage() {
     }
   }, [])
 
+  const fetchWithdrawals = useCallback(async () => {
+    if (!supabase) return
+    setWithdrawalsLoading(true)
+    try {
+      const { data } = await supabase
+        .from('agent_withdrawals')
+        .select('*, agents(name, email)')
+        .order('created_at', { ascending: false })
+      setAgentWithdrawals(data || [])
+    } catch (err) {
+      console.error('Failed to fetch withdrawals:', err)
+    } finally {
+      setWithdrawalsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (activeTab === 'organizations' || activeTab === 'analytics') fetchOrganizations()
     if (activeTab === 'users') { fetchAllUsers(); if (orgs.length === 0) fetchOrganizations() }
@@ -382,8 +400,9 @@ export default function SuperAdminPage() {
       fetchAgents()
       fetchPendingCommissions()
       fetchTierConfigs()
+      fetchWithdrawals()
     }
-  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers, fetchAgents, fetchPendingCommissions, fetchTierConfigs])
+  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers, fetchAgents, fetchPendingCommissions, fetchTierConfigs, fetchWithdrawals])
 
   // ── Organizations helpers ────────────────────────────────────────────
 
@@ -1456,6 +1475,10 @@ export default function SuperAdminPage() {
             name_fr: edits.name_fr ?? tier.name_fr,
             min_referrals: edits.min_referrals ?? tier.min_referrals,
             commission_rate: edits.commission_rate ?? tier.commission_rate,
+            commission_gen1: edits.commission_gen1 ?? tier.commission_gen1,
+            commission_gen2: edits.commission_gen2 ?? tier.commission_gen2,
+            commission_gen3: edits.commission_gen3 ?? tier.commission_gen3,
+            commission_gen4: edits.commission_gen4 ?? tier.commission_gen4,
           }).eq('tier', tier.tier)
         }
       }
@@ -1774,26 +1797,26 @@ export default function SuperAdminPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: `linear-gradient(135deg, ${C.headerStart}, ${C.headerEnd})` }}>
-                  {['Niveau', 'Parrainages min.', 'Taux de commission (%)'].map(h => (
+                  {['Niveau', 'Parr. min.', 'Taux (%)', 'Gen 1 (%)', 'Gen 2 (%)', 'Gen 3 (%)', 'Gen 4 (%)'].map(h => (
                     <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#fff', fontSize: 12, fontWeight: 600 }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {tierConfigs.map((tier, i) => {
-                  const key = tier.tier // use tier number (1,2,3,4) as unique key
+                  const key = tier.tier
                   return (
                   <tr key={key} style={{ background: i % 2 ? C.stripe : C.card }}>
                     <td style={{ padding: '8px 12px' }}>
                       <input
-                        style={{ ...inputStyle, width: 140 }}
+                        style={{ ...inputStyle, width: 120 }}
                         value={tierEdits[key]?.name_fr ?? tier.name_fr}
                         onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], name_fr: e.target.value } }))}
                       />
                     </td>
                     <td style={{ padding: '8px 12px' }}>
                       <input
-                        style={{ ...inputStyle, width: 100 }}
+                        style={{ ...inputStyle, width: 70 }}
                         type="number"
                         value={tierEdits[key]?.min_referrals ?? tier.min_referrals}
                         onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], min_referrals: parseInt(e.target.value) || 0 } }))}
@@ -1801,16 +1824,156 @@ export default function SuperAdminPage() {
                     </td>
                     <td style={{ padding: '8px 12px' }}>
                       <input
-                        style={{ ...inputStyle, width: 100 }}
+                        style={{ ...inputStyle, width: 70 }}
                         type="number"
                         step="0.01"
                         value={tierEdits[key]?.commission_rate ?? tier.commission_rate}
                         onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_rate: parseFloat(e.target.value) || 0 } }))}
                       />
                     </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 70 }}
+                        type="number"
+                        step="0.01"
+                        value={tierEdits[key]?.commission_gen1 ?? tier.commission_gen1 ?? 0}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_gen1: parseFloat(e.target.value) || 0 } }))}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 70 }}
+                        type="number"
+                        step="0.01"
+                        value={tierEdits[key]?.commission_gen2 ?? tier.commission_gen2 ?? 0}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_gen2: parseFloat(e.target.value) || 0 } }))}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 70 }}
+                        type="number"
+                        step="0.01"
+                        value={tierEdits[key]?.commission_gen3 ?? tier.commission_gen3 ?? 0}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_gen3: parseFloat(e.target.value) || 0 } }))}
+                      />
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <input
+                        style={{ ...inputStyle, width: 70 }}
+                        type="number"
+                        step="0.01"
+                        value={tierEdits[key]?.commission_gen4 ?? tier.commission_gen4 ?? 0}
+                        onChange={e => setTierEdits(prev => ({ ...prev, [key]: { ...prev[key], commission_gen4: parseFloat(e.target.value) || 0 } }))}
+                      />
+                    </td>
                   </tr>
                   )
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ── Withdrawals Management ─────────────────────────────────────── */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 24), boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: `1px solid ${C.border}`, marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <DollarSign size={16} /> Retraits agents
+          </h3>
+          <button style={btnPrimary} onClick={fetchWithdrawals}>
+            <RefreshCw size={14} /> Actualiser
+          </button>
+        </div>
+
+        {withdrawalsLoading ? (
+          <div style={{ textAlign: 'center', padding: 30 }}>
+            <Loader2 size={20} style={{ animation: 'spin 1s linear infinite', color: C.primary }} />
+          </div>
+        ) : agentWithdrawals.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: C.textSecondary, fontSize: 14 }}>
+            Aucune demande de retrait
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: `linear-gradient(135deg, ${C.headerStart}, ${C.headerEnd})` }}>
+                  {['Agent', 'Montant', 'Frais', 'Net', 'Methode', 'Telephone', 'Date', 'Statut', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#fff', fontSize: 12, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {agentWithdrawals.map((w: any, i: number) => (
+                  <tr key={w.id} style={{ background: i % 2 ? C.stripe : C.card, borderBottom: `1px solid ${C.border}` }}>
+                    <td style={{ padding: '8px 12px', fontWeight: 500 }}>
+                      {w.agents?.name || '-'}
+                      <div style={{ fontSize: 11, color: C.textSecondary }}>{w.agents?.email || ''}</div>
+                    </td>
+                    <td style={{ padding: '8px 12px', fontWeight: 600 }}>{Number(w.amount).toLocaleString()} FCFA</td>
+                    <td style={{ padding: '8px 12px' }}>{Number(w.fee).toLocaleString()} FCFA</td>
+                    <td style={{ padding: '8px 12px', fontWeight: 600, color: C.success }}>{Number(w.net_amount).toLocaleString()} FCFA</td>
+                    <td style={{ padding: '8px 12px' }}>{w.method === 'mtn_momo' ? 'MTN MoMo' : 'Orange Money'}</td>
+                    <td style={{ padding: '8px 12px' }}>{w.phone}</td>
+                    <td style={{ padding: '8px 12px', color: C.textSecondary }}>{new Date(w.created_at).toLocaleDateString()}</td>
+                    <td style={{ padding: '8px 12px' }}>
+                      <span style={{
+                        padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 500, display: 'inline-block',
+                        background: w.status === 'paid' ? C.successLight : w.status === 'approved' ? '#dbeafe' : w.status === 'rejected' ? C.errorLight : C.warningLight,
+                        color: w.status === 'paid' ? C.success : w.status === 'approved' ? C.primary : w.status === 'rejected' ? C.error : '#92400e',
+                      }}>
+                        {w.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '8px 12px' }}>
+                      {w.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          <button
+                            style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: C.success, borderColor: C.success }}
+                            onClick={async () => {
+                              if (!supabase) return
+                              await supabase.from('agent_withdrawals').update({ status: 'approved' }).eq('id', w.id)
+                              fetchWithdrawals()
+                            }}
+                          >
+                            <CheckCircle2 size={12} /> Approuver
+                          </button>
+                          <button
+                            style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: C.error, borderColor: C.error }}
+                            onClick={async () => {
+                              if (!supabase) return
+                              await supabase.from('agent_withdrawals').update({ status: 'rejected' }).eq('id', w.id)
+                              // Re-credit agent pending_balance
+                              const { data: agentData } = await supabase.from('agents').select('pending_balance').eq('id', w.agent_id).single()
+                              if (agentData) {
+                                await supabase.from('agents').update({
+                                  pending_balance: (Number(agentData.pending_balance) || 0) + Number(w.amount),
+                                }).eq('id', w.agent_id)
+                              }
+                              fetchWithdrawals()
+                            }}
+                          >
+                            <XCircle size={12} /> Rejeter
+                          </button>
+                        </div>
+                      )}
+                      {w.status === 'approved' && (
+                        <button
+                          style={{ ...btnOutline, fontSize: 11, padding: '4px 8px', color: C.primary, borderColor: C.primary }}
+                          onClick={async () => {
+                            if (!supabase) return
+                            await supabase.from('agent_withdrawals').update({ status: 'paid', processed_at: new Date().toISOString() }).eq('id', w.id)
+                            fetchWithdrawals()
+                          }}
+                        >
+                          <DollarSign size={12} /> Marquer paye
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

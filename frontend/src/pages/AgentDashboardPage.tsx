@@ -86,6 +86,19 @@ interface Referral {
   [key: string]: any
 }
 
+interface Withdrawal {
+  id: string
+  agent_id: string
+  amount: number
+  fee: number
+  net_amount: number
+  method: string
+  phone: string
+  status: string
+  created_at: string
+  processed_at?: string
+}
+
 interface Commission {
   id: string
   organization_id: string
@@ -94,6 +107,7 @@ interface Commission {
   gross_amount_usd: number
   commission_rate: number
   commission_usd: number
+  generation?: number
   status: string
   created_at: string
   organizations?: {
@@ -133,6 +147,11 @@ export default function AgentDashboardPage() {
   const [tiers, setTiers] = useState<TierConfig[]>(DEFAULT_TIERS)
   const [copied, setCopied] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [sponsorName, setSponsorName] = useState<string | null>(null)
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([])
+  const [withdrawForm, setWithdrawForm] = useState({ amount: '', method: 'mtn_momo', phone: '' })
+  const [withdrawSubmitting, setWithdrawSubmitting] = useState(false)
+  const [withdrawMsg, setWithdrawMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // ── Responsive listener ──────────────────────────────────────────────
 
@@ -208,6 +227,24 @@ export default function AgentDashboardPage() {
             organizations: cOrgMap[c.organization_id] || { name: '-' },
           })))
         }
+
+        // Fetch withdrawals
+        const { data: wData } = await supabase
+          .from('agent_withdrawals')
+          .select('*')
+          .eq('agent_id', agentData.id)
+          .order('created_at', { ascending: false })
+        if (wData) setWithdrawals(wData)
+
+        // Fetch sponsor info
+        if (agentData.sponsor_id) {
+          const { data: sponsorData } = await supabase
+            .from('agents')
+            .select('name')
+            .eq('id', agentData.sponsor_id)
+            .maybeSingle()
+          if (sponsorData) setSponsorName(sponsorData.name)
+        }
       }
 
       // Fetch tier config
@@ -246,6 +283,15 @@ export default function AgentDashboardPage() {
   const totalCommissionsEarned = commissions.reduce((s: number, c: any) => s + (Number(c.commission_usd) || 0), 0)
   const balancePending = totalCommissionsEarned - totalPaid
 
+  const pendingBalance = Number(agent?.pending_balance) || 0
+
+  // Per-generation totals
+  const genTotals = [1, 2, 3, 4].map(gen =>
+    commissions
+      .filter((c: any) => (c.generation || 1) === gen)
+      .reduce((s: number, c: any) => s + (Number(c.commission_usd) || 0), 0)
+  )
+
   // ── Tier progress ────────────────────────────────────────────────────
 
   const progressPercent = nextTier
@@ -270,6 +316,50 @@ export default function AgentDashboardPage() {
 
   function handleLogout() {
     useAuthStore.getState().logout()
+  }
+
+  async function handleWithdraw() {
+    if (!supabase || !agent) return
+    const amount = Number(withdrawForm.amount)
+    if (!amount || amount < 5000) {
+      setWithdrawMsg({ type: 'error', text: 'Le montant minimum est de 5 000 FCFA.' })
+      return
+    }
+    if (amount > pendingBalance) {
+      setWithdrawMsg({ type: 'error', text: 'Solde insuffisant.' })
+      return
+    }
+    if (!withdrawForm.phone.trim()) {
+      setWithdrawMsg({ type: 'error', text: 'Veuillez saisir votre numero de telephone.' })
+      return
+    }
+    setWithdrawSubmitting(true)
+    setWithdrawMsg(null)
+    try {
+      const fee = Math.round(amount * 0.03)
+      const netAmount = amount - fee
+      const { error } = await supabase.from('agent_withdrawals').insert({
+        agent_id: agent.id,
+        amount,
+        fee,
+        net_amount: netAmount,
+        method: withdrawForm.method,
+        phone: withdrawForm.phone.trim(),
+        status: 'pending',
+      })
+      if (error) throw error
+      // Debit pending_balance
+      await supabase.from('agents').update({
+        pending_balance: pendingBalance - amount,
+      }).eq('id', agent.id)
+      setWithdrawForm({ amount: '', method: 'mtn_momo', phone: '' })
+      setWithdrawMsg({ type: 'success', text: `Demande de retrait de ${netAmount.toLocaleString()} FCFA envoyee.` })
+      fetchData()
+    } catch (err: any) {
+      setWithdrawMsg({ type: 'error', text: err.message || 'Erreur, veuillez reessayer.' })
+    } finally {
+      setWithdrawSubmitting(false)
+    }
   }
 
   // ── Loading state ────────────────────────────────────────────────────
@@ -472,6 +562,70 @@ export default function AgentDashboardPage() {
             value={`${totalEarned.toLocaleString()} $`}
             color={C.success}
           />
+        </div>
+
+        {/* ── Pending Balance + Sponsor Info ──────────────────────────── */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : sponsorName ? '1fr 1fr' : '1fr',
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ background: C.card, borderRadius: 12, padding: isMobile ? 16 : 20, border: `1px solid ${C.border}` }}>
+            <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 6 }}>Solde disponible pour retrait</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: C.success }}>{pendingBalance.toLocaleString()} FCFA</div>
+          </div>
+          {sponsorName && (
+            <div style={{ background: C.card, borderRadius: 12, padding: isMobile ? 16 : 20, border: `1px solid ${C.border}` }}>
+              <div style={{ fontSize: 13, color: C.textSecondary, marginBottom: 6 }}>Votre parrain</div>
+              <div style={{ fontSize: 18, fontWeight: 600, color: C.text }}>{sponsorName}</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Gains par generation ────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+            Gains par generation
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+              gap: 10,
+            }}
+          >
+            {[
+              { label: 'Gen 1 (Direct)', value: genTotals[0], color: '#2563eb' },
+              { label: 'Gen 2', value: genTotals[1], color: '#7c3aed' },
+              { label: 'Gen 3', value: genTotals[2], color: '#d97706' },
+              { label: 'Gen 4', value: genTotals[3], color: '#059669' },
+            ].map(g => (
+              <div
+                key={g.label}
+                style={{
+                  background: `${g.color}0a`,
+                  borderRadius: 10,
+                  padding: 14,
+                  border: `1px solid ${g.color}30`,
+                  textAlign: 'center',
+                }}
+              >
+                <div style={{ fontSize: 12, color: C.textSecondary, marginBottom: 4 }}>{g.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: g.color }}>{g.value.toLocaleString()} FCFA</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ── Tier Progression ─────────────────────────────────────────── */}
@@ -682,6 +836,7 @@ export default function AgentDashboardPage() {
                     'Date',
                     'Client',
                     'Type',
+                    'Gen.',
                     (t as any).agent?.grossAmount || 'Montant brut',
                     (t as any).agent?.rate || 'Taux',
                     'Commission',
@@ -706,7 +861,7 @@ export default function AgentDashboardPage() {
                 {commissions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       style={{ padding: 20, textAlign: 'center', color: C.textSecondary }}
                     >
                       {(t as any).agent?.noCommissions || 'Aucune commission pour le moment'}
@@ -732,6 +887,20 @@ export default function AgentDashboardPage() {
                           }}
                         >
                           {comm.source_type}
+                        </span>
+                      </td>
+                      <td style={{ padding: '8px 10px' }}>
+                        <span
+                          style={{
+                            background: (comm.generation || 1) === 1 ? '#dbeafe' : (comm.generation || 1) === 2 ? '#ede9fe' : (comm.generation || 1) === 3 ? '#fef3c7' : '#d1fae5',
+                            color: (comm.generation || 1) === 1 ? '#1e40af' : (comm.generation || 1) === 2 ? '#5b21b6' : (comm.generation || 1) === 3 ? '#92400e' : '#065f46',
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          G{comm.generation || 1}
                         </span>
                       </td>
                       <td style={{ padding: '8px 10px' }}>
@@ -789,6 +958,142 @@ export default function AgentDashboardPage() {
             />
           </div>
         </div>
+
+        {/* ── Withdrawal Form ──────────────────────────────────────────── */}
+        <div
+          style={{
+            background: C.card,
+            borderRadius: 12,
+            padding: isMobile ? 16 : 20,
+            marginBottom: 20,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+            Demande de retrait
+          </div>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr',
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <div>
+              <label style={{ fontSize: 12, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Montant (min 5 000 FCFA)</label>
+              <input
+                type="number"
+                placeholder="10000"
+                value={withdrawForm.amount}
+                onChange={e => setWithdrawForm(f => ({ ...f, amount: e.target.value }))}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Methode de paiement</label>
+              <select
+                value={withdrawForm.method}
+                onChange={e => setWithdrawForm(f => ({ ...f, method: e.target.value }))}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#fff' }}
+              >
+                <option value="mtn_momo">MTN MoMo</option>
+                <option value="orange_money">Orange Money</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: C.textSecondary, display: 'block', marginBottom: 4 }}>Numero de telephone</label>
+              <input
+                type="tel"
+                placeholder="6XXXXXXXX"
+                value={withdrawForm.phone}
+                onChange={e => setWithdrawForm(f => ({ ...f, phone: e.target.value }))}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          {/* Fee display */}
+          {Number(withdrawForm.amount) > 0 && (
+            <div style={{ display: 'flex', gap: 20, fontSize: 13, color: C.textSecondary, marginBottom: 12, flexWrap: 'wrap' }}>
+              <span>Frais (3%): <strong style={{ color: C.warning }}>{Math.round(Number(withdrawForm.amount) * 0.03).toLocaleString()} FCFA</strong></span>
+              <span>Montant net: <strong style={{ color: C.success }}>{(Number(withdrawForm.amount) - Math.round(Number(withdrawForm.amount) * 0.03)).toLocaleString()} FCFA</strong></span>
+            </div>
+          )}
+
+          <button
+            onClick={handleWithdraw}
+            disabled={withdrawSubmitting}
+            style={{
+              padding: '10px 24px',
+              background: C.primary,
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: withdrawSubmitting ? 'not-allowed' : 'pointer',
+              opacity: withdrawSubmitting ? 0.6 : 1,
+            }}
+          >
+            {withdrawSubmitting ? 'Envoi en cours...' : 'Demander le retrait'}
+          </button>
+
+          {withdrawMsg && (
+            <div style={{
+              marginTop: 10,
+              padding: '8px 14px',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
+              background: withdrawMsg.type === 'success' ? '#dcfce7' : '#fee2e2',
+              color: withdrawMsg.type === 'success' ? '#166534' : '#991b1b',
+            }}>
+              {withdrawMsg.text}
+            </div>
+          )}
+        </div>
+
+        {/* ── Withdrawal History ────────────────────────────────────────── */}
+        {withdrawals.length > 0 && (
+          <div
+            style={{
+              background: C.card,
+              borderRadius: 12,
+              padding: isMobile ? 16 : 20,
+              marginBottom: 40,
+              border: `1px solid ${C.border}`,
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 14, color: C.text }}>
+              Historique des retraits
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${C.border}` }}>
+                    {['Date', 'Montant', 'Frais', 'Net', 'Methode', 'Telephone', 'Statut'].map(col => (
+                      <th key={col} style={{ textAlign: 'left', padding: '8px 10px', color: C.textSecondary, fontWeight: 600, whiteSpace: 'nowrap' }}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {withdrawals.map(w => (
+                    <tr key={w.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '8px 10px', color: C.textSecondary }}>{new Date(w.created_at).toLocaleDateString()}</td>
+                      <td style={{ padding: '8px 10px', fontWeight: 600 }}>{Number(w.amount).toLocaleString()} FCFA</td>
+                      <td style={{ padding: '8px 10px' }}>{Number(w.fee).toLocaleString()} FCFA</td>
+                      <td style={{ padding: '8px 10px', fontWeight: 600, color: C.success }}>{Number(w.net_amount).toLocaleString()} FCFA</td>
+                      <td style={{ padding: '8px 10px' }}>{w.method === 'mtn_momo' ? 'MTN MoMo' : 'Orange Money'}</td>
+                      <td style={{ padding: '8px 10px' }}>{w.phone}</td>
+                      <td style={{ padding: '8px 10px' }}><StatusBadge status={w.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

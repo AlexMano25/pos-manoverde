@@ -414,7 +414,10 @@ export default function LandingPage() {
   const [sectorTab, setSectorTab] = useState(0)
   const [activeCategory, setActiveCategory] = useState('all')
   // Partner application form
-  const [partnerForm, setPartnerForm] = useState({ name: '', email: '', phone: '', city: '', motivation: '' })
+  const [partnerForm, setPartnerForm] = useState(() => {
+    const urlRef = new URLSearchParams(window.location.search).get('ref') || sessionStorage.getItem('pos_referral_code') || ''
+    return { name: '', email: '', phone: '', city: '', motivation: '', sponsorCode: urlRef }
+  })
   const [partnerSubmitting, setPartnerSubmitting] = useState(false)
   const [partnerResult, setPartnerResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const { t } = useLanguageStore()
@@ -475,18 +478,22 @@ export default function LandingPage() {
         return
       }
       // Insert as pending agent (no auth_id = pending)
+      const motivationParts = [partnerForm.motivation, partnerForm.city].filter(Boolean).join(' | ')
+      const notesValue = partnerForm.sponsorCode.trim()
+        ? `sponsor:${partnerForm.sponsorCode.trim()}${motivationParts ? ' | ' + motivationParts : ''}`
+        : motivationParts || null
       const { error } = await supabase.from('agents').insert({
         name: partnerForm.name,
         email: partnerForm.email,
         phone: partnerForm.phone,
-        motivation: partnerForm.motivation || partnerForm.city || null,
+        motivation: notesValue,
         is_active: false,
         tier: 1,
         commission_rate: 0,
         referral_code: 'PENDING-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase(),
       })
       if (error) throw error
-      setPartnerForm({ name: '', email: '', phone: '', city: '', motivation: '' })
+      setPartnerForm({ name: '', email: '', phone: '', city: '', motivation: '', sponsorCode: '' })
       setPartnerResult({ type: 'success', text: 'Candidature envoyee! Vous recevrez une notification WhatsApp apres validation.' })
     } catch (err: any) {
       setPartnerResult({ type: 'error', text: err.message || 'Erreur, veuillez reessayer.' })
@@ -3572,6 +3579,15 @@ export default function LandingPage() {
             <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#4ade80', textAlign: 'center' }}>
               {(t.landing as any)?.partnerFormTitle || 'Postuler maintenant'}
             </h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>Code parrain (optionnel)</label>
+              <input
+                placeholder="Ex: AGT-XXXXXX"
+                value={partnerForm.sponsorCode}
+                onChange={e => setPartnerForm(f => ({ ...f, sponsorCode: e.target.value }))}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#f8fafc', fontSize: 14, fontFamily: pageFont, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <input
                 placeholder={(t.landing as any)?.partnerName || 'Nom complet *'}
