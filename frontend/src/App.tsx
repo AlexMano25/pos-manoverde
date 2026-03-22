@@ -238,7 +238,14 @@ export default function App() {
     if (refCode) {
       setReferralCode(refCode)
       sessionStorage.setItem('pos_referral_code', refCode)
-      // Clean URL without reload
+    }
+    // Store employee invite store/email params for login pre-fill
+    const storeParam = params.get('store')
+    const emailParam = params.get('email')
+    if (storeParam) sessionStorage.setItem('pos_invite_store', storeParam)
+    if (emailParam) sessionStorage.setItem('pos_invite_email', emailParam)
+    // Clean ref from URL (keep store/email for LoginPage to read)
+    if (refCode) {
       const url = new URL(window.location.href)
       url.searchParams.delete('ref')
       window.history.replaceState({}, '', url.pathname + url.search)

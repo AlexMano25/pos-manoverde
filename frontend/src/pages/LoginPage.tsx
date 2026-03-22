@@ -8,8 +8,10 @@ import { goToLanding } from '../utils/navigation'
 type TabKey = 'email' | 'pin'
 
 export default function LoginPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('email')
-  const [email, setEmail] = useState('')
+  // Pre-fill email from URL params (shared employee link)
+  const urlEmail = new URLSearchParams(window.location.search).get('email') || ''
+  const [activeTab, setActiveTab] = useState<TabKey>(urlEmail ? 'email' : 'email')
+  const [email, setEmail] = useState(urlEmail)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [pin, setPin] = useState(['', '', '', ''])
