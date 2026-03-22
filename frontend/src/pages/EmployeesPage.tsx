@@ -15,6 +15,7 @@ import {
   DollarSign,
   Award,
   FileText,
+  Share2,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
 import MiniBarChart from '../components/charts/MiniBarChart'
@@ -240,6 +241,9 @@ export default function EmployeesPage() {
         .where('store_id')
         .equals(currentStore.id)
         .toArray()
+
+      // Never show super_admin in employee list
+      users = users.filter((u) => u.role !== 'super_admin' && u.role !== 'agent')
 
       // Role-based filtering
       if (currentUser?.role === 'manager') {
@@ -1030,7 +1034,7 @@ export default function EmployeesPage() {
                       }}
                       title="Partager via WhatsApp"
                     >
-                      <StoreIcon size={16} />
+                      <Share2 size={16} />
                     </button>
                     <button
                       style={actionBtnStyle(C.danger)}
@@ -1179,7 +1183,9 @@ export default function EmployeesPage() {
             gap: 6, padding: 12, borderRadius: 10, border: `1px solid ${C.border}`,
             backgroundColor: '#f8fafc', maxHeight: 220, overflowY: 'auto',
           }}>
-            {getSidebarItems(currentStore?.activity).map(item => {
+            {getSidebarItems(currentStore?.activity)
+              .filter(item => !['super_admin', 'employees', 'billing', 'forecast', 'multi_store', 'webhooks', 'data_exchange'].includes(item.pageComponent))
+              .map(item => {
               const pageKey = item.pageComponent
               const checked = form.allowed_pages.includes(pageKey)
               const label = (() => {
@@ -1219,7 +1225,9 @@ export default function EmployeesPage() {
                 type="button"
                 onClick={() => setForm(prev => ({
                   ...prev,
-                  allowed_pages: getSidebarItems(currentStore?.activity).map(i => i.pageComponent),
+                  allowed_pages: getSidebarItems(currentStore?.activity)
+                    .filter(i => !['super_admin', 'employees', 'billing', 'forecast', 'multi_store', 'webhooks', 'data_exchange'].includes(i.pageComponent))
+                    .map(i => i.pageComponent),
                 }))}
                 style={{ fontSize: 11, color: C.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
