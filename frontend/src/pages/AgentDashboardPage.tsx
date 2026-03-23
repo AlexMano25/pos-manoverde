@@ -72,6 +72,8 @@ interface AgentRecord {
 interface Referral {
   id: string
   organization_id: string
+  generation?: number
+  referred_agent_id?: string
   status: string
   created_at: string
   organizations?: {
@@ -747,6 +749,7 @@ export default function AgentDashboardPage() {
               <thead>
                 <tr style={{ borderBottom: `2px solid ${C.border}` }}>
                   {[
+                    'Gen.',
                     (t as any).agent?.colName || 'Nom',
                     (t as any).agent?.colOwner || 'Proprietaire',
                     (t as any).agent?.colPlan || 'Plan',
@@ -772,7 +775,7 @@ export default function AgentDashboardPage() {
                 {referrals.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       style={{ padding: 20, textAlign: 'center', color: C.textSecondary }}
                     >
                       {(t as any).agent?.noReferrals || 'Aucun filleul pour le moment'}
@@ -781,6 +784,13 @@ export default function AgentDashboardPage() {
                 ) : (
                   referrals.map((ref) => (
                     <tr key={ref.id} style={{ borderBottom: `1px solid ${C.border}` }}>
+                      <td style={{ padding: '8px 10px' }}>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
+                          background: ref.generation === 1 ? '#dbeafe' : ref.generation === 2 ? '#ede9fe' : ref.generation === 3 ? '#fef3c7' : '#d1fae5',
+                          color: ref.generation === 1 ? '#1d4ed8' : ref.generation === 2 ? '#6d28d9' : ref.generation === 3 ? '#92400e' : '#065f46',
+                        }}>G{ref.generation || 1}</span>
+                      </td>
                       <td style={{ padding: '8px 10px', fontWeight: 500 }}>
                         {ref.organizations?.name || '-'}
                       </td>

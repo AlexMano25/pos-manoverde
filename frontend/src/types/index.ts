@@ -958,8 +958,10 @@ export type Agent = {
 export type AgentReferral = {
   id: string
   agent_id: string
-  organization_id: string
+  organization_id?: string
+  referred_agent_id?: string
   referral_code: string
+  generation?: number
   status: 'active' | 'churned' | 'suspended'
   created_at: string
   // Joined fields
