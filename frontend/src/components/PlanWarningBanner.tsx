@@ -8,6 +8,7 @@ import { useAppStore } from '../stores/appStore'
 import { useAuthStore } from '../stores/authStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { validateLicenseCode, getLicenseEndDate } from '../utils/licenseManager'
+import { supabase } from '../services/supabase'
 import { db } from '../db/dexie'
 import type { PlanStatusLevel } from '../types'
 
@@ -116,6 +117,27 @@ export default function PlanWarningBanner() {
           await db.table('_meta').put({ key: 'subscription', value: updated })
         }
       } catch { /* ignore */ }
+
+      // Mark license as used in Supabase (prevent reuse)
+      if (supabase) {
+        supabase.from('license_codes')
+          .update({ is_used: true, used_at: new Date().toISOString() })
+          .eq('code', licenseCode.trim().toUpperCase())
+          .then(({ error: e }) => { if (e) console.warn('[license] Mark used failed:', e.message) })
+      }
+
+      // Also update subscription in Supabase if online
+      if (supabase && currentStore?.organization_id) {
+        supabase.from('subscriptions')
+          .upsert({
+            organization_id: currentStore.organization_id,
+            plan: result.parsed!.plan,
+            status: 'active',
+            current_period_end: endDate.toISOString(),
+            updated_at: new Date().toISOString(),
+          } as never)
+          .then(({ error: e }) => { if (e) console.warn('[license] Sub update failed:', e.message) })
+      }
 
       // Update plan status immediately
       setPlanStatus({

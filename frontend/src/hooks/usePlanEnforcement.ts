@@ -69,10 +69,20 @@ export function usePlanEnforcement(): void {
           }
         }
       } else {
-        // Offline: load from IndexedDB cache
+        // Offline: load from IndexedDB cache (with freshness check)
         try {
           const cachedSub = await db.table('_meta').get('subscription')
-          if (cachedSub?.value) subscription = cachedSub.value
+          if (cachedSub?.value) {
+            subscription = cachedSub.value
+            // If cached data is older than 7 days, show warning
+            const cachedAt = cachedSub.value?.updated_at || cachedSub.value?.created_at
+            if (cachedAt) {
+              const cacheAge = Date.now() - new Date(cachedAt).getTime()
+              if (cacheAge > 7 * 86400000) {
+                console.warn('[usePlanEnforcement] Cached subscription data is >7 days old')
+              }
+            }
+          }
 
           const cachedCredit = await db.table('_meta').get('credit_balance')
           if (cachedCredit?.value != null) creditBalance = cachedCredit.value
@@ -102,9 +112,15 @@ export function usePlanEnforcement(): void {
       if (plan === 'pay_as_you_grow') {
         // Credit-based enforcement
         creditsRemaining = creditBalance
-        // Estimate percentage based on initial load (use 100 as reference)
-        const initialCredits = 100 // reference amount
-        creditsPct = creditsRemaining != null ? Math.max(0, Math.min(100, (creditsRemaining / initialCredits) * 100)) : null
+        // Calculate percentage based on total loaded (not hardcoded)
+        let totalLoaded = 10 // default initial credit
+        const currentStoreRef = useAppStore.getState().currentStore
+        if (connectionStatus === 'online' && isSupabaseConfigured && supabase && currentStoreRef?.organization_id) {
+          const { data: cb } = await supabase.from('credit_balances')
+            .select('total_loaded_usd').eq('organization_id', currentStoreRef.organization_id).single()
+          if (cb?.total_loaded_usd) totalLoaded = Math.max(cb.total_loaded_usd, 1)
+        }
+        creditsPct = creditsRemaining != null ? Math.max(0, Math.min(100, (creditsRemaining / totalLoaded) * 100)) : null
 
         if (creditsRemaining != null) {
           if (creditsRemaining <= 0) level = 'expired'
