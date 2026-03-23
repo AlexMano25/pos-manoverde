@@ -327,9 +327,11 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
               done: false,
             }))
 
+            const tableLabel = `${order.fulfillment === 'delivery' ? 'Livraison' : 'Retrait'} - ${order.customer_name}`
             useKdsStore.getState().addOrder(order.store_id, {
               order_id: order.id,
               order_number: order.order_number,
+              table_number: tableLabel,
               items: kdsItems,
               status: 'new',
               station: 'all',
@@ -337,23 +339,7 @@ export const useOnlineOrderStore = create<OnlineOrderState & OnlineOrderActions>
             }).catch(err => {
               console.error('[onlineOrderStore] KDS order creation failed:', err)
             })
-
-            // Also insert KDS in Supabase for cloud sync
-            if (supabase) {
-              const now = new Date().toISOString()
-              supabase.from('kds_orders').insert({
-                store_id: order.store_id,
-                order_number: order.order_number,
-                table_name: `${order.fulfillment === 'delivery' ? 'Livraison' : 'Retrait'} - ${order.customer_name}`,
-                status: 'new',
-                priority: false,
-                items: kdsItems,
-                created_at: now,
-                updated_at: now,
-              }).then(({ error: kdsErr }) => {
-                if (kdsErr) console.error('[onlineOrderStore] KDS cloud insert error:', kdsErr)
-              })
-            }
+            // Note: kdsStore.addOrder already syncs to Supabase cloud
           }
         }
       } catch (error) {
