@@ -234,7 +234,18 @@ function AppContent() {
   )
 }
 
-export default function App() {
+// Public pages rendered WITHOUT any store/auth — prevents login redirect
+export default function PublicRouter() {
+  const pathname = window.location.pathname
+  const search = window.location.search
+  if (pathname === '/privacy') return <LegalPage type="privacy" />
+  if (pathname === '/terms') return <LegalPage type="terms" />
+  if (pathname === '/order' || new URLSearchParams(search).get('order') === 'qr') return <QROrderPage />
+  if (pathname === '/catalog') return <CatalogPage />
+  return <App />
+}
+
+function App() {
   const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent, setReferralCode } = useAppStore()
   const { user, token } = useAuthStore()
 
@@ -292,25 +303,7 @@ export default function App() {
     }
   }, [setIsAppInstalled, setInstallPromptEvent])
 
-  // Public legal pages — no auth required (for Google Cloud branding validation)
-  if (window.location.pathname === '/privacy') {
-    return <LegalPage type="privacy" />
-  }
-  if (window.location.pathname === '/terms') {
-    return <LegalPage type="terms" />
-  }
-
-  // QR Code table ordering — public page, no auth required
-  const isQrOrder = window.location.pathname === '/order' ||
-    new URLSearchParams(window.location.search).get('order') === 'qr'
-  if (isQrOrder) {
-    return <QROrderPage />
-  }
-
-  // Public catalog page — no auth required
-  if (window.location.pathname === '/catalog') {
-    return <CatalogPage />
-  }
+  // Public routes handled by PublicRouter wrapper (no auth needed)
 
   // Registration flow (all plans including free)
   if (registrationMode) {

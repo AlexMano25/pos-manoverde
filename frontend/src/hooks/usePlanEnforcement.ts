@@ -124,8 +124,8 @@ export function usePlanEnforcement(): void {
 
         if (creditsRemaining != null) {
           if (creditsRemaining <= 0) level = 'expired'
-          else if (creditsPct != null && creditsPct <= 10) level = 'warning_10'
-          else if (creditsPct != null && creditsPct <= 30) level = 'warning_30'
+          else if (creditsRemaining <= 2) level = 'warning_10'  // $2 or less = urgent
+          else if (creditsRemaining <= 5) level = 'warning_30'  // $5 or less = warning
           else level = 'active'
         }
       } else {
@@ -140,10 +140,10 @@ export function usePlanEnforcement(): void {
             level = 'expired'
           } else if (daysRemaining <= 0) {
             level = 'grace'
-          } else if (daysRemaining <= 3) {
-            level = 'warning_10'
+          } else if (daysRemaining <= 5) {
+            level = 'warning_10'  // 5 days or less = urgent
           } else if (daysRemaining <= 10) {
-            level = 'warning_30'
+            level = 'warning_30'  // 10 days or less = warning
           } else {
             level = 'active'
           }
