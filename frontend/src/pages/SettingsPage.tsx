@@ -505,13 +505,13 @@ export default function SettingsPage() {
               <DollarSign size={18} color="#16a34a" />
             </div>
             <div>
-              <h3 style={sectionTitleStyle}>Paiement en ligne</h3>
-              <p style={sectionDescStyle}>Configurez vos coordonn{'\u00e9'}es de paiement pour les commandes catalogue</p>
+              <h3 style={sectionTitleStyle}>{t.settings.onlinePayment}</h3>
+              <p style={sectionDescStyle}>{t.settings.onlinePaymentDesc}</p>
             </div>
           </div>
 
           <div style={inputRowStyle}>
-            <label style={labelStyle}>Num{'\u00e9'}ro de paiement Mobile Money</label>
+            <label style={labelStyle}>{t.settings.momoNumber}</label>
             <input
               style={inputStyle}
               value={paymentPhone}
@@ -522,7 +522,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={inputRowStyle}>
-            <label style={labelStyle}>Op{'\u00e9'}rateur / Label</label>
+            <label style={labelStyle}>{t.settings.operatorLabel}</label>
             <input
               style={inputStyle}
               value={paymentLabel}
@@ -532,7 +532,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={inputRowStyle}>
-            <label style={labelStyle}>Code marchand (optionnel)</label>
+            <label style={labelStyle}>{t.settings.merchantCodeOpt}</label>
             <input
               style={inputStyle}
               value={merchantCode}
@@ -542,7 +542,7 @@ export default function SettingsPage() {
           </div>
 
           <div style={inputRowStyle}>
-            <label style={labelStyle}>Code USSD (optionnel)</label>
+            <label style={labelStyle}>{t.settings.ussdCodeOpt}</label>
             <input
               style={inputStyle}
               value={ussdCode}
@@ -550,12 +550,12 @@ export default function SettingsPage() {
               placeholder="Ex: *126*1*237651XXXXXX*MONTANT#"
             />
             <p style={{ fontSize: 11, color: C.textSecondary, margin: '4px 0 0' }}>
-              Utilisez MONTANT pour le total de la commande
+              {t.settings.ussdHint}
             </p>
           </div>
 
           <div style={inputRowStyle}>
-            <label style={labelStyle}>URL QR code de paiement (optionnel)</label>
+            <label style={labelStyle}>{t.settings.paymentQrUrl}</label>
             <input
               style={inputStyle}
               value={paymentQrUrl}
@@ -570,9 +570,9 @@ export default function SettingsPage() {
             onClick={handleSavePayment}
           >
             {paymentSaved ? (
-              <><CheckCircle2 size={16} /> Sauvegard{'\u00e9'} !</>
+              <><CheckCircle2 size={16} /> {t.settings.paymentSaved}</>
             ) : (
-              <><Save size={16} /> Sauvegarder le paiement</>
+              <><Save size={16} /> {t.settings.savePayment}</>
             )}
           </button>
         </div>

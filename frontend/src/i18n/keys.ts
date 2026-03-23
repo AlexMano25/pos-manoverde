@@ -674,6 +674,11 @@ export type TranslationKeys = {
     totalHoursToday: string
     exportPayslip: string
     salesRanking: string
+    // Page access permissions
+    pageAccess: string
+    pageAccessHint: string
+    checkAll: string
+    uncheckDefault: string
   }
 
   // Settings
@@ -740,6 +745,17 @@ export type TranslationKeys = {
     exportSAGE: string
     exportJournal: string
     noOrdersToExport: string
+    // Online payment config
+    onlinePayment: string
+    onlinePaymentDesc: string
+    momoNumber: string
+    operatorLabel: string
+    merchantCodeOpt: string
+    ussdCodeOpt: string
+    ussdHint: string
+    paymentQrUrl: string
+    savePayment: string
+    paymentSaved: string
   }
 
   // Sync
@@ -1081,6 +1097,33 @@ export type TranslationKeys = {
     partnerCTA: string
     partnerPhoneTitle: string
     partnerPhoneDesc: string
+    partnerBadge: string
+    partnerTitleAccent: string
+    partnerTiersTitle: string
+    partnerTier1Label: string
+    partnerTier1Clients: string
+    partnerTier2Label: string
+    partnerTier2Clients: string
+    partnerTier3Label: string
+    partnerTier3Clients: string
+    partnerTier4Label: string
+    partnerTier4Clients: string
+    partnerShowcaseTitle: string
+    partnerShowcaseDesc: string
+    partnerFormTitle: string
+    partnerCta: string
+    partnerName: string
+    partnerEmail: string
+    partnerPhone: string
+    partnerCity: string
+    partnerMotivation: string
+    partnerStep1Title: string
+    partnerStep1Desc: string
+    partnerStep2Title: string
+    partnerStep2Desc: string
+    partnerStep3Title: string
+    partnerStep3Desc: string
+    partnerSponsorLabel: string
   }
 
   // Sidebar

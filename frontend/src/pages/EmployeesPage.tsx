@@ -1186,9 +1186,9 @@ export default function EmployeesPage() {
         {/* ── Page Access Permissions ─────────────────────────────── */}
         <div style={{ ...formFieldStyle, marginTop: 8 }}>
           <label style={{ ...formLabelStyle, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-            Acc{'\u00e8'}s aux pages
+            {t.employees.pageAccess}
             <span style={{ fontSize: 11, color: C.textSecondary, fontWeight: 400 }}>
-              (vide = acc{'\u00e8'}s par d{'\u00e9'}faut selon le r{'\u00f4'}le)
+              {t.employees.pageAccessHint}
             </span>
           </label>
           <div style={{
@@ -1244,14 +1244,14 @@ export default function EmployeesPage() {
                 }))}
                 style={{ fontSize: 11, color: C.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                Tout cocher
+                {t.employees.checkAll}
               </button>
               <button
                 type="button"
                 onClick={() => setForm(prev => ({ ...prev, allowed_pages: [] }))}
                 style={{ fontSize: 11, color: C.danger, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                Tout d{'\u00e9'}cocher (d{'\u00e9'}faut r{'\u00f4'}le)
+                {t.employees.uncheckDefault}
               </button>
             </div>
           )}

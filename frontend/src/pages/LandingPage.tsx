@@ -3175,9 +3175,9 @@ export default function LandingPage() {
             gap: 20, marginBottom: 48,
           }}>
             {[
-              { step: '1', title: 'Inscrivez-vous', desc: 'Cr\u00e9ez votre compte partenaire gratuitement en 30 secondes.' },
-              { step: '2', title: 'Proposez le POS', desc: 'Partagez votre lien de parrainage aux commer\u00e7ants autour de vous.' },
-              { step: '3', title: 'Gagnez', desc: 'Recevez des commissions r\u00e9currentes sur chaque client actif.' },
+              { step: '1', title: (t.landing as any)?.partnerStep1Title || 'Inscrivez-vous', desc: (t.landing as any)?.partnerStep1Desc || 'Cr\u00e9ez votre compte partenaire gratuitement en 30 secondes.' },
+              { step: '2', title: (t.landing as any)?.partnerStep2Title || 'Proposez le POS', desc: (t.landing as any)?.partnerStep2Desc || 'Partagez votre lien de parrainage aux commer\u00e7ants autour de vous.' },
+              { step: '3', title: (t.landing as any)?.partnerStep3Title || 'Gagnez', desc: (t.landing as any)?.partnerStep3Desc || 'Recevez des commissions r\u00e9currentes sur chaque client actif.' },
             ].map((s, i) => (
               <div key={i} style={{
                 textAlign: 'center', padding: 20,
@@ -3580,7 +3580,7 @@ export default function LandingPage() {
               {(t.landing as any)?.partnerFormTitle || 'Postuler maintenant'}
             </h3>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>Code parrain (optionnel)</label>
+              <label style={{ display: 'block', fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>{(t.landing as any)?.partnerSponsorLabel || 'Code parrain (optionnel)'}</label>
               <input
                 placeholder="Ex: AGT-XXXXXX"
                 value={partnerForm.sponsorCode}
