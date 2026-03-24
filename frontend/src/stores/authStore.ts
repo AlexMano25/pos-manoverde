@@ -295,7 +295,19 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                 .eq('organization_id', orgId)
               if (orgStores && orgStores.length > 0) {
                 appStore.setAvailableStores(orgStores as Store[])
-                if (orgStores.length > 1) {
+                // Auto-select store from invite link (?store=XXX)
+                const inviteStore = sessionStorage.getItem('pos_invite_store')
+                if (inviteStore) {
+                  const target = orgStores.find((s: any) => s.id === inviteStore)
+                  if (target) {
+                    appStore.setCurrentStore(target as Store)
+                    appStore.setActivity((target as Store).activity)
+                    appStore.setNeedsStoreSelection(false)
+                    sessionStorage.removeItem('pos_invite_store')
+                  } else if (orgStores.length > 1) {
+                    appStore.setNeedsStoreSelection(true)
+                  }
+                } else if (orgStores.length > 1) {
                   appStore.setNeedsStoreSelection(true)
                 }
               }
@@ -409,7 +421,19 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
                   .eq('organization_id', orgId)
                 if (orgStores && orgStores.length > 0) {
                   appStore.setAvailableStores(orgStores as Store[])
-                  if (orgStores.length > 1) {
+                  // Auto-select store from invite link (?store=XXX)
+                  const inviteStore2 = sessionStorage.getItem('pos_invite_store')
+                  if (inviteStore2) {
+                    const target2 = orgStores.find((s: any) => s.id === inviteStore2)
+                    if (target2) {
+                      appStore.setCurrentStore(target2 as Store)
+                      appStore.setActivity((target2 as Store).activity)
+                      appStore.setNeedsStoreSelection(false)
+                      sessionStorage.removeItem('pos_invite_store')
+                    } else if (orgStores.length > 1) {
+                      appStore.setNeedsStoreSelection(true)
+                    }
+                  } else if (orgStores.length > 1) {
                     appStore.setNeedsStoreSelection(true)
                   }
                 }
