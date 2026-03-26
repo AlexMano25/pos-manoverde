@@ -5,6 +5,7 @@ import {
   Package, ShoppingCart, Users, Edit3, Lock, Unlock,
   Mail, Store, Eye, EyeOff, Save, X,
   UserCheck, UserX, KeyRound, DollarSign, Clock, XCircle,
+  FileText, Globe, Upload, Trash2, MessageSquare,
 } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
@@ -71,7 +72,7 @@ const ROLE_COLORS: Record<string, string> = {
   stock: '#F59E0B',
 }
 
-type TabId = 'organizations' | 'users' | 'plans' | 'licenses' | 'analytics' | 'agents'
+type TabId = 'organizations' | 'users' | 'plans' | 'licenses' | 'analytics' | 'agents' | 'ai_sources'
 
 // ── Plan config type ────────────────────────────────────────────────────
 
@@ -192,6 +193,16 @@ export default function SuperAdminPage() {
   const [tierSaving, setTierSaving] = useState(false)
   const [agentWithdrawals, setAgentWithdrawals] = useState<any[]>([])
   const [withdrawalsLoading, setWithdrawalsLoading] = useState(false)
+
+  // ── AI Sources state ────────────────────────────────────────────────
+  const [aiSources, setAiSources] = useState<any[]>([])
+  const [aiSourcesLoading, setAiSourcesLoading] = useState(false)
+  const [aiNewUrl, setAiNewUrl] = useState('')
+  const [aiNewText, setAiNewText] = useState('')
+  const [aiNewTitle, setAiNewTitle] = useState('')
+  const [aiAddType, setAiAddType] = useState<'url' | 'text' | 'file'>('url')
+  const [aiUploading, setAiUploading] = useState(false)
+  const [aiMsg, setAiMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // ── Data fetching ────────────────────────────────────────────────────
 
@@ -388,6 +399,16 @@ export default function SuperAdminPage() {
     }
   }, [])
 
+  const fetchAiSources = useCallback(async () => {
+    if (!supabase) return
+    setAiSourcesLoading(true)
+    try {
+      const { data } = await supabase.from('chatbot_sources').select('*').order('created_at', { ascending: false })
+      if (data) setAiSources(data)
+    } catch (err) { console.error('Failed to fetch AI sources:', err) }
+    finally { setAiSourcesLoading(false) }
+  }, [])
+
   useEffect(() => {
     if (activeTab === 'organizations' || activeTab === 'analytics') fetchOrganizations()
     if (activeTab === 'users') { fetchAllUsers(); if (orgs.length === 0) fetchOrganizations() }
@@ -402,7 +423,8 @@ export default function SuperAdminPage() {
       fetchTierConfigs()
       fetchWithdrawals()
     }
-  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers, fetchAgents, fetchPendingCommissions, fetchTierConfigs, fetchWithdrawals])
+    if (activeTab === 'ai_sources') fetchAiSources()
+  }, [activeTab, fetchOrganizations, fetchPlanConfigs, fetchLicenseHistory, fetchAllUsers, fetchAgents, fetchPendingCommissions, fetchTierConfigs, fetchWithdrawals, fetchAiSources])
 
   // ── Organizations helpers ────────────────────────────────────────────
 
@@ -596,6 +618,7 @@ export default function SuperAdminPage() {
     { id: 'licenses', label: 'Licences', icon: <Key size={rv(14, 16, 16)} /> },
     { id: 'analytics', label: 'Analyses', icon: <BarChart3 size={rv(14, 16, 16)} /> },
     { id: 'agents', label: 'Agents', icon: <Users size={rv(14, 16, 16)} />, count: agents.length },
+    { id: 'ai_sources', label: 'Sources IA', icon: <MessageSquare size={rv(14, 16, 16)} /> },
   ]
 
   // ── Guard ─────────────────────────────────────────────────────────────
@@ -1983,6 +2006,231 @@ export default function SuperAdminPage() {
   )
   }
 
+  // ── AI Sources Tab ─────────────────────────────────────────────────
+  const handleAddAiSource = async () => {
+    if (!supabase) return
+    setAiUploading(true)
+    setAiMsg(null)
+    try {
+      if (aiAddType === 'url') {
+        if (!aiNewUrl.trim()) { setAiMsg({ type: 'error', text: 'URL requise' }); setAiUploading(false); return }
+        const title = aiNewTitle.trim() || new URL(aiNewUrl).hostname
+        const { error } = await supabase.from('chatbot_sources').insert({ type: 'url', title, url: aiNewUrl.trim(), status: 'active' })
+        if (error) throw error
+        setAiNewUrl('')
+        setAiNewTitle('')
+        setAiMsg({ type: 'success', text: 'URL ajoutee avec succes' })
+      } else if (aiAddType === 'text') {
+        if (!aiNewText.trim()) { setAiMsg({ type: 'error', text: 'Contenu requis' }); setAiUploading(false); return }
+        const title = aiNewTitle.trim() || 'Note ' + new Date().toLocaleDateString()
+        const { error } = await supabase.from('chatbot_sources').insert({ type: 'text', title, content: aiNewText.trim(), status: 'active' })
+        if (error) throw error
+        setAiNewText('')
+        setAiNewTitle('')
+        setAiMsg({ type: 'success', text: 'Contenu ajoute avec succes' })
+      } else if (aiAddType === 'file') {
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = '.pdf,.docx,.doc,.xlsx,.xls,.csv,.txt'
+        input.onchange = async (e: any) => {
+          const file = e.target.files?.[0]
+          if (!file) { setAiUploading(false); return }
+          const ext = file.name.split('.').pop()?.toLowerCase() || 'txt'
+          const fileType = ['pdf'].includes(ext) ? 'pdf' : ['docx', 'doc'].includes(ext) ? 'docx' : ['xlsx', 'xls', 'csv'].includes(ext) ? 'xlsx' : 'text'
+          const filePath = `sources/${Date.now()}_${file.name}`
+          const { error: uploadErr } = await supabase!.storage.from('chatbot-sources').upload(filePath, file)
+          if (uploadErr) { setAiMsg({ type: 'error', text: 'Erreur upload: ' + uploadErr.message }); setAiUploading(false); return }
+          const { error } = await supabase!.from('chatbot_sources').insert({
+            type: fileType, title: aiNewTitle.trim() || file.name, file_path: filePath,
+            status: 'active', metadata: { size: file.size, originalName: file.name },
+          })
+          if (error) throw error
+          setAiNewTitle('')
+          setAiMsg({ type: 'success', text: `Fichier "${file.name}" charge avec succes` })
+          fetchAiSources()
+          setAiUploading(false)
+        }
+        input.click()
+        return // async file picker
+      }
+      fetchAiSources()
+    } catch (err: any) {
+      setAiMsg({ type: 'error', text: err.message || 'Erreur' })
+    } finally {
+      setAiUploading(false)
+    }
+  }
+
+  const handleDeleteAiSource = async (id: string) => {
+    if (!supabase) return
+    const src = aiSources.find(s => s.id === id)
+    if (src?.file_path) {
+      await supabase.storage.from('chatbot-sources').remove([src.file_path])
+    }
+    await supabase.from('chatbot_sources').delete().eq('id', id)
+    setAiSources(prev => prev.filter(s => s.id !== id))
+  }
+
+  const handleToggleAiSource = async (id: string, currentStatus: string) => {
+    if (!supabase) return
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active'
+    await supabase.from('chatbot_sources').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id)
+    setAiSources(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s))
+  }
+
+  const renderAiSourcesTab = () => (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div>
+          <h2 style={{ fontSize: rv(16, 18, 20), fontWeight: 700, margin: 0, color: C.text }}>Sources de connaissances IA</h2>
+          <p style={{ fontSize: 13, color: C.textSecondary, margin: '4px 0 0' }}>
+            Documents et URLs utilises par le chatbot pour repondre aux questions
+          </p>
+        </div>
+      </div>
+
+      {aiMsg && (
+        <div style={{
+          padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: 13,
+          background: aiMsg.type === 'success' ? '#dcfce7' : '#fee2e2',
+          color: aiMsg.type === 'success' ? '#166534' : '#991b1b',
+        }}>
+          {aiMsg.text}
+        </div>
+      )}
+
+      {/* Add source form */}
+      <div style={{ background: C.card, borderRadius: 12, padding: rv(14, 18, 20), marginBottom: 20, border: `1px solid ${C.border}` }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          {([
+            { id: 'url' as const, label: 'URL', icon: <Globe size={14} /> },
+            { id: 'file' as const, label: 'Fichier', icon: <Upload size={14} /> },
+            { id: 'text' as const, label: 'Texte', icon: <FileText size={14} /> },
+          ]).map(t => (
+            <button key={t.id} onClick={() => setAiAddType(t.id)} style={{
+              ...btnOutline, background: aiAddType === t.id ? C.primaryLight : C.card,
+              color: aiAddType === t.id ? C.primary : C.text,
+              borderColor: aiAddType === t.id ? C.primary : C.border,
+              fontWeight: aiAddType === t.id ? 700 : 500,
+            }}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input
+            placeholder="Titre (optionnel)"
+            value={aiNewTitle}
+            onChange={e => setAiNewTitle(e.target.value)}
+            style={{ flex: '0 0 200px', padding: '8px 12px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 13, background: C.bg, color: C.text }}
+          />
+          {aiAddType === 'url' && (
+            <input
+              placeholder="https://example.com/documentation"
+              value={aiNewUrl}
+              onChange={e => setAiNewUrl(e.target.value)}
+              style={{ flex: 1, minWidth: 250, padding: '8px 12px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 13, background: C.bg, color: C.text }}
+            />
+          )}
+          {aiAddType === 'text' && (
+            <textarea
+              placeholder="Collez ici le contenu texte (FAQ, descriptions, reponses type...)"
+              value={aiNewText}
+              onChange={e => setAiNewText(e.target.value)}
+              rows={3}
+              style={{ flex: 1, minWidth: 250, padding: '8px 12px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 13, background: C.bg, color: C.text, resize: 'vertical' }}
+            />
+          )}
+          {aiAddType === 'file' && (
+            <div style={{ flex: 1, minWidth: 250, padding: '16px', borderRadius: 6, border: `2px dashed ${C.border}`, textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
+              <Upload size={24} style={{ marginBottom: 4 }} /><br />
+              PDF, Word (.docx), Excel (.xlsx), CSV, TXT
+            </div>
+          )}
+          <button
+            onClick={handleAddAiSource}
+            disabled={aiUploading}
+            style={{
+              ...btnOutline, background: C.primary, color: '#fff', borderColor: C.primary,
+              opacity: aiUploading ? 0.6 : 1, fontWeight: 600,
+            }}
+          >
+            {aiUploading ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={14} />}
+            Ajouter
+          </button>
+        </div>
+      </div>
+
+      {/* Sources list */}
+      {aiSourcesLoading ? (
+        <div style={{ textAlign: 'center', padding: 40 }}>
+          <Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: C.primary }} />
+        </div>
+      ) : aiSources.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 40, color: C.textSecondary }}>
+          <MessageSquare size={40} style={{ marginBottom: 8, opacity: 0.3 }} />
+          <p>Aucune source configuree</p>
+          <p style={{ fontSize: 12 }}>Ajoutez des URLs, fichiers ou textes pour enrichir les reponses du chatbot</p>
+        </div>
+      ) : (
+        <div style={{ background: C.card, borderRadius: 12, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: C.stripe }}>
+                <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: C.textSecondary }}>TYPE</th>
+                <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: C.textSecondary }}>TITRE</th>
+                <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 600, color: C.textSecondary }}>SOURCE</th>
+                <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: C.textSecondary }}>STATUT</th>
+                <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: C.textSecondary }}>DATE</th>
+                <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 600, color: C.textSecondary }}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aiSources.map(src => (
+                <tr key={src.id} style={{ borderTop: `1px solid ${C.border}` }}>
+                  <td style={{ padding: '10px 14px' }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px',
+                      borderRadius: 4, fontSize: 11, fontWeight: 600,
+                      background: src.type === 'url' ? '#dbeafe' : src.type === 'pdf' ? '#fee2e2' : src.type === 'docx' ? '#e0e7ff' : src.type === 'xlsx' ? '#dcfce7' : '#f3f4f6',
+                      color: src.type === 'url' ? '#1d4ed8' : src.type === 'pdf' ? '#991b1b' : src.type === 'docx' ? '#4338ca' : src.type === 'xlsx' ? '#166534' : '#374151',
+                    }}>
+                      {src.type === 'url' ? <Globe size={12} /> : <FileText size={12} />}
+                      {src.type.toUpperCase()}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 14px', fontWeight: 500, color: C.text }}>{src.title}</td>
+                  <td style={{ padding: '10px 14px', color: C.textSecondary, fontSize: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {src.url || src.file_path || (src.content?.substring(0, 60) + '...') || '-'}
+                  </td>
+                  <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                    <button onClick={() => handleToggleAiSource(src.id, src.status)} style={{
+                      ...btnOutline, padding: '3px 10px', fontSize: 11, border: 'none',
+                      background: src.status === 'active' ? '#dcfce7' : '#fee2e2',
+                      color: src.status === 'active' ? '#166534' : '#991b1b', cursor: 'pointer',
+                    }}>
+                      {src.status === 'active' ? <Eye size={11} /> : <EyeOff size={11} />}
+                      {src.status === 'active' ? 'Actif' : 'Inactif'}
+                    </button>
+                  </td>
+                  <td style={{ padding: '10px 14px', textAlign: 'center', color: C.textSecondary, fontSize: 12 }}>
+                    {new Date(src.created_at).toLocaleDateString()}
+                  </td>
+                  <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                    <button onClick={() => handleDeleteAiSource(src.id)} style={{ ...btnOutline, padding: '3px 8px', color: '#dc2626', borderColor: '#fca5a5' }}>
+                      <Trash2 size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+
   // ── Main render ──────────────────────────────────────────────────────
 
   return (
@@ -2053,6 +2301,7 @@ export default function SuperAdminPage() {
         {activeTab === 'licenses' && renderLicensesTab()}
         {activeTab === 'analytics' && renderAnalyticsTab()}
         {activeTab === 'agents' && renderAgentsTab()}
+        {activeTab === 'ai_sources' && renderAiSourcesTab()}
       </div>
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
