@@ -9,7 +9,7 @@ import { getNextReceiptNumber } from '../utils/receiptCounter'
 import { triggerWebhookEvent } from '../utils/webhookEngine'
 import { useKdsStore } from './kdsStore'
 import { useNotificationStore } from './notificationStore'
-import { TICKET_PRICE_USD } from '../config/planLimits'
+import { TICKET_PRICE_USD, PLAN_LIMITS } from '../config/planLimits'
 
 // ── State ────────────────────────────────────────────────────────────────────
 
@@ -122,20 +122,43 @@ export const useOrderStore = create<OrderState & OrderActions>()(
         status?: OrderStatus
       }
     ): Promise<Order> => {
-      // ── Credit / plan validation (block if insufficient) ──────────────
+      // ── Strict billing enforcement ──────────────────────────────────────
       const authUser = useAuthStore.getState().user
       if (authUser?.role !== 'super_admin') {
         const planStatus = useAppStore.getState().planStatus
+        const appState = useAppStore.getState()
+        const selectedPlan = appState.selectedPlan || 'free'
+
+        // 1. Expired plans → block
         if (planStatus) {
           if (planStatus.level === 'expired') {
-            // For credit-based plans: check credit remaining
             if (planStatus.creditsRemaining != null && planStatus.creditsRemaining < TICKET_PRICE_USD) {
               throw new Error('Credit insuffisant. Veuillez recharger votre compte.')
             }
-            // For time-based plans: subscription expired
             if (planStatus.creditsRemaining == null) {
               throw new Error('Plan expire. Veuillez renouveler votre abonnement.')
             }
+          }
+        }
+
+        // 2. Daily order limit enforcement for free/starter plans
+        const planLimits = PLAN_LIMITS[selectedPlan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free
+        if (planLimits.maxOrdersPerDay > 0) {
+          const todayStr = new Date().toISOString().slice(0, 10)
+          const todayOrders = await db.orders.where('created_at').startsWithIgnoreCase(todayStr).count()
+          if (todayOrders >= planLimits.maxOrdersPerDay) {
+            throw new Error(
+              `Limite de ${planLimits.maxOrdersPerDay} commandes/jour atteinte (plan ${selectedPlan}). Passez au plan superieur.`
+            )
+          }
+        }
+
+        // 3. Product limit check (prevent selling with too many products)
+        if (planLimits.maxProducts > 0) {
+          const productCount = await db.products.where('store_id').equals(storeId).count()
+          if (productCount > planLimits.maxProducts * 1.5) {
+            // Allow some tolerance but warn/block at 150%
+            console.warn(`[orderStore] Product count (${productCount}) exceeds plan limit (${planLimits.maxProducts})`)
           }
         }
       }

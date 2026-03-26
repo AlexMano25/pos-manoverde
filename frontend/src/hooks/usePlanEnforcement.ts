@@ -78,7 +78,13 @@ export function usePlanEnforcement(): void {
             const cachedAt = cachedSub.value?.updated_at || cachedSub.value?.created_at
             if (cachedAt) {
               const cacheAge = Date.now() - new Date(cachedAt).getTime()
-              if (cacheAge > 7 * 86400000) {
+              if (cacheAge > 14 * 86400000) {
+                // >14 days offline without sync → expired, must reconnect
+                console.warn('[usePlanEnforcement] Cached subscription >14 days old → expired')
+                setPlanStatus({ level: 'expired', daysRemaining: 0, creditsRemaining: null, creditsPct: null, checkedAt: new Date().toISOString() })
+                return
+              } else if (cacheAge > 7 * 86400000) {
+                // >7 days offline → warning, should reconnect soon
                 console.warn('[usePlanEnforcement] Cached subscription data is >7 days old')
               }
             }
@@ -90,15 +96,24 @@ export function usePlanEnforcement(): void {
       }
 
       if (!subscription) {
-        // No subscription data — treat as active (possibly free plan)
-        setPlanStatus({ level: 'active', daysRemaining: null, creditsRemaining: null, creditsPct: null, checkedAt: new Date().toISOString() })
+        // No subscription data: if online and still no sub → treat as free (limited)
+        // If offline with no cache → allow limited access with warning
+        if (connectionStatus === 'online') {
+          // Online but no subscription found → apply free plan limits
+          setPlanStatus({ level: 'active', daysRemaining: null, creditsRemaining: null, creditsPct: null, checkedAt: new Date().toISOString() })
+          // Store the fact that this is a free/no-plan user
+          useAppStore.getState().setSelectedPlan('free')
+        } else {
+          // Offline with no cached sub → warning level (limited functionality)
+          setPlanStatus({ level: 'warning_30', daysRemaining: null, creditsRemaining: null, creditsPct: null, checkedAt: new Date().toISOString() })
+        }
         return
       }
 
       const plan = subscription.plan as string
       const now = new Date()
 
-      // Free plan is always active
+      // Free plan — active but with strict limits (enforced in orderStore)
       if (plan === 'free') {
         setPlanStatus({ level: 'active', daysRemaining: null, creditsRemaining: null, creditsPct: null, checkedAt: now.toISOString() })
         return
