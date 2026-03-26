@@ -5,6 +5,7 @@ import { languages } from '../i18n/types'
 import type { Language } from '../i18n/types'
 import type { Activity } from '../types'
 import LegalModal from '../components/common/LegalModal'
+import ChatWidget from '../components/common/ChatWidget'
 import { supabase } from '../services/supabase'
 import { ACTIVITY_ICONS, ALL_ACTIVITIES, ACTIVITY_COLORS } from '../data/activityIcons'
 import { ACTIVITY_WALLPAPERS } from '../data/activityThemes'
@@ -4332,6 +4333,9 @@ export default function LandingPage() {
       </button>
 
       </div>{/* end .landing-page-root */}
+
+      {/* Chat Widget */}
+      <ChatWidget pageKey="landing" />
 
       {/* Legal document modal */}
       {legalModal && (

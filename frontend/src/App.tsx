@@ -9,7 +9,7 @@ import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useSync } from './hooks/useSync'
 import { useInventoryAlerts } from './hooks/useInventoryAlerts'
 import Layout from './components/layout/Layout'
-import HelpButton from './components/common/HelpButton'
+import ChatWidget from './components/common/ChatWidget'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 // SetupPage removed - registration flow handles all plans
@@ -229,7 +229,7 @@ function AppContent() {
     <Layout title={effectiveTitle} subtitle={effectiveSubtitle}>
       <PlanWarningBanner />
       {renderPage()}
-      <HelpButton pageKey={pageKey} userRole={user?.role} />
+      <ChatWidget pageKey={pageKey} userRole={user?.role} />
     </Layout>
   )
 }
