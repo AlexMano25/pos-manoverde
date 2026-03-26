@@ -421,7 +421,7 @@ export default function LandingPage() {
   })
   const [partnerSubmitting, setPartnerSubmitting] = useState(false)
   const [partnerResult, setPartnerResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const { t } = useLanguageStore()
+  const { t, language: currentLangCode } = useLanguageStore()
 
   // SEO: update page meta
   useEffect(() => {
@@ -1051,6 +1051,10 @@ export default function LandingPage() {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
         }
+        @keyframes pulse-green {
+          0%, 100% { box-shadow: 0 8px 32px rgba(34,197,94,0.3); }
+          50% { box-shadow: 0 8px 48px rgba(34,197,94,0.5), 0 0 0 8px rgba(34,197,94,0.1); }
+        }
         @keyframes slideInLeft {
           from { opacity: 0; transform: translateX(-40px); }
           to { opacity: 1; transform: translateX(0); }
@@ -1097,6 +1101,8 @@ export default function LandingPage() {
         .landing-hero-stats { flex-direction: column !important; gap: 16px !important; align-items: center !important; }
         .landing-hero-stats-divider { display: none !important; }
 
+        .landing-ai-assistant-row { flex-direction: column !important; text-align: center !important; }
+        .landing-ai-assistant-row > div:last-child > div:last-child { justify-content: center !important; }
         .landing-features-grid { grid-template-columns: 1fr !important; }
         .landing-steps-grid { grid-template-columns: 1fr !important; }
         .landing-step-connector { display: none !important; }
@@ -3897,6 +3903,76 @@ export default function LandingPage() {
               </button>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ================================================================
+          AI ASSISTANT SECTION
+          ================================================================ */}
+      <section className="landing-section-padding" style={{
+        ...sectionStyle('#f0fdf4'),
+        borderTop: '1px solid #dcfce7',
+        borderBottom: '1px solid #dcfce7',
+      }}>
+        <div style={{ ...containerStyle, maxWidth: 900 }}>
+          <div className="landing-ai-assistant-row" style={{
+            display: 'flex', alignItems: 'center', gap: 32,
+          }}>
+            {/* Icon */}
+            <div style={{
+              flex: '0 0 auto',
+              width: 100, height: 100,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 32px rgba(34,197,94,0.3)',
+              animation: 'pulse-green 2s ease-in-out infinite',
+            }}>
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                <circle cx="9" cy="10" r="1" fill="white" />
+                <circle cx="12" cy="10" r="1" fill="white" />
+                <circle cx="15" cy="10" r="1" fill="white" />
+              </svg>
+            </div>
+
+            {/* Text */}
+            <div style={{ flex: 1 }}>
+              <h2 style={{
+                fontSize: 24, fontWeight: 800, color: '#0f172a',
+                margin: '0 0 8px', lineHeight: 1.2,
+              }}>
+                {currentLangCode === 'en' ? 'Your AI assistant, available 24/7' : currentLangCode === 'es' ? 'Tu asistente IA, disponible 24/7' : 'Votre assistant IA, disponible 24h/24'}
+              </h2>
+              <p style={{
+                fontSize: 15, color: '#475569',
+                margin: '0 0 16px', lineHeight: 1.6,
+              }}>
+                {currentLangCode === 'en'
+                  ? 'Have a question about our features, pricing, or how to get started? Click the green icon at the bottom right of your screen. Our intelligent assistant answers in 7 languages and guides you step by step.'
+                  : currentLangCode === 'es'
+                  ? 'Tiene una pregunta sobre nuestras funciones, precios o como empezar? Haga clic en el icono verde en la parte inferior derecha. Nuestro asistente inteligente responde en 7 idiomas.'
+                  : 'Une question sur nos fonctionnalites, nos tarifs ou comment demarrer ? Cliquez sur l\'icone verte en bas a droite de votre ecran. Notre assistant intelligent repond dans 7 langues et vous guide pas a pas.'}
+              </p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {[
+                  currentLangCode === 'en' ? '7 languages' : currentLangCode === 'es' ? '7 idiomas' : '7 langues',
+                  currentLangCode === 'en' ? 'Instant answers' : currentLangCode === 'es' ? 'Respuestas instantaneas' : 'Reponses instantanees',
+                  currentLangCode === 'en' ? 'Free' : currentLangCode === 'es' ? 'Gratis' : 'Gratuit',
+                ].map((tag, i) => (
+                  <span key={i} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '4px 12px', borderRadius: 20,
+                    background: '#dcfce7', color: '#166534',
+                    fontSize: 12, fontWeight: 600,
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
