@@ -6,7 +6,9 @@ import { useResponsive } from '../hooks/useLayoutMode'
 import { supabase, isSupabaseConfigured } from '../services/supabase'
 import PaymentMethodSelector, { RECHARGE_PACKAGES } from '../components/billing/PaymentMethodSelector'
 import SubscriptionManager from '../components/billing/SubscriptionManager'
+import { sendBillingInvoice } from '../utils/billingInvoice'
 import { TICKET_PRICE_USD } from '../config/planLimits'
+import { useAuthStore } from '../stores/authStore'
 import type { CreditBalance, CreditTransaction, RechargePackage, PayPalResult } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
@@ -27,6 +29,7 @@ const C = {
 
 export default function BillingPage() {
   const { currentStore, selectedPlan } = useAppStore()
+  const { user } = useAuthStore()
   const { t, language } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -158,6 +161,22 @@ export default function BillingPage() {
       }
     }
 
+    // Send invoice email (non-blocking)
+    if (user?.email && selectedPackage) {
+      sendBillingInvoice({
+        customerName: user.name || user.email,
+        customerEmail: user.email,
+        organizationName: currentStore?.name,
+        type: 'recharge',
+        packageName: selectedPackage.id,
+        tickets: selectedPackage.tickets,
+        amountXAF: selectedPackage.amountXAF,
+        amountUSD: selectedPackage.amountUSD,
+        transactionId: result.orderId || result.subscriptionId || '',
+        paymentMethod: 'PayPal',
+      })
+    }
+
     setRechargeSuccess(true)
     setRechargeError('')
 
@@ -169,6 +188,22 @@ export default function BillingPage() {
 
   const handleOrangeMoneySuccess = async (transactionId: string) => {
     console.log('[BillingPage] Orange Money success:', transactionId)
+
+    // Send invoice email (non-blocking)
+    if (user?.email && selectedPackage) {
+      sendBillingInvoice({
+        customerName: user.name || user.email,
+        customerEmail: user.email,
+        organizationName: currentStore?.name,
+        type: 'recharge',
+        packageName: selectedPackage.id,
+        tickets: selectedPackage.tickets,
+        amountXAF: selectedPackage.amountXAF,
+        amountUSD: selectedPackage.amountUSD,
+        transactionId,
+        paymentMethod: 'Orange Money / MTN MoMo',
+      })
+    }
 
     // The Edge Function should have already credited the balance
     // Just refresh the data

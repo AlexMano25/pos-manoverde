@@ -1,0 +1,53 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#60a5fa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1050" cy="100" r="200" fill="#3b82f6" opacity="0.15"/>
+  <circle cx="150" cy="530" r="150" fill="#60a5fa" opacity="0.1"/>
+
+  <!-- Top bar accent -->
+  <rect x="0" y="0" width="1200" height="6" fill="#16a34a"/>
+
+  <!-- Logo area -->
+  <rect x="80" y="80" width="56" height="56" rx="14" fill="#16a34a"/>
+  <text x="108" y="118" font-family="Arial,sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">MV</text>
+  <text x="150" y="114" font-family="Arial,sans-serif" font-size="24" font-weight="bold" fill="white">POS Mano Verde</text>
+
+  <!-- Main title -->
+  <text x="80" y="260" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="white">Logiciel de caisse</text>
+  <text x="80" y="325" font-family="Arial,sans-serif" font-size="52" font-weight="bold" fill="white">pour votre commerce</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="390" font-family="Arial,sans-serif" font-size="24" fill="#93c5fd">Ventes, stocks, clients, tickets — tout en une plateforme.</text>
+  <text x="80" y="425" font-family="Arial,sans-serif" font-size="24" fill="#93c5fd">Fonctionne meme sans internet.</text>
+
+  <!-- Features badges -->
+  <rect x="80" y="475" width="180" height="40" rx="20" fill="#16a34a" opacity="0.9"/>
+  <text x="170" y="501" font-family="Arial,sans-serif" font-size="15" font-weight="600" fill="white" text-anchor="middle">Mode hors-ligne</text>
+
+  <rect x="280" y="475" width="180" height="40" rx="20" fill="url(#accent)" opacity="0.9"/>
+  <text x="370" y="501" font-family="Arial,sans-serif" font-size="15" font-weight="600" fill="white" text-anchor="middle">27 activites</text>
+
+  <rect x="480" y="475" width="180" height="40" rx="20" fill="#7c3aed" opacity="0.9"/>
+  <text x="570" y="501" font-family="Arial,sans-serif" font-size="15" font-weight="600" fill="white" text-anchor="middle">7 langues</text>
+
+  <rect x="680" y="475" width="200" height="40" rx="20" fill="#f59e0b" opacity="0.9"/>
+  <text x="780" y="501" font-family="Arial,sans-serif" font-size="15" font-weight="600" fill="white" text-anchor="middle">Gratuit pour demarrer</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#0f172a" opacity="0.5"/>
+  <text x="80" y="607" font-family="Arial,sans-serif" font-size="16" fill="#94a3b8">pos.manovende.com</text>
+  <text x="1120" y="607" font-family="Arial,sans-serif" font-size="14" fill="#64748b" text-anchor="end">TERRASOCIAL SAS</text>
+</svg>

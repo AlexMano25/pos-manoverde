@@ -1,21 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Landing page -->
   <url>
     <loc>https://pos.manovende.com/</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- Legal pages (crawlable, required for Google Cloud branding) -->
   <url>
     <loc>https://pos.manovende.com/privacy</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://pos.manovende.com/terms</loc>
-    <lastmod>2026-03-21</lastmod>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
+  </url>
+
+  <!-- Login / Registration (public entry points) -->
+  <url>
+    <loc>https://pos.manovende.com/login</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://pos.manovende.com/register</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Public catalog (shareable via QR / WhatsApp) -->
+  <url>
+    <loc>https://pos.manovende.com/catalog</loc>
+    <lastmod>2026-03-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>

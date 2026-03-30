@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Crown, Check, ArrowRight, Zap, Star, Building2, CreditCard } from 'lucide-react'
 import { useAppStore } from '../../stores/appStore'
+import { useAuthStore } from '../../stores/authStore'
 import { useLanguageStore } from '../../stores/languageStore'
 import { useResponsive } from '../../hooks/useLayoutMode'
 import { supabase, isSupabaseConfigured } from '../../services/supabase'
 import { formatCurrency } from '../../utils/currency'
 import PaymentMethodSelector from './PaymentMethodSelector'
+import { sendBillingInvoice } from '../../utils/billingInvoice'
 import type { Subscription, SubscriptionPlan, BillingCycle, PayPalResult } from '../../types'
 
 // ---------------------------------------------------------------------------
@@ -42,6 +44,7 @@ const PLANS: {
 
 export default function SubscriptionManager() {
   const { currentStore } = useAppStore()
+  const { user } = useAuthStore()
   const { t } = useLanguageStore()
   const { isMobile, rv } = useResponsive()
 
@@ -156,6 +159,27 @@ export default function SubscriptionManager() {
       } catch (err) {
         console.error('[SubscriptionManager] Update failed:', err)
       }
+    }
+
+    // Send invoice email (non-blocking)
+    if (user?.email && selectedPlan && ref !== 'free_switch') {
+      const planData = PLANS.find(p => p.id === selectedPlan)
+      const amount = billingCycle === 'monthly'
+        ? (planData?.priceMonthly || 0)
+        : (planData?.priceYearly || 0)
+
+      sendBillingInvoice({
+        customerName: user.name || user.email,
+        customerEmail: user.email,
+        organizationName: currentStore?.name,
+        type: 'subscription',
+        planName: getPlanLabel(selectedPlan),
+        billingCycle,
+        amountXAF: amount,
+        amountUSD: Math.round(amount / 600 * 100) / 100,
+        transactionId: ref,
+        paymentMethod: typeof result === 'string' ? 'Orange Money / MTN MoMo' : 'PayPal',
+      })
     }
 
     setSuccessMsg(billing.paymentSuccess)

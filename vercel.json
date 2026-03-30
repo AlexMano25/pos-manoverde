@@ -13,6 +13,7 @@
     { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/google69e7fb965f541d24.html", "destination": "/google69e7fb965f541d24.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -50,6 +51,12 @@
       "headers": [
         { "key": "Content-Type", "value": "application/xml" },
         { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/og-image.(png|svg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800, immutable" }
       ]
     },
     {
