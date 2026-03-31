@@ -261,7 +261,7 @@ function App() {
     setOauthLoading(true)
 
     // Supabase client auto-detects the hash and sets the session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase!.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) {
         setOauthLoading(false)
         return
@@ -273,7 +273,7 @@ function App() {
       if (!email) { setOauthLoading(false); return }
 
       // Check if this user already has a profile in the users table
-      const { data: profile } = await supabase
+      const { data: profile } = await supabase!
         .from('users')
         .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
         .eq('email', email)
@@ -282,14 +282,14 @@ function App() {
 
       if (profile) {
         // Existing user — load their store and log them in
-        const { data: store } = await supabase
+        const { data: store } = await supabase!
           .from('stores')
           .select('*')
           .eq('id', profile.store_id)
           .single()
 
         const appStore = useAppStore.getState()
-        const effectiveRole = email === 'direction@manoverde.com' ? 'super_admin' : profile.role
+        const effectiveRole = email === 'direction@manovende.com' ? 'super_admin' : profile.role
 
         if (store) {
           if (!appStore.activity) appStore.setActivity((store.activity || 'restaurant') as any)
@@ -297,12 +297,12 @@ function App() {
         }
 
         if (effectiveRole === 'super_admin') {
-          const { data: allStores } = await supabase.from('stores').select('*')
+          const { data: allStores } = await supabase!.from('stores').select('*')
           appStore.setAvailableStores((allStores || [store]) as any[])
           appStore.setNeedsStoreSelection(false)
           appStore.setSection('super_admin')
         } else if (store?.organization_id) {
-          const { data: orgStores } = await supabase.from('stores').select('*').eq('organization_id', store.organization_id)
+          const { data: orgStores } = await supabase!.from('stores').select('*').eq('organization_id', store.organization_id)
           if (orgStores && orgStores.length > 1) {
             appStore.setAvailableStores(orgStores as any[])
             appStore.setNeedsStoreSelection(true)

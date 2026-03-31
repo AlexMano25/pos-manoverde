@@ -85,7 +85,7 @@ export default function ServerOrderPage() {
   const selectedCustomer = useCustomerStore(s => s.selectedCustomer)
   const { calculateTotalDiscount, loadPromotions } = usePromotionStore()
   const kdsStore = useKdsStore()
-  const { rv } = useResponsive()
+  const { rv, isMobile } = useResponsive()
 
   const currencyCode = currentStore?.currency || 'XAF'
   const storeId = currentStore?.id || ''
