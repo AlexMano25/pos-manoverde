@@ -15,15 +15,20 @@ import {
   Loader2,
   ArrowRight,
   Trash2,
+  ShoppingCart,
+  ChevronDown,
+  Globe,
+  UtensilsCrossed,
 } from 'lucide-react'
 import Modal from '../components/common/Modal'
 import { useAppStore } from '../stores/appStore'
 import { useLanguageStore } from '../stores/languageStore'
 import { useDeliveryStore } from '../stores/deliveryStore'
+import { useOrderStore } from '../stores/orderStore'
 import { useResponsive } from '../hooks/useLayoutMode'
 import { formatCurrency } from '../utils/currency'
 import { db } from '../db/dexie'
-import type { Delivery, DeliveryStatus, DeliveryFeeType, User as UserType } from '../types'
+import type { Delivery, DeliveryStatus, DeliveryFeeType, Order, User as UserType } from '../types'
 
 // ── Color palette ────────────────────────────────────────────────────────
 
@@ -109,6 +114,8 @@ export default function DeliveriesPage() {
     advanceStatus,
   } = useDeliveryStore()
 
+  const { orders, loadOrders } = useOrderStore()
+
   const storeId = currentStore?.id || 'default-store'
   const currency = currentStore?.currency || 'XAF'
 
@@ -127,6 +134,12 @@ export default function DeliveriesPage() {
   const [failedReason, setFailedReason] = useState('')
   const [drivers, setDrivers] = useState<UserType[]>([])
   const [driversLoading, setDriversLoading] = useState(false)
+
+  // Order selection state
+  const [orderMode, setOrderMode] = useState<'existing' | 'new'>('existing')
+  const [orderSearch, setOrderSearch] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [showOrderDropdown, setShowOrderDropdown] = useState(false)
 
   // i18n
   const label = (t as Record<string, any>).deliveries || {}
@@ -176,7 +189,34 @@ export default function DeliveriesPage() {
   // ── Load data on mount ─────────────────────────────────────────────────
   useEffect(() => {
     loadDeliveries(storeId)
-  }, [storeId, loadDeliveries])
+    loadOrders(storeId)
+  }, [storeId, loadDeliveries, loadOrders])
+
+  // ── Deliverable orders (paid/pending, not already assigned to a delivery) ──
+  const deliverableOrders = useMemo(() => {
+    const assignedOrderIds = new Set(
+      deliveries
+        .filter((d) => d.order_id && d.status !== 'failed')
+        .map((d) => d.order_id!)
+    )
+    return orders.filter((o) =>
+      (o.status === 'paid' || o.status === 'pending') &&
+      !assignedOrderIds.has(o.id)
+    )
+  }, [orders, deliveries])
+
+  // ── Filtered orders for dropdown ──
+  const filteredOrders = useMemo(() => {
+    if (!orderSearch.trim()) return deliverableOrders
+    const q = orderSearch.toLowerCase()
+    return deliverableOrders.filter((o) =>
+      (o.customer_name || '').toLowerCase().includes(q) ||
+      (o.receipt_number || '').toLowerCase().includes(q) ||
+      (o.table_name || '').toLowerCase().includes(q) ||
+      o.id.toLowerCase().includes(q) ||
+      formatCurrency(o.total, currency).toLowerCase().includes(q)
+    )
+  }, [deliverableOrders, orderSearch, currency])
 
   // ── Stats ──────────────────────────────────────────────────────────────
   const todayStr = new Date().toISOString().slice(0, 10)
@@ -252,6 +292,10 @@ export default function DeliveriesPage() {
     setEditingDelivery(null)
     setForm({ ...emptyForm })
     setFormError('')
+    setOrderMode(deliverableOrders.length > 0 ? 'existing' : 'new')
+    setOrderSearch('')
+    setSelectedOrder(null)
+    setShowOrderDropdown(false)
     setShowAddModal(true)
   }
 
@@ -272,7 +316,35 @@ export default function DeliveriesPage() {
     setShowDeleteConfirm(true)
   }
 
+  const selectOrder = (order: Order) => {
+    setSelectedOrder(order)
+    setShowOrderDropdown(false)
+    setOrderSearch('')
+    // Auto-fill customer info from the order
+    setForm((prev) => ({
+      ...prev,
+      order_id: order.receipt_number || order.id.slice(0, 8),
+      customer_name: order.customer_name || prev.customer_name,
+      customer_phone: '', // orders don't have phone, keep empty for user to fill
+    }))
+  }
+
+  const getOrderSource = (order: Order): { label: string; icon: React.ReactNode; color: string } => {
+    if (order.table_name || order.table_id) {
+      return { label: `Table ${order.table_name || ''}`.trim(), icon: <UtensilsCrossed size={12} />, color: '#8b5cf6' }
+    }
+    if (order.note?.toLowerCase().includes('online') || order.note?.toLowerCase().includes('en ligne')) {
+      return { label: 'En ligne', icon: <Globe size={12} />, color: '#0891b2' }
+    }
+    return { label: 'POS', icon: <ShoppingCart size={12} />, color: '#3b82f6' }
+  }
+
   const handleSave = async () => {
+    // Validate: existing order mode requires a selected order
+    if (orderMode === 'existing' && !editingDelivery && !selectedOrder) {
+      setFormError('Veuillez selectionner une commande')
+      return
+    }
     if (!form.customer_name.trim()) {
       setFormError(L.customerName + ' required')
       return
@@ -281,6 +353,8 @@ export default function DeliveriesPage() {
       setFormError(L.deliveryAddress + ' required')
       return
     }
+    // Use the real order ID when an existing order is selected
+    const effectiveOrderId = selectedOrder ? selectedOrder.id : form.order_id.trim()
     setSaving(true)
     setFormError('')
     try {
@@ -298,7 +372,7 @@ export default function DeliveriesPage() {
         })
       } else {
         await addDelivery(storeId, {
-          order_id: form.order_id.trim() || undefined,
+          order_id: effectiveOrderId || undefined,
           customer_name: form.customer_name.trim(),
           customer_phone: form.customer_phone.trim() || undefined,
           delivery_address: form.delivery_address.trim(),
@@ -756,12 +830,27 @@ export default function DeliveriesPage() {
 
           {/* Order ref, estimated time */}
           <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: 11, color: C.textSecondary }}>
-            {delivery.order_id && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Package size={11} />
-                {delivery.order_id}
-              </span>
-            )}
+            {delivery.order_id && (() => {
+              const linkedOrder = orders.find((o) => o.id === delivery.order_id)
+              const source = linkedOrder ? getOrderSource(linkedOrder) : null
+              return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Package size={11} />
+                  {linkedOrder ? (
+                    <>
+                      <span style={{
+                        padding: '1px 5px', borderRadius: 3,
+                        backgroundColor: source!.color + '15', color: source!.color,
+                        fontWeight: 600, fontSize: 10,
+                      }}>
+                        {source!.label}
+                      </span>
+                      {linkedOrder.receipt_number || linkedOrder.id.slice(0, 8)} — {formatCurrency(linkedOrder.total, currency)}
+                    </>
+                  ) : delivery.order_id.length > 12 ? delivery.order_id.slice(0, 8) + '...' : delivery.order_id}
+                </span>
+              )
+            })()}
             {delivery.estimated_time && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <Clock size={11} />
@@ -812,16 +901,244 @@ export default function DeliveriesPage() {
       <div>
         {formError && <div style={formErrorStyle}>{formError}</div>}
 
-        {/* Order Ref */}
-        <div style={formFieldStyle}>
-          <label style={formLabelStyle}>{L.orderRef}</label>
-          <input
-            value={form.order_id}
-            onChange={(e) => setForm((prev) => ({ ...prev, order_id: e.target.value }))}
-            placeholder={L.orderRef}
-            style={formInputStyle}
-          />
-        </div>
+        {/* Order source toggle */}
+        {!editingDelivery && (
+          <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderRadius: 10, overflow: 'hidden', border: `1px solid ${C.border}` }}>
+            <button
+              type="button"
+              onClick={() => { setOrderMode('existing'); setSelectedOrder(null); setForm((p) => ({ ...p, order_id: '', customer_name: '', customer_phone: '' })) }}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: orderMode === 'existing' ? C.primary : '#f8fafc',
+                color: orderMode === 'existing' ? '#fff' : C.textSecondary,
+                transition: 'all 0.15s',
+              }}
+            >
+              <Package size={14} />
+              Commande existante
+            </button>
+            <button
+              type="button"
+              onClick={() => { setOrderMode('new'); setSelectedOrder(null); setForm((p) => ({ ...p, order_id: '' })) }}
+              style={{
+                flex: 1,
+                padding: '10px 16px',
+                border: 'none',
+                borderLeft: `1px solid ${C.border}`,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                backgroundColor: orderMode === 'new' ? C.primary : '#f8fafc',
+                color: orderMode === 'new' ? '#fff' : C.textSecondary,
+                transition: 'all 0.15s',
+              }}
+            >
+              <Plus size={14} />
+              Nouvelle livraison
+            </button>
+          </div>
+        )}
+
+        {/* Order selector (existing mode) */}
+        {orderMode === 'existing' && !editingDelivery && (
+          <div style={{ ...formFieldStyle, position: 'relative' }}>
+            <label style={formLabelStyle}>Selectionner une commande *</label>
+
+            {selectedOrder ? (
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: `2px solid ${C.primary}`,
+                backgroundColor: C.primary + '08',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 8,
+                    backgroundColor: getOrderSource(selectedOrder).color + '18',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {getOrderSource(selectedOrder).icon}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                      {selectedOrder.customer_name || `#${(selectedOrder.receipt_number || selectedOrder.id.slice(0, 8))}`}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.textSecondary, display: 'flex', gap: 8 }}>
+                      <span>{formatCurrency(selectedOrder.total, currency)}</span>
+                      <span>{getOrderSource(selectedOrder).label}</span>
+                      <span>{selectedOrder.items.length} article{selectedOrder.items.length > 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOrder(null)
+                    setForm((p) => ({ ...p, order_id: '', customer_name: '', customer_phone: '' }))
+                  }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.danger, padding: 4 }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div
+                  onClick={() => setShowOrderDropdown(!showOrderDropdown)}
+                  style={{
+                    ...formInputStyle,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    color: C.textSecondary,
+                  }}
+                >
+                  <span>{deliverableOrders.length > 0 ? `${deliverableOrders.length} commande${deliverableOrders.length > 1 ? 's' : ''} disponible${deliverableOrders.length > 1 ? 's' : ''}` : 'Aucune commande disponible'}</span>
+                  <ChevronDown size={16} style={{ transform: showOrderDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </div>
+
+                {showOrderDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    left: 0, right: 0,
+                    top: '100%',
+                    zIndex: 50,
+                    backgroundColor: '#fff',
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    maxHeight: 320,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}>
+                    {/* Search orders */}
+                    <div style={{ padding: '10px 12px', borderBottom: `1px solid ${C.border}` }}>
+                      <div style={{ position: 'relative' }}>
+                        <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: C.textSecondary }} />
+                        <input
+                          value={orderSearch}
+                          onChange={(e) => setOrderSearch(e.target.value)}
+                          placeholder="Rechercher par client, table, ref..."
+                          autoFocus
+                          style={{
+                            ...formInputStyle,
+                            paddingLeft: 32,
+                            fontSize: 13,
+                            margin: 0,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Order list */}
+                    <div style={{ overflowY: 'auto', maxHeight: 260 }}>
+                      {filteredOrders.length === 0 ? (
+                        <div style={{ padding: 24, textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
+                          <ShoppingCart size={24} style={{ marginBottom: 8, opacity: 0.3 }} />
+                          <p style={{ margin: 0 }}>Aucune commande trouvee</p>
+                        </div>
+                      ) : (
+                        filteredOrders.map((order) => {
+                          const source = getOrderSource(order)
+                          const timeStr = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+                          const dateStr = new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+                          return (
+                            <div
+                              key={order.id}
+                              onClick={() => selectOrder(order)}
+                              style={{
+                                padding: '10px 14px',
+                                cursor: 'pointer',
+                                borderBottom: `1px solid ${C.border}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10,
+                                transition: 'background-color 0.1s',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f8fafc')}
+                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            >
+                              {/* Source icon */}
+                              <div style={{
+                                width: 32, height: 32, borderRadius: 8,
+                                backgroundColor: source.color + '15',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                                color: source.color,
+                              }}>
+                                {source.icon}
+                              </div>
+
+                              {/* Order info */}
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <span style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                                    {order.customer_name || `Commande #${(order.receipt_number || order.id.slice(0, 8))}`}
+                                  </span>
+                                  <span style={{
+                                    fontSize: 10, fontWeight: 600,
+                                    padding: '2px 6px', borderRadius: 4,
+                                    backgroundColor: source.color + '15',
+                                    color: source.color,
+                                  }}>
+                                    {source.label}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: 11, color: C.textSecondary, marginTop: 2, display: 'flex', gap: 8 }}>
+                                  <span>{order.items.length} article{order.items.length > 1 ? 's' : ''}</span>
+                                  <span>{dateStr} {timeStr}</span>
+                                  {order.table_name && <span>Table: {order.table_name}</span>}
+                                </div>
+                              </div>
+
+                              {/* Total */}
+                              <div style={{ fontSize: 14, fontWeight: 700, color: C.primary, flexShrink: 0 }}>
+                                {formatCurrency(order.total, currency)}
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Manual order ref (editing mode or new delivery mode) */}
+        {(orderMode === 'new' || editingDelivery) && (
+          <div style={formFieldStyle}>
+            <label style={formLabelStyle}>{L.orderRef}</label>
+            <input
+              value={form.order_id}
+              onChange={(e) => setForm((prev) => ({ ...prev, order_id: e.target.value }))}
+              placeholder={L.orderRef}
+              style={formInputStyle}
+            />
+          </div>
+        )}
 
         {/* Customer Name */}
         <div style={formFieldStyle}>
