@@ -320,11 +320,14 @@ function App() {
         })
       } else {
         // New Google user — no profile yet, redirect to registration
+        // Save OAuth info so registration can skip signUp + password
         const appStore = useAppStore.getState()
         appStore.setRegistrationMode(true)
         appStore.setSelectedPlan('free')
         sessionStorage.setItem('pos_oauth_email', email)
         sessionStorage.setItem('pos_oauth_name', session.user.user_metadata?.full_name || '')
+        sessionStorage.setItem('pos_oauth_auth_id', session.user.id)
+        sessionStorage.setItem('pos_oauth_token', session.access_token)
       }
       setOauthLoading(false)
     })

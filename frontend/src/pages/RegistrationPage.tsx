@@ -43,6 +43,9 @@ type RegistrationStep = 1 | 2 | 3 | 4 | 5
 // ── Component ───────────────────────────────────────────────────────────────
 
 export default function RegistrationPage() {
+  // Detect if user came from Google OAuth (has auth but no profile)
+  const isGoogleOAuth = Boolean(sessionStorage.getItem('pos_oauth_auth_id'))
+
   const [step, setStep] = useState<RegistrationStep>(1)
 
   // Step 1: Plan
@@ -114,6 +117,7 @@ export default function RegistrationPage() {
     if (step === 3) return selectedActivity !== null && storeName.trim().length > 0
     if (step === 4) return plan === 'free' || plan === 'pay_as_you_grow' || paymentMethod.length > 0
     if (step === 5) {
+      if (isGoogleOAuth) return termsAccepted
       return (
         password.length >= 6 &&
         password === confirmPassword &&
@@ -142,6 +146,9 @@ export default function RegistrationPage() {
     setError(null)
 
     try {
+      const oauthAuthId = sessionStorage.getItem('pos_oauth_auth_id')
+      const oauthPassword = isGoogleOAuth ? crypto.randomUUID() : password
+
       await register({
         orgName,
         ownerName,
@@ -153,9 +160,15 @@ export default function RegistrationPage() {
         paymentMethod: (plan === 'free' || plan === 'pay_as_you_grow') ? 'none' : paymentMethod,
         storeName,
         activity: selectedActivity,
-        password,
+        password: oauthPassword,
         termsAcceptedAt: new Date().toISOString(),
+        oauthAuthId: oauthAuthId || undefined,
       })
+      // Clean up OAuth session data
+      sessionStorage.removeItem('pos_oauth_email')
+      sessionStorage.removeItem('pos_oauth_name')
+      sessionStorage.removeItem('pos_oauth_auth_id')
+      sessionStorage.removeItem('pos_oauth_token')
       setMode(selectedMode)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed'
@@ -848,86 +861,107 @@ export default function RegistrationPage() {
         </div>
       )}
 
-      <div style={fieldGroupStyle}>
-        <label style={labelStyle}>{t.auth.passwordLabel} *</label>
-        <div style={{ position: 'relative' }}>
-          <input
-            style={inputStyle}
-            type={showPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => { setPassword(e.target.value); clearError() }}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#94a3b8',
-              padding: 4,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-        {password.length > 0 && password.length < 6 && (
-          <p style={{ fontSize: 12, color: '#dc2626', margin: '4px 0 0' }}>
-            6 caracteres minimum
+      {isGoogleOAuth ? (
+        <div style={{
+          ...infoCardStyle,
+          background: '#f0fdf4',
+          borderColor: '#86efac',
+          marginBottom: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Check size={18} style={{ color: '#16a34a' }} />
+            <span style={{ fontSize: 14, color: '#15803d', fontWeight: 600 }}>
+              Connecte via Google
+            </span>
+          </div>
+          <p style={{ fontSize: 13, color: '#166534', margin: '8px 0 0' }}>
+            Votre compte est securise par Google. Aucun mot de passe requis.
           </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <>
+          <div style={fieldGroupStyle}>
+            <label style={labelStyle}>{t.auth.passwordLabel} *</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                style={inputStyle}
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); clearError() }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  padding: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {password.length > 0 && password.length < 6 && (
+              <p style={{ fontSize: 12, color: '#dc2626', margin: '4px 0 0' }}>
+                6 caracteres minimum
+              </p>
+            )}
+          </div>
 
-      <div style={fieldGroupStyle}>
-        <label style={labelStyle}>{t.auth.confirmPassword} *</label>
-        <div style={{ position: 'relative' }}>
-          <input
-            style={{
-              ...inputStyle,
-              borderColor: confirmPassword && password !== confirmPassword ? '#dc2626' : '#d1d5db',
-            }}
-            type={showConfirmPassword ? 'text' : 'password'}
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => { setConfirmPassword(e.target.value); clearError() }}
-            onFocus={handleInputFocus}
-            onBlur={handleInputBlur}
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            style={{
-              position: 'absolute',
-              right: 10,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#94a3b8',
-              padding: 4,
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-        {confirmPassword && password !== confirmPassword && (
-          <p style={{ fontSize: 12, color: '#dc2626', margin: '4px 0 0' }}>
-            {t.auth.passwordMismatch}
-          </p>
-        )}
-      </div>
+          <div style={fieldGroupStyle}>
+            <label style={labelStyle}>{t.auth.confirmPassword} *</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                style={{
+                  ...inputStyle,
+                  borderColor: confirmPassword && password !== confirmPassword ? '#dc2626' : '#d1d5db',
+                }}
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); clearError() }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute',
+                  right: 10,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  padding: 4,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {confirmPassword && password !== confirmPassword && (
+              <p style={{ fontSize: 12, color: '#dc2626', margin: '4px 0 0' }}>
+                {t.auth.passwordMismatch}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Summary before submit */}
       <div style={{

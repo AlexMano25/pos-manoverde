@@ -924,6 +924,7 @@ export type RegistrationData = {
   password: string
   termsAcceptedAt?: string
   referralCode?: string
+  oauthAuthId?: string
 }
 
 // -- Agent / Affiliate Program ------------------------------------------------

@@ -551,13 +551,24 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           throw new Error('Supabase is not configured')
         }
 
-        // 1. Create Supabase Auth user (unconfirmed at this point)
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.ownerEmail,
-          password: data.password,
-        })
-        if (authError) throw new Error(authError.message)
-        if (!authData.user) throw new Error('Registration failed')
+        let authUserId: string
+        let sessionToken: string | null = null
+
+        if (data.oauthAuthId) {
+          // Google OAuth user — already authenticated, skip signUp
+          authUserId = data.oauthAuthId
+          sessionToken = sessionStorage.getItem('pos_oauth_token')
+        } else {
+          // Standard email/password registration
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: data.ownerEmail,
+            password: data.password,
+          })
+          if (authError) throw new Error(authError.message)
+          if (!authData.user) throw new Error('Registration failed')
+          authUserId = authData.user.id
+          sessionToken = authData.session?.access_token ?? null
+        }
 
         // 2. Call the registration RPC function (SECURITY DEFINER)
         //    This auto-confirms the auth user AND creates org/store/user/subscription
@@ -572,7 +583,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           p_payment_method: data.paymentMethod,
           p_store_name: data.storeName,
           p_activity: data.activity,
-          p_auth_id: authData.user.id,
+          p_auth_id: authUserId,
           p_terms_accepted_at: data.termsAcceptedAt || null,
         })
         if (rpcError) throw new Error(rpcError.message)
@@ -592,13 +603,16 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           }
         }
 
-        // 3. Now sign in (user is auto-confirmed by the RPC function)
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: data.ownerEmail,
-          password: data.password,
-        })
-        if (signInError) {
-          console.warn('[authStore] Sign-in after registration failed:', signInError.message)
+        // 3. Sign in (skip for OAuth users — they're already signed in)
+        if (!data.oauthAuthId) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: data.ownerEmail,
+            password: data.password,
+          })
+          if (signInError) {
+            console.warn('[authStore] Sign-in after registration failed:', signInError.message)
+          }
+          sessionToken = signInData?.session?.access_token ?? sessionToken
         }
 
         // 4. Fetch the newly created user profile
@@ -623,7 +637,6 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
         appStore.setActivity(data.activity)
         if (store) {
           appStore.setCurrentStore(store)
-          // After registration there is only the one newly created store
           appStore.setAvailableStores([store as Store])
         }
 
@@ -638,7 +651,7 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
         // 7. Set auth state
         set({
           user: profile as User,
-          token: signInData?.session?.access_token ?? authData.session?.access_token ?? 'registered-session',
+          token: sessionToken ?? 'registered-session',
         })
 
         // 8. Load cloud data into IndexedDB (non-blocking)
