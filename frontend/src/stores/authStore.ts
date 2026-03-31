@@ -18,6 +18,7 @@ interface AuthState {
 
 interface AuthActions {
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
   loginWithPin: (pin: string) => Promise<void>
   logout: () => void
   setUser: (user: User) => void
@@ -362,6 +363,21 @@ export const useAuthStore = create<AuthState & AuthActions & AuthComputed>()(
           user: data.user as User,
           token: data.token as string,
         })
+      },
+
+      loginWithGoogle: async () => {
+        if (!isSupabaseConfigured || !supabase) {
+          throw new Error('Supabase is not configured')
+        }
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin,
+          },
+        })
+        if (error) throw new Error(error.message)
+        // The browser will redirect to Google, then back to the app.
+        // Session will be restored by onAuthStateChange / loadSession.
       },
 
       loginWithPin: async (pin: string) => {

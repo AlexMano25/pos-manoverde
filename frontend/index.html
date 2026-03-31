@@ -238,6 +238,21 @@
         overflow: hidden;
       }
 
+      /* Mobile portrait: allow scrolling */
+      @media (max-width: 640px) {
+        body.app-mode,
+        body.app-mode html {
+          height: auto;
+          min-height: 100%;
+          overflow: auto;
+        }
+        body.app-mode #root {
+          height: auto;
+          min-height: 100%;
+          overflow: auto;
+        }
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
           'Helvetica Neue', Arial, sans-serif;

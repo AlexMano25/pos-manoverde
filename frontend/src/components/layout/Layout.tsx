@@ -78,7 +78,7 @@ const Layout: React.FC<LayoutProps> = ({
           flexDirection: 'column',
           minWidth: 0,    // prevent flex overflow on x-axis
           minHeight: 0,   // allow flex child to shrink for scroll
-          overflow: 'hidden',
+          overflow: layoutMode === 'mobile' ? 'auto' : 'hidden',
           position: 'relative',
           zIndex: 1,
           ...(layoutMode === 'tablet' ? { marginLeft: 64 } : {}),

@@ -536,9 +536,9 @@ export default function ServerOrderPage() {
   // ── Styles ──────────────────────────────────────────────────────────────
 
   const pageStyle: React.CSSProperties = {
-    display: 'flex', flexDirection: 'column', height: '100vh',
+    display: 'flex', flexDirection: 'column', height: isMobile ? 'auto' : '100vh', minHeight: '100vh',
     backgroundColor: C.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    overflow: 'hidden',
+    overflow: isMobile ? 'auto' : 'hidden',
   }
 
   const headerStyle: React.CSSProperties = {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useAppStore } from './stores/appStore'
 import { useAuthStore } from './stores/authStore'
 import { useProductStore } from './stores/productStore'
@@ -85,6 +85,7 @@ import StoreSelectPage from './pages/StoreSelectPage'
 import { getSidebarItems } from './data/sidebarConfig'
 import { resolveI18nKey } from './utils/i18nResolve'
 import { usePlanEnforcement } from './hooks/usePlanEnforcement'
+import { supabase, isSupabaseConfigured } from './services/supabase'
 
 function AppContent() {
   const { section, setSection, mode, activity, currentStore } = useAppStore()
@@ -248,6 +249,84 @@ export default function PublicRouter() {
 function App() {
   const { activity, registrationMode, showLogin, needsStoreSelection, setIsAppInstalled, setInstallPromptEvent, setReferralCode } = useAppStore()
   const { user, token } = useAuthStore()
+  const [oauthLoading, setOauthLoading] = useState(false)
+
+  // Handle OAuth callback (Google sign-in redirect)
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return
+    // Supabase puts tokens in the URL hash after OAuth redirect
+    const hash = window.location.hash
+    if (!hash || !hash.includes('access_token')) return
+
+    setOauthLoading(true)
+
+    // Supabase client auto-detects the hash and sets the session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) {
+        setOauthLoading(false)
+        return
+      }
+      // Clean hash from URL
+      window.history.replaceState({}, '', window.location.pathname)
+
+      const email = session.user.email
+      if (!email) { setOauthLoading(false); return }
+
+      // Check if this user already has a profile in the users table
+      const { data: profile } = await supabase
+        .from('users')
+        .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
+        .eq('email', email)
+        .eq('is_active', true)
+        .single()
+
+      if (profile) {
+        // Existing user — load their store and log them in
+        const { data: store } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('id', profile.store_id)
+          .single()
+
+        const appStore = useAppStore.getState()
+        const effectiveRole = email === 'direction@manoverde.com' ? 'super_admin' : profile.role
+
+        if (store) {
+          if (!appStore.activity) appStore.setActivity((store.activity || 'restaurant') as any)
+          appStore.setCurrentStore(store)
+        }
+
+        if (effectiveRole === 'super_admin') {
+          const { data: allStores } = await supabase.from('stores').select('*')
+          appStore.setAvailableStores((allStores || [store]) as any[])
+          appStore.setNeedsStoreSelection(false)
+          appStore.setSection('super_admin')
+        } else if (store?.organization_id) {
+          const { data: orgStores } = await supabase.from('stores').select('*').eq('organization_id', store.organization_id)
+          if (orgStores && orgStores.length > 1) {
+            appStore.setAvailableStores(orgStores as any[])
+            appStore.setNeedsStoreSelection(true)
+          } else {
+            appStore.setAvailableStores([store] as any[])
+          }
+        }
+
+        useAuthStore.setState({
+          user: { ...profile, role: effectiveRole } as any,
+          token: session.access_token,
+        })
+      } else {
+        // New Google user — no profile yet, redirect to registration
+        const appStore = useAppStore.getState()
+        appStore.setRegistrationMode(true)
+        appStore.setSelectedPlan('free')
+        // Pre-fill email will come from session
+        sessionStorage.setItem('pos_oauth_email', email)
+        sessionStorage.setItem('pos_oauth_name', session.user.user_metadata?.full_name || '')
+      }
+      setOauthLoading(false)
+    }).catch(() => setOauthLoading(false))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Capture ?ref= referral code from URL on first load
   useEffect(() => {
@@ -304,6 +383,19 @@ function App() {
   }, [setIsAppInstalled, setInstallPromptEvent])
 
   // Public routes handled by PublicRouter wrapper (no auth needed)
+
+  // Show loading while processing OAuth callback
+  if (oauthLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)' }}>
+        <div style={{ textAlign: 'center', color: '#fff' }}>
+          <div style={{ width: 48, height: 48, border: '4px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: 16, fontWeight: 500 }}>Connexion avec Google...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    )
+  }
 
   // Registration flow (all plans including free)
   if (registrationMode) {

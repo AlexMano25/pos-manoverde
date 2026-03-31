@@ -5,13 +5,24 @@
 }
 
 /* ── App mode (Layout active) ─────────────────────────────────────────────
-   Lock html/body/root to viewport height so Layout handles its own scroll */
+   Lock html/body/root to viewport height so Layout handles its own scroll.
+   On mobile (portrait), allow scrolling so all POS options are reachable. */
 html.app-mode,
 html.app-mode body,
 html.app-mode #root {
   height: 100%;
   width: 100%;
   overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  html.app-mode,
+  html.app-mode body,
+  html.app-mode #root {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
 }
 
 /* ── Normal mode (landing, login, registration) ───────────────────────────
