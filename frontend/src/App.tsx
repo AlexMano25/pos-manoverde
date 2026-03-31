@@ -254,18 +254,18 @@ function App() {
   // Handle OAuth callback (Google sign-in redirect)
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return
-    // Supabase puts tokens in the URL hash after OAuth redirect
+    // Detect OAuth redirect: hash with access_token or code in query
     const hash = window.location.hash
-    if (!hash || !hash.includes('access_token')) return
+    const hasOAuthTokens = hash && (hash.includes('access_token') || hash.includes('refresh_token'))
+    if (!hasOAuthTokens) return
 
     setOauthLoading(true)
 
-    // Supabase client auto-detects the hash and sets the session
-    supabase!.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session?.user) {
-        setOauthLoading(false)
-        return
-      }
+    // Listen for Supabase to finish processing the OAuth tokens
+    const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, session) => {
+      if (event !== 'SIGNED_IN' || !session?.user) return
+      subscription.unsubscribe()
+
       // Clean hash from URL
       window.history.replaceState({}, '', window.location.pathname)
 
@@ -292,7 +292,7 @@ function App() {
         const effectiveRole = email === 'direction@manovende.com' ? 'super_admin' : profile.role
 
         if (store) {
-          if (!appStore.activity) appStore.setActivity((store.activity || 'restaurant') as any)
+          appStore.setActivity((store.activity || 'restaurant') as any)
           appStore.setCurrentStore(store)
         }
 
@@ -311,6 +311,9 @@ function App() {
           }
         }
 
+        appStore.setShowLogin(false)
+        appStore.setRegistrationMode(false)
+
         useAuthStore.setState({
           user: { ...profile, role: effectiveRole } as any,
           token: session.access_token,
@@ -320,12 +323,19 @@ function App() {
         const appStore = useAppStore.getState()
         appStore.setRegistrationMode(true)
         appStore.setSelectedPlan('free')
-        // Pre-fill email will come from session
         sessionStorage.setItem('pos_oauth_email', email)
         sessionStorage.setItem('pos_oauth_name', session.user.user_metadata?.full_name || '')
       }
       setOauthLoading(false)
-    }).catch(() => setOauthLoading(false))
+    })
+
+    // Timeout fallback in case onAuthStateChange doesn't fire
+    const timeout = setTimeout(() => {
+      subscription.unsubscribe()
+      setOauthLoading(false)
+    }, 10000)
+
+    return () => { subscription.unsubscribe(); clearTimeout(timeout) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Capture ?ref= referral code from URL on first load
