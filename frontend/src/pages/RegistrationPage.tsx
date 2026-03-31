@@ -1069,8 +1069,8 @@ export default function RegistrationPage() {
           <p style={stepDescStyle}>{getStepDesc()}</p>
         </div>
 
-        {/* Google sign-up — visible on all steps */}
-        {step <= 2 && (
+        {/* Google sign-up — visible on steps 1-2 only if NOT already authenticated via Google */}
+        {step <= 2 && !isGoogleOAuth && (
           <div style={{ padding: '12px 24px 0' }}>
             <button
               onClick={async () => {
@@ -1108,6 +1108,30 @@ export default function RegistrationPage() {
               <div style={{ flex: 1, height: 1, backgroundColor: '#e2e8f0' }} />
               <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>ou remplir le formulaire</span>
               <div style={{ flex: 1, height: 1, backgroundColor: '#e2e8f0' }} />
+            </div>
+          </div>
+        )}
+        {/* Google OAuth success banner */}
+        {isGoogleOAuth && step <= 2 && (
+          <div style={{ padding: '12px 24px 0' }}>
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: 8,
+              background: '#f0fdf4',
+              border: '1px solid #86efac',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+              <Check size={18} style={{ color: '#16a34a', flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#15803d', margin: 0 }}>
+                  Connecte avec Google
+                </p>
+                <p style={{ fontSize: 12, color: '#166534', margin: '2px 0 0' }}>
+                  {sessionStorage.getItem('pos_oauth_email') || ''} — Completez les informations ci-dessous
+                </p>
+              </div>
             </div>
           </div>
         )}
