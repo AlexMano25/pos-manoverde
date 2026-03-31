@@ -262,8 +262,11 @@ function App() {
     setOauthLoading(true)
 
     // Listen for Supabase to finish processing the OAuth tokens
+    let handled = false
     const { data: { subscription } } = supabase!.auth.onAuthStateChange(async (event, session) => {
-      if (event !== 'SIGNED_IN' || !session?.user) return
+      if (handled) return
+      if ((event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') || !session?.user) return
+      handled = true
       subscription.unsubscribe()
 
       // Clean hash from URL
@@ -272,21 +275,14 @@ function App() {
       const email = session.user.email
       if (!email) { setOauthLoading(false); return }
 
-      // Check if this user already has a profile in the users table
+      // Use RPC to bypass RLS — the Google auth user has no profile row yet
       const { data: profile } = await supabase!
-        .from('users')
-        .select('id, store_id, name, email, role, pin, phone, is_active, allowed_pages, created_at, updated_at')
-        .eq('email', email)
-        .eq('is_active', true)
-        .single()
+        .rpc('get_user_by_email', { p_email: email })
 
       if (profile) {
         // Existing user — load their store and log them in
         const { data: store } = await supabase!
-          .from('stores')
-          .select('*')
-          .eq('id', profile.store_id)
-          .single()
+          .rpc('get_store_by_id', { p_store_id: profile.store_id })
 
         const appStore = useAppStore.getState()
         const effectiveRole = email === 'direction@manovende.com' ? 'super_admin' : profile.role
@@ -302,7 +298,8 @@ function App() {
           appStore.setNeedsStoreSelection(false)
           appStore.setSection('super_admin')
         } else if (store?.organization_id) {
-          const { data: orgStores } = await supabase!.from('stores').select('*').eq('organization_id', store.organization_id)
+          const { data: orgStores } = await supabase!
+            .rpc('get_stores_by_org', { p_org_id: store.organization_id })
           if (orgStores && orgStores.length > 1) {
             appStore.setAvailableStores(orgStores as any[])
             appStore.setNeedsStoreSelection(true)
